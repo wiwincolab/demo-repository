@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff"><meta name="description" content="去趣 eSIM 競賽概念原型：行程、旅伴優惠與旅行回憶的手機體驗。">
+  <title>去趣旅行提案 · 手機互動版</title><link rel="icon" href="data:,">
+  <link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="memory.css"><script src="content.js" defer></script><script src="assets/tokyo-map-data.js" defer></script><script src="script.js" defer></script><script src="memory.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-bar"><a class="wordmark" href="#trip">去趣 <i>chicTrip</i><span aria-hidden="true"></span></a><span class="prototype">競賽概念原型</span><button class="icon-button" id="help" aria-label="查看原型說明">?</button></header>
+    <main id="main">
+      <section id="trip" class="screen active" aria-labelledby="trip-title">
+        <div class="trip-cover"><img src="assets/photos/sensoji.jpg" alt="東京淺草寺雷門"><div class="cover-copy"><span>我的行程 · 日本</span><h1 id="trip-title">東京，慢慢玩。</h1><p>Tokyo 5 Days</p></div><button id="trip-info" class="cover-button" aria-label="查看旅程資訊">•••</button></div>
+        <div class="trip-summary"><div><strong>10.12 — 10.16</strong><p>5 天 4 夜 · 15 個景點</p></div><button id="invite" class="invite-button"><span id="avatars" class="avatars"></span><span>邀請旅伴 ＋</span></button></div>
+        <button class="deal-banner" id="deal-open" aria-haspopup="dialog"><span class="sim-mark" aria-hidden="true">e</span><span><strong>旅伴一起買，上網一起省</strong><small id="deal-caption">4 人旅伴價，每人現省 NT$20</small></span><span aria-hidden="true">›</span></button>
+        <div class="trip-tools"><a class="ai-link" href="../circle-trip-planner/index.html?mobile=1">✦ 圈選 AI 排程</a><button id="adjust-open">臨時改行程</button><button id="saved-plan">已儲存</button></div>
+        <div class="day-bar" id="day-bar" aria-label="選擇旅遊日期"></div>
+        <div class="view-bar"><h2 id="area-title">淺草・晴空塔</h2><div class="segmented" aria-label="行程顯示方式"><button data-view="list" aria-pressed="true">清單</button><button data-view="map" aria-pressed="false">地圖</button></div></div>
+        <div id="list-view" class="stop-list"></div>
+        <div id="map-view" hidden>
+          <div id="route-map" class="route-map"><canvas id="base-map" aria-hidden="true"></canvas><canvas id="route-layer" aria-hidden="true"></canvas><div id="map-pins"></div><span class="map-note">路線示意・非導航</span><a class="map-credit" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a></div>
+          <div class="play-bar"><span id="stop-status" role="status"></span><button id="play">播放旅程</button><button id="next-stop" aria-label="下一站">下一站 →</button></div>
+          <div class="map-stops" id="map-stops" aria-label="對應景點"></div><div id="spot-detail"></div>
+        </div>
+        <p class="page-note">示範行程 · 流量依使用行為估算，不是地區實測。</p>
+      </section>
+      <section id="esim" class="screen" aria-labelledby="esim-title" hidden>
+        <div class="page-heading"><span class="eyebrow">東京 5 日 · 出國準備</span><h1 id="esim-title">網路，也幫你想好了。</h1><p>買多少、付多少、得到什麼，一次看懂。</p></div>
+        <div class="panel"><div class="row"><h2>你的上網習慣</h2><span class="mock">Mock</span></div><div class="choice-row" id="usage-choices"><button data-usage="light" aria-pressed="false">導航聊天</button><button data-usage="normal" aria-pressed="true">照片社群</button><button data-usage="heavy" aria-pressed="false">影片熱點</button></div><div class="estimate"><span>5 天預估用量</span><strong id="trip-usage">5–8 <small>GB</small></strong></div><p id="usage-reason" class="muted">照片上傳、導航與社群；住宿有 Wi-Fi。</p></div>
+        <div class="plan-card"><div class="row"><span class="blue-label" id="plan-label">依你的習慣推薦</span><span>日本 · 5 日</span></div><h2 id="plan-name">每日 2GB 高速上網</h2><p class="muted" id="plan-description">共 10GB 高速額度 · 每日重置</p><div class="price-row"><div><small>模擬一般價</small><strong>NT$<span id="plan-price">299</span></strong></div><span class="blue-label">含回憶創作 1 次</span></div><div class="benefit-lines"><p>✓ 先看風格，回國留下旅行回憶</p><p>✓ 可自由共編，購買才計入組隊福利</p></div><button class="primary" id="join-buy">模擬我的 eSIM 購買</button><p class="small-note">裝置須支援 eSIM 且無電信鎖；相容性與方案條款需在正式結帳前確認。本頁不會付款。</p></div>
+        <button class="link-row" id="esim-group">看看整團能省多少 <span>旅伴組隊省 ›</span></button>
+        <details class="panel"><summary>沒用完的網路，能變成下一次的旅金？</summary><p>「趣Chip」先以可結算的總量型方案探索。每日重置的方案不直接套用。</p><label class="range-label" for="unused">試算：10GB 總量方案，剩下 <b id="unused-value">2 GB</b></label><input id="unused" type="range" min="0" max="10" value="2"><div class="estimate"><span>可獲趣Chip</span><strong id="chip-value">20</strong></div><p class="small-note">Mock：每剩 1GB 換 10 點，上限 30 點；限下次 eSIM 訂單滿 NT$299 抵用，30 天有效，非現金。需供應商結算資料與成本驗證。</p></details>
+      </section>
+      <section id="memory" class="screen" aria-labelledby="memory-title" hidden>
+        <div class="page-heading memory-heading"><span class="eyebrow">TRAVEL, KEPT YOUR WAY</span><h1 id="memory-title">風景相同，<br>回憶有你的樣子。</h1><p>一張照片，三種值得分享的旅行作品。</p></div>
+        <a class="atlas-entry" href="../memory-atlas/index.html"><span class="atlas-entry-icon">↗</span><span><b>走進你的回憶地圖</b><small>大阪・首爾・香港，18 枚專屬收藏</small></span><span>→</span></a>
+        <div class="memory-gallery">
+          <div class="memory-location"><span>富士山周邊 · 藍調時刻</span><span>AI 示範作品</span></div>
+          <button class="art-stage" id="memory-zoom" aria-label="放大查看回憶作品"><img id="memory-art" src="assets/memory/fuji-editorial.png" alt="富士山攝影與手繪插畫的上下對半詩頁"><span class="art-expand" aria-hidden="true">↗</span></button>
+          <div class="art-caption"><div><span id="art-number">02 / 03</span><h2 id="art-title">一半風景，一半詩</h2></div><span id="art-format">直式 3:4</span></div>
+          <p id="art-description">把真實留在上半頁，把感受畫成下半頁。</p>
+          <div class="memory-style-grid" aria-label="選擇回憶風格">
+            <button data-memory-style="sticker" aria-pressed="false"><span><img src="assets/memory/fuji-sticker.png" alt="" loading="lazy"></span><b>收藏貼紙卡</b><small>手作 × 六枚貼紙</small></button>
+            <button data-memory-style="editorial" aria-pressed="true"><span><img src="assets/memory/fuji-editorial.png" alt=""></span><b>攝影詩頁</b><small>照片 × 留白插畫</small></button>
+            <button data-memory-style="ticket" aria-pressed="false"><span><img src="assets/memory/fuji-ticket.png" alt="" loading="lazy"></span><b>藍調旅行票根</b><small>雙色 × 孔版印刷</small></button>
+          </div>
+          <div class="memory-actions"><button class="threads-share" id="share-threads"><span aria-hidden="true">＠</span> 分享到 Threads <span aria-hidden="true">↗</span></button><a id="download-memory" class="art-download" href="assets/memory/fuji-editorial.png" download="fuji-editorial.png" aria-label="下載回憶作品">↓</a></div>
+          <p class="memory-fine">先體驗示範作品分享；開啟模擬編輯器，不會直接發文。</p>
+        </div>
+        <div class="panel memory-create"><div class="row"><h2>下一張，換你的旅行。</h2><span class="blue-label">eSIM 專屬</span></div><p id="memory-eligibility">本趟 eSIM 購買後，解鎖 1 次創作。</p><div class="memory-steps"><span>01 選照片</span><i>→</i><span>02 挑風格</span><i>→</i><span>03 留下回憶</span></div><label class="photo-upload">＋ 選擇自己的照片<input id="photo-input" type="file" accept="image/jpeg,image/png,image/webp"></label><div id="local-photo" hidden><img id="local-photo-preview" alt="你選擇的本機照片"><div><b id="local-photo-name"></b><button id="remove-local-photo">移除照片</button></div></div><p class="small-note" id="photo-status">照片僅在本機預覽，不會上傳。</p><button class="primary" id="create-memory">查看解鎖方式</button><p class="small-note" id="memory-result" role="status">此原型以預先生成的富士山作品展示，尚未串接即時生圖。</p></div>
+      </section>
+      <section id="proposal" class="screen" aria-labelledby="proposal-title" hidden><div class="page-heading"><span class="eyebrow">給組員的討論版</span><h1 id="proposal-title">從使用者，到商業價值。</h1><p>分開看 TA、故事與效益，每次聚焦一件事。</p></div><div class="proposal-tabs" id="proposal-tabs"><button data-doc="canvas" aria-pressed="true">價值主張</button><button data-doc="stories" aria-pressed="false">User Story</button><button data-doc="business" aria-pressed="false">商業模式</button></div><div id="proposal-content"></div></section>
+    </main>
+    <nav class="bottom-nav" aria-label="主要功能"><a href="#trip" aria-current="page"><span class="nav-icon icon-trip" aria-hidden="true"></span>行程</a><a href="#esim"><span class="nav-icon icon-sim" aria-hidden="true"></span>eSIM</a><a href="#memory"><span class="nav-icon icon-memory" aria-hidden="true"></span>回憶</a><a href="#proposal"><span class="nav-icon icon-doc" aria-hidden="true"></span>提案</a><a href="../memory-atlas/index.html"><span class="nav-icon icon-atlas" aria-hidden="true"></span>回憶地圖</a></nav>
+  </div>
+  <dialog id="sheet" class="sheet"><div class="sheet-handle" aria-hidden="true"></div><div class="sheet-heading"><h2 id="sheet-title"></h2><button id="sheet-close" class="icon-button" aria-label="關閉">×</button></div><div id="sheet-body"></div></dialog>
+  <dialog id="art-lightbox" class="art-lightbox" aria-label="回憶作品大圖"><button id="close-art" aria-label="關閉大圖">×</button><img id="lightbox-art" alt="回憶作品完整大圖"></dialog>
+  <dialog id="threads-composer" class="threads-composer" aria-labelledby="composer-title">
+    <header class="composer-header"><button id="cancel-thread">取消</button><h2 id="composer-title">新串文</h2><button id="save-thread">存草稿</button></header>
+    <div class="composer-notice">Threads 發文模擬 · 不會送出</div>
+    <div id="thread-editor">
+      <div class="thread-body"><div class="thread-avatar" aria-hidden="true">你</div><div class="thread-content"><div class="thread-author">你的帳號 <span>示範</span></div><label class="sr-only" for="thread-text">串文內容</label><textarea id="thread-text" maxlength="500" placeholder="這趟旅行，有什麼想說的？"></textarea><div class="thread-attachment" id="thread-attachment"><img id="thread-art" alt="將分享的回憶作品"><button id="remove-thread-art" aria-label="移除貼文圖片">×</button></div><button id="restore-thread-art" class="restore-art" hidden>＋ 加回回憶作品</button><span id="thread-count" class="thread-count">0 / 500</span></div></div>
+      <div class="thread-options"><label><span><b>附上這個地點的靈感</b><small>朋友可以欣賞同一地點的三種作品</small></span><input id="thread-link" type="checkbox"></label><div id="thread-link-card" hidden><span>chicTrip · 富士山回憶</span><small>公開示範作品，不含你的照片或行程</small></div></div>
+      <footer class="composer-footer"><span>任何人都可以回覆<br><small>示範設定</small></span><button id="publish-thread">模擬發佈</button></footer>
+    </div>
+    <div id="thread-published" hidden><div class="thread-success"><span>✓</span><h3>你的串文，看起來會像這樣。</h3><p>預覽完成，尚未發送到 Threads。</p></div><article class="published-post"><div class="thread-author"><span class="thread-avatar">你</span>你的帳號 <small>剛剛 · 模擬</small></div><p id="published-text"></p><img id="published-art" alt="串文中的回憶作品"><a id="published-link" target="_blank" rel="noopener" hidden>富士山回憶 · 看看三種風格 ↗</a><div class="post-reactions" aria-hidden="true">♡　♧　⇄　↗</div></article><div class="published-actions"><button id="edit-thread">返回編輯</button><button id="copy-thread">複製串文</button><a id="post-download" download>下載圖片 ↓</a></div><p id="thread-feedback" role="status"></p></div>
+  </dialog>
+  <div id="toast" class="toast" role="status"></div><noscript>請開啟 JavaScript 使用互動原型。</noscript>
+</body>
+</html>
