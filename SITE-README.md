@@ -1,10 +1,10 @@
 # chicTrip eSIM 提案展示
 
-此目錄收錄 Scott 既有 GitHub Pages demo，依團隊約定命名為 **`lagacy`**。它是獨立的舊版展示快照，與 repository 根目錄的團隊提案分開維護。
+此為站點主內容（原 `lagacy/` 目錄已升為 repository 根目錄部署）。
 
 ## 入口
 
-線上入口：[lagacy demo](https://wiwincolab.github.io/demo-repository/lagacy/)。桌機顯示完整提案，800px 以下會自動轉到手機版。
+線上入口：[GitHub Pages](https://wiwincolab.github.io/demo-repository/)。桌機顯示完整提案，800px 以下會自動轉到手機版。
 
 | 頁面 | 相對路徑 |
 |---|---|
@@ -21,7 +21,7 @@
 
 在此目錄執行 `python -m http.server 8000`，開啟 `http://localhost:8000/`，不需要 npm install 或打包。一般頁面也可直接開啟 HTML；回憶地圖建議以 HTTP 開啟，其詳細地圖需要網路與 WebGL。
 
-所有頁面、樣式、腳本、圖片、vendor 與授權資料均放在 `lagacy/`。保留現有團隊首頁、package.json 與 GitHub Actions；發布沿用既有 Pages workflow。維護此快照時只修改本目錄，不將檔案搬到 repo 根目錄。
+所有頁面、樣式、腳本、圖片、vendor 與授權資料均放在 repository 根目錄。`package.json` 與 GitHub Actions 維持不變；發布沿用既有 Pages workflow。原團隊提案 v4 備份於 `chictrip-v4/`。
 
 本次匯入僅包含原發布 repo 的追蹤檔案，不含原工作區的聊天、研究報告、私照、工具設定、skills、快取或 `.git`。外部地圖服務、素材出處與官方網站連結仍保留。
 
@@ -30,7 +30,7 @@
 - 匯入日：2026-09-12
 - 原 repo：[scott0127/chictrip-ai-demo](https://github.com/scott0127/chictrip-ai-demo)
 - 目前已發布版本：[3f70575848c8583dc7a0c1b29f2ced29c5e6b2e0](https://github.com/scott0127/chictrip-ai-demo/commit/3f70575848c8583dc7a0c1b29f2ced29c5e6b2e0)
-- 保留原目錄結構與功能；僅調整手機回憶的分享連結，指向團隊 `lagacy/mobile-trip/`，並補充匯入說明。
+- 保留原目錄結構與功能；手機回憶分享連結指向主站 `mobile-trip/`。
 - 原站繼續保留；本次未修改原發布 repo。
 
 ## 原型說明

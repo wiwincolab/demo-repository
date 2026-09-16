@@ -10,7 +10,7 @@
   let selected=Object.hasOwn(styles,requested)?requested:'editorial';
   let localUrl='',draft=null,opener=null;
   const src=style=>'assets/memory/fuji-'+style+'.png';
-  const publicUrl=style=>'https://wiwincolab.github.io/demo-repository/lagacy/mobile-trip/index.html?memory=fuji&style='+style+'#memory';
+  const publicUrl=style=>'https://wiwincolab.github.io/demo-repository/mobile-trip/index.html?memory=fuji&style='+style+'#memory';
   const notify=t=>window.ChicMemoryAccess.notify(t);
   function showStyle(style){
     selected=style;const art=styles[style];
