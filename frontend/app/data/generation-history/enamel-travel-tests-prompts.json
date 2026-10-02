@@ -1,0 +1,95 @@
+{
+  "project": "friend-trip",
+  "form": "photo-derived enamel landscape badge proposal tests",
+  "tool": "built-in image_gen__imagegen",
+  "canvas": {
+    "aspect_ratio": "1:1",
+    "width": 1254,
+    "height": 1254,
+    "format": "png",
+    "transparent_background": false
+  },
+  "high_level_inspiration": {
+    "original_post_url": "https://x.com/Emmma__0/status/2093194689222705645",
+    "archive_url": "https://youmind.club/prompts/landscape-enamel-pin-badge-32850",
+    "date": "2026-08-28",
+    "attribution": "@Emmma__0, photo-to-travel-souvenir enamel scene pin",
+    "use": "High-level form inspiration only. All actual generation and refinement prompts below were independently written for the two supplied destination photographs. Creator artwork was not supplied as a visual reference.",
+    "verification_limit": "Original X page returned 403 during read-only research. Date and model attribution are visible in the archive. No popularity or viral claim is made."
+  },
+  "kyoto": {
+    "imagefilename": "kyoto-pin-test.png",
+    "tool_mode": "built-in imagegen; reference-guided generation plus one precise revision",
+    "references": [
+      {
+        "path": "references/kyoto-shrine-source.png",
+        "role": "User-provided subject and spatial-cue photograph; inspected with view_image before generation",
+        "source_url": null,
+        "source_kind": "user-provided local reference"
+      },
+      {
+        "path": "C:/Users/scott/.codex/generated_images/01a0facc-8301-7482-9262-b1f426fca92b/exec-9457cef9-df21-47dc-811d-96c4d7af5617.png",
+        "role": "Generated first-pass Kyoto pin; sole edit target for one final precision correction",
+        "source_url": null
+      }
+    ],
+    "prompt": "Use case: product-mockup\nAsset type: one square 1:1 travel souvenir enamel scene-pin proposal test.\nPrimary request: Independently reinterpret the attached Kyoto shrine photograph as ONE manufactured enamel landscape pin. The photograph is a SUBJECT AND SPATIAL-CUE REFERENCE only, not a picture to paste into the badge and not a layout/style reference. This is an original proposal informed only at a high level by the idea of turning travel photographs into enamel souvenir badges.\n\nFIXED SERIES CONTRACT: Square 1:1 canvas. Exactly ONE independent irregular die-cut enamel pin whose outer shape follows the combined silhouette of the scene. Straight-on front camera, entire badge visible, centered, occupying approximately 65% of the canvas width and height with generous calm margin. The pin lies on deep navy fine woven linen, consistent navy across the whole background, delicate soft contact shadow. Thin satin-gold perimeter and thin gold metal dividers between enamel color cells; refined small manufactured physical object with barely visible thickness, no perspective tilt. Muted MATTE enamel color fill, softly diffused even light, satin gold only a tiny gentle glint. No glossy glare, gems, jewels or polished mirror surfaces.\n\nKYOTO SUBJECT: The black wooden torii gateway in the reference is the unmistakable MAIN anchor. Preserve its thick dark vertical posts and broad dark horizontal wooden lintels, with the substantial sacred straw rope hung beneath the lintel and a few small crisp white folded paper streamers (shide) attached to it. Simplify faithfully, no red torii. Support the torii with just TWO supporting landscape cues: one restrained connected green treetop canopy silhouette behind and above the gateway, and a few shallow light stone steps along the bottom foreground. The visible rope and paper streamers are details of the gateway, not extra floating objects. Keep the quiet woodland shrine feeling and relative foreground/background placement. Remove all people and all signs, inscriptions, fences, boards and unrelated buildings from the reference.\n\nCOLOR SYSTEM: Exactly seven enamel fill colors: charcoal-black wood, deep olive green, forest green, soft leaf green, warm ivory for shide, pale stone gray, muted straw-taupe rope. The satin gold dividers and navy background are separate materials outside that seven-color enamel palette. Clean substantial color cells, concise crafted contours, no photographic gradients, no dense leaf or stone textures, no complex filigree. The irregular exterior should follow the treetops, torii and small step edge, not a rectangle, circle, shield or generic medallion enclosing a scene. All scene parts form one connected badge.\n\nConstraints: no text, lettering, numerals, labels, logos, signature or watermark. No rectangular photo frame. No photo print. No collage. No multiple pins. No extra decorations, flowers, charms, hanging chains or packaging. No snow globe. No ceramic figurine. No photoreal outdoor scene. Only a quietly refined physical enamel souvenir pin on deep navy linen.",
+    "refinement_prompt": "Use case: precise-object-edit\nFinalize the attached Kyoto enamel scene pin with ONE precise framing and front-view correction. Preserve its single connected die-cut landscape badge, black wood torii, sacred straw rope with small white folded paper streamers, green woodland canopy, short stone steps, seven muted matte enamel colors and deep navy woven linen. No new objects.\n\nCORRECT FRAMING: Zoom the camera OUT so the complete pin's longest edge occupies exactly about 65% of the square canvas. Keep the pin centered, with generous approximately 17.5% navy linen margin around the complete pin. Entire badge visible, no cropping. Do not fill 80% of the frame as before.\n\nCORRECT FRONT VIEW: Show the whole pin directly from the FRONT, flat and straight-on, like a meticulous souvenir product catalogue shot. Correct the gateway's current diagonal tilt: BOTH horizontal lintels must be horizontal and level, and the two posts must be vertical. No perspective skew from the source photo. Preserve the gateway's dark timber identity, rope, shide and proportions.\n\nREFINE METAL: Make the gold perimeter and internal dividers slightly thinner and reduce their bright yellow specular glow to subdued SATIN GOLD. Keep only very soft even light and a tiny realistic contact shadow. Matte color cells should remain muted and calm. Do not change the scene-shaped irregular outer silhouette or add an enclosing frame.\n\nExactly one enamel pin on navy linen, no text, letters, labels, logo, extra objects, multiple badges, rectangular photo frame, collage, packaging, snow globe or ceramic object. Square 1:1.",
+    "refinement_count": 1,
+    "generated_source": "C:/Users/scott/.codex/generated_images/01a0facc-8301-7482-9262-b1f426fca92b/exec-d645c743-2f81-4968-9401-0a36eebe843f.png",
+    "output_dimensions": {
+      "width": 1254,
+      "height": 1254
+    },
+    "visual_checks": {
+      "passed": [
+        "One connected scene-shaped pin on deep navy linen",
+        "Straight-on gateway with level lintels and vertical posts",
+        "Black torii with rope and white shide; green canopy and short stone steps",
+        "Matte restrained enamel cells and gold metal divisions",
+        "No people, text, logo, photo frame, packaging, collage or extra pin"
+      ],
+      "limit": "Target occupancy was about 65% of canvas longest edge. Final observed pin height is approximately 69%, with the full pin visible. No further image edits were made after the one authorized correction."
+    }
+  },
+  "usj": {
+    "imagefilename": "usj-pin-test.png",
+    "tool_mode": "built-in imagegen; reference-guided generation plus one precise revision",
+    "references": [
+      {
+        "path": "references/usj-nintendo-source.png",
+        "role": "User-provided subject and spatial-cue photograph; inspected with view_image before generation",
+        "source_url": null,
+        "source_kind": "user-provided local reference"
+      },
+      {
+        "path": "C:/Users/scott/.codex/generated_images/01a0facc-8301-7482-9262-b1f426fca92b/exec-d645c743-2f81-4968-9401-0a36eebe843f.png",
+        "role": "Generated Kyoto final pin as series reference only for matte enamel, satin gold, front camera, navy linen and light; no Kyoto subjects carried over",
+        "source_url": null
+      },
+      {
+        "path": "C:/Users/scott/.codex/generated_images/01a0facc-8301-7482-9262-b1f426fca92b/exec-eee26c6f-fd90-433e-b3a5-87bf23fb8369.png",
+        "role": "Generated first-pass USJ pin; sole edit target for one final precision correction",
+        "source_url": null
+      }
+    ],
+    "prompt": "Use case: product-mockup\nAsset type: one square 1:1 travel souvenir enamel scene-pin proposal test.\nPrimary request: Independently reinterpret the attached USJ Nintendo-area photograph as ONE manufactured enamel landscape pin. This is an original proposal informed only at a high level by turning travel photographs into enamel souvenir badges.\nInput roles: Image 1, the USJ photograph, is a SUBJECT AND SPATIAL-CUE REFERENCE only, not a picture to paste into the badge. Image 2, the Kyoto enamel pin, is a SERIES REFERENCE ONLY for matte enamel material, subdued satin gold outline thickness, straight-on front camera, deep navy woven linen, soft contact shadow and centered framing. Do not carry over its gateway, forest, rope, steps or any Kyoto subject.\n\nFIXED SERIES CONTRACT: Square 1:1 canvas. Exactly ONE independent irregular die-cut enamel pin with the outer edge following the combined landscape silhouette. Straight-on FRONT camera, no perspective tilt, complete badge visible, centered, occupying approximately 65% of the square canvas's longest edge, with generous approximately 17.5% deep navy linen margin. Pin lies flat on the same navy woven linen as the series reference, delicate soft contact shadow. Thin subdued SATIN GOLD perimeter and thin gold metal dividers; barely visible realistic thickness. Muted MATTE enamel color cells, evenly diffused soft light, tiny gold sheen only, no highly glossy glare.\n\nUSJ SUBJECT: The substantial gray stone castle from the reference is the unmistakable MAIN anchor: a tall central crenellated gray tower, two lower fortified side towers, broad battlement walls, and one dark central arched entrance. Preserve this identifiable architecture, simplify it cleanly without any character face, crest, signs, banners or emblem. Supporting cue ONE: the reference's layered green grassy slopes spread below and alongside the castle, simplified into only three or four clear rounded green tiers separated by restrained sandy-ochre soil bands. Supporting cue TWO: just ONE small upright GREEN PIPE with a simple open round mouth in the foreground. Add a tiny restrained red-and-cream checker pattern as a surface detail on one lower grass/soil terrace, no more than eight small squares and less than 5% of the badge area. This pattern is a subtle texture hint, not another object. Keep castle, terraces and pipe as one cohesive connected die-cut badge with an organic scene-shaped edge.\n\nCOLOR SYSTEM: Exactly eight enamel fill colors: cool medium stone gray, pale stone gray, charcoal arch shadow, deep grass green, soft grass green, muted sandy ochre, warm cream, muted brick red. Satin gold and navy linen are separate materials outside these eight enamel colors. Clean substantial flat color cells, no gradients or tiny photoreal texture, no gold line around every individual stone brick. Divide only the main architectural and terrain shapes. Keep a calm crafted souvenir feel.\n\nConstraints: no text, letters, numerals, symbols, labels, brands, logos, watermark or signature. Remove all source copyright lettering and park signs. No people, character figures, character heads/faces, mascot emblems, mushrooms, coins, stars, flags, ride vehicles, extra pipes, lampposts or extra park attractions. No enclosing rectangle, circle, shield or picture frame. No photo print, collage, multiple pins, loose accessories, charms, chains or packaging. No snow globe and no ceramic figurine. Exactly one physical matte enamel landscape badge on navy linen.",
+    "refinement_prompt": "Use case: precise-object-edit\nFinalize this attached USJ enamel landscape pin with ONE precise scale-and-simplification correction. Keep the same square canvas, navy woven linen, single connected die-cut pin, straight-on front view, gray fortified castle with tall central crenellated tower, three or four layered green grass terraces, exactly one green foreground pipe, tiny red-and-cream checker patch, matte eight-color enamel cells and fine satin-gold edges. Do not change the main architectural landmark or add anything.\n\nSCALE CORRECTION: The current complete pin is much too large in the frame. Shrink the ENTIRE pin including every piece of the connected scene by exactly 25% RELATIVE TO ITS CURRENT WIDTH AND HEIGHT. Keep the canvas dimensions unchanged. Center the smaller pin on the navy linen. The resulting complete pin should occupy approximately 65% of the square canvas WIDTH, with about 17.5% empty navy linen margin on BOTH left and right. The complete badge must remain visible. Maintain its existing scene-shaped irregular contour rather than adding a frame.\n\nSIMPLIFICATION CORRECTION: Remove the separate rounded dark green bush blobs around the castle and terraces. Keep just the clean layered grassy slopes as the green landscape supporting cue. The scene has only its main gray castle architecture plus TWO supporting cues: layered green hills and one green pipe. The eight-square red-and-cream checker patch remains a tiny surface detail on one terrace. Keep the central castle entrance connection clear but simplify any unnecessary small finial ornaments. Preserve matte subdued color fills and reduce any bright gold flare to soft satin gold.\n\nNo extra objects, signs, letters, numbers, brands, logos, characters, people, multiple pins, collage, photo frame, enclosing medallion, packaging, snow globe or ceramic object. Only one coherent matte enamel scene-shaped pin on navy woven linen. Square 1:1.",
+    "refinement_count": 1,
+    "generated_source": "C:/Users/scott/.codex/generated_images/01a0facc-8301-7482-9262-b1f426fca92b/exec-6f439a51-f7a9-4cd5-8902-27799043ea2a.png",
+    "output_dimensions": {
+      "width": 1254,
+      "height": 1254
+    },
+    "visual_checks": {
+      "passed": [
+        "One connected scene-shaped pin on matching deep navy linen",
+        "Gray castle, layered green slopes and exactly one green pipe",
+        "Small red-and-cream checker texture retained; unrelated park objects and bushes omitted",
+        "Matte limited-color cells, satin gold material and complete pin visible",
+        "No characters, people, brands, text, watermark, photo frame, packaging, collage or extra pin"
+      ],
+      "limit": "Target occupancy was about 65% of canvas longest edge. The single precision revision improved the excessive framing but final observed pin width remains approximately 75%. Retained as a proposal test; no further image edits were made after the one authorized correction."
+    }
+  }
+}

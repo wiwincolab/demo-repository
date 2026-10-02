@@ -1,0 +1,73 @@
+{
+  "version": 2,
+  "updated": "2026-10-02",
+  "scope": "Current AI Image Creation prototype. Supersedes the active editorial slot with professional photography; historical memory-formats.json prompts remain archived reference material.",
+  "common": {
+    "input": "One source image plus explicitly supplied destination; mascot identity reference for companion only",
+    "exchange": "Collectible copy; creator retains original; all six formats are exchangeable",
+    "provenance": [
+      "work id",
+      "original creator",
+      "destination",
+      "creation time",
+      "exchange id",
+      "exchange partner",
+      "shared trip when applicable",
+      "invitation time",
+      "completion time",
+      "message",
+      "reply"
+    ],
+    "generation": "Precomputed examples; no AI API is called. A custom upload is not transformed into the displayed result.",
+    "persistence": "Collections and exchange records in localStorage. Local image object URLs are never persisted or uploaded.",
+    "motionPersistence": "Playground arrangements and animation states reset when closed. Collections/exchange provenance retain existing local persistence."
+  },
+  "formats": [
+    {
+      "id": "sticker",
+      "name": "貼紙卡",
+      "promptReference": "memory-formats.json#sticker",
+      "output": "Complete card plus six transparent individual motifs",
+      "interaction": "Drag independent stickers onto a notebook; corner lift, cast shadow and spring settle; tap alternative"
+    },
+    {
+      "id": "photo",
+      "name": "專業攝影",
+      "promptTemplate": "Refine one travel photograph as professional editorial travel photography. Preserve the source destination, architecture, people, identities, pose and relative spatial relationships. Use restrained natural color grading, balanced highlights and shadows, realistic depth and clear focal hierarchy. Preserve photographic texture and plausible light. No illustration, added objects, collage, heavy skin retouching, invented signage, excessive saturation or text overlays. Return one standalone photograph in the original aspect ratio.",
+      "output": "Original photo and refined photo in the same framing",
+      "demoAsset": "references/usj-nintendo-source.png",
+      "demoNote": "Existing source photo plus display-only grading, not newly AI-generated",
+      "interaction": "Interactive original/graded wipe, hold original and subtle paper tilt. Demo is CSS grading, not AI"
+    },
+    {
+      "id": "ticket",
+      "name": "旅行票根",
+      "promptReference": "memory-formats.json#ticket",
+      "output": "Front and back paper ticket, pocket and separate stamp",
+      "interaction": "Pull out, turn over and stamp with a short pressure/ink sequence"
+    },
+    {
+      "id": "pin",
+      "name": "琺瑯徽章",
+      "promptReference": "memory-formats.json#pin",
+      "output": "Transparent scene-shaped pin, matched silhouette reverse and clasp",
+      "interaction": "Pointer tilt, masked metal sheen, flip and pin to a collection board"
+    },
+    {
+      "id": "scene",
+      "name": "場景積木（3D 模型）",
+      "promptReference": "memory-formats.json#diorama",
+      "output": "Hexagonal base plus five independent semantic groups",
+      "interaction": "Raycast drag/snap or tap-to-place, reset, assemble preview, rotation and lighting",
+      "futureAssetRequirement": "Actual 3D mesh with semantic parts and materials; raster artwork alone is insufficient"
+    },
+    {
+      "id": "companion",
+      "name": "去趣吉祥物呼應景點",
+      "promptReference": "memory-formats.json#companion",
+      "output": "Transparent costumed mascot sprite, independent scenery and props",
+      "interaction": "Walk toward the block, squash/jump, block impact, star reward and return; sprite motion, no joint rig"
+    }
+  ],
+  "motionAssets": "generation-history/2026-10-02-motion-assets.json"
+}

@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-02",
+  "tool": "built-in image_gen.imagegen",
+  "transparent_background": true,
+  "assets": [
+    {
+      "output": "public/assets/memory/motion/companion.png",
+      "reference": "public/assets/memory/usj-companion-test.png",
+      "prompt": "Edit target: provided image. Produce a SINGLE isolated full-body transparent PNG sprite of exactly the same chicTrip felt mascot from the provided image. Preserve distinctive yellow right-facing rounded triangular body, cyan vertical left side, two big white eyes with black pupils, red felt cap, blue denim overalls, white boots. Remove background entirely. Remove map from its hands; pose its empty little yellow hands relaxed on sides, making the right hand visible so another object can be overlaid in the app. Character looks cheerfully forward. Premium handcrafted felt texture and soft studio shading. Full body from hat to both feet, centered, fills 85 percent canvas, no ground, no shadow below feet, no lettering, no extra props. This is a reusable game/UI character cutout, alpha transparent background essential."
+    },
+    {
+      "output": "public/assets/memory/motion/pin.png",
+      "reference": "public/assets/memory/kyoto-pin-test.png",
+      "prompt": "Edit target provided enamel pin photograph: remove ALL navy fabric background to true transparent alpha. Keep ONLY the entire intricately shaped Kyoto shrine enamel pin: gold outer contour, black wooden torii, green foliage, gold rope tassels white paper streamers and grey stone steps. Preserve its outline and premium materials exactly, centered with modest transparent margin. Front on product view, entire pin uncropped, crisp polished gold edges and dimensional enamel reflections. No added ground, no backdrop, no rectangular plaque, no text. Reusable transparent collectible UI sprite."
+    },
+    {
+      "output": "public/assets/memory/motion/stickers.png",
+      "reference": null,
+      "prompt": "Create a production-ready transparent PNG sprite sheet for six Fuji blue-hour travel stickers, landscape 3:2 canvas, strict 3 columns by 2 rows equal square cells, one separate die-cut sticker centered inside each cell, maximum 75% of each cell width and height, generous transparent gutters so no artwork crosses cell boundaries. Row 1 left: recognizable blue Mount Fuji snowy peak. Row 1 middle: small modern charcoal single-story glass coffee shop warmly lit amber windows. Row 1 right: pair of dark blue Japanese conifer trees. Row 2 left: tall slim black bent-top warm streetlamp. Row 2 middle: a low horizontal bank of pale blue misty clouds. Row 2 right: a cream takeaway coffee cup with blue sleeve and small curl of steam. All six: refined hand painted paper editorial aesthetic, gouache flat shapes and subtle paper grain, limited navy blue cream sky blue amber palette, clean offwhite die-cut border following object shape. Entire background truly transparent alpha, no card no labels no words no grid lines no rectangular panels no extra elements. Consistent collectible quality, recognisable at 80px.",
+      "implementationNote": "The generator did not maintain exact cell boundaries. CreationStickerSprite uses six measured SVG view boxes and clip paths. The saved image remains unchanged."
+    }
+  ],
+  "limits": "Pre-generated illustrative sprites, not extracted automatically from user uploads. The souvenir pin back, paper ticket, motion, and Three.js model are code-native. Photo uses source plus display-only grading. No skeletal mascot rig or photo depth map is implemented."
+}

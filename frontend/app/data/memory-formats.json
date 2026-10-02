@@ -1,0 +1,273 @@
+{
+  "schemaVersion": "1.0",
+  "updated": "2026-10-02",
+  "purpose": "Six-format generation catalog and review proposals; not yet a runtime generation service",
+  "tool": "built-in image_gen; actual model version not returned",
+  "globalRules": [
+    "One source photo per work; references have explicitly separated roles",
+    "Every format has the same composition and material across destinations",
+    "Do not invent trip dates, participants or landmarks absent from source/context",
+    "All templates below are newly written; exact generation histories live in linked records",
+    "Raster previews alone do not supply 3D models, layers or extracted interactive objects"
+  ],
+  "references": {
+    "mascot": {
+      "path": "references/chictrip-mascot.png",
+      "role": "user-provided official character identity"
+    },
+    "kyoto": {
+      "path": "references/kyoto-shrine-source.png",
+      "role": "user-provided test photo; location anchor",
+      "anchors": [
+        "dark wooden torii",
+        "braided sacred rope and white paper",
+        "green canopy",
+        "stone path"
+      ]
+    },
+    "usj": {
+      "path": "references/usj-nintendo-source.png",
+      "role": "user-provided test photo; location anchor",
+      "anchors": [
+        "gray castle",
+        "tiered tan hills with green tops",
+        "green pipe",
+        "red checker paving"
+      ]
+    },
+    "nara": {
+      "path": "deer-source.png",
+      "role": "existing AI-generated demo source; not a user travel photograph"
+    },
+    "fuji": {
+      "path": "fuji-postcard.png",
+      "role": "top photographic half only; no independent original file available"
+    }
+  },
+  "formats": [
+    {
+      "id": "sticker",
+      "name": "收藏貼紙卡",
+      "status": "existing-format-standardized",
+      "aspectRatio": "3:2",
+      "required": [
+        "one unframed main scene",
+        "exactly six separate source-derived stickers",
+        "matte paper texture",
+        "one short footer"
+      ],
+      "layout": "Main scene 66–68% of width; six stickers in the remaining column; continuous ivory outer margin",
+      "avoid": [
+        "single isolated cutout replacing card",
+        "seven or more stickers",
+        "photographic patches",
+        "glossy 3D"
+      ],
+      "promptTemplate": "Create one 3:2 horizontal travel memory sticker card from the source photo. Preserve these recognition anchors: {{sourceAnchors}}. Use restrained matte gouache and coarse cut-paper color planes on warm ivory paper. The left 66–68% contains one large unframed scene above a shallow paper footer. The right column contains exactly six separated source-derived stickers: {{sixMotifs}}. Give each sticker an irregular ivory cut edge, calm spacing and subtle paper shadow. Main scene and stickers share the same simple handmade material. Footer text, once: {{threeKeywords}}. No extra stickers, photographic patch, glossy rendering, outer title or watermark.",
+      "record": "standardized-format-prompts.json",
+      "examples": {
+        "nara": "deer-sticker-card.png",
+        "fuji": "fuji-sticker.png"
+      },
+      "atlasConcept": "Individual sticker motifs can become draggable collectibles after separate extraction or generation"
+    },
+    {
+      "id": "postcard",
+      "name": "旅行明信片",
+      "status": "existing-format-contract",
+      "aspectRatio": "3:4",
+      "required": [
+        "top half authentic source photograph",
+        "bottom half minimal handmade interpretation",
+        "exact 50:50 division",
+        "one poster per photo"
+      ],
+      "layout": "Upper 50% photograph; lower 50% ivory paper with centered subject occupying 10–20% of that half",
+      "avoid": [
+        "multi-photo collage",
+        "distorted identities or bodies",
+        "large bottom illustration",
+        "commercial cartoon"
+      ],
+      "promptTemplate": "Create one independent 3:4 vertical travel postcard from one source photo. Divide it into exactly equal upper and lower halves. Preserve the source photograph and subject relationships faithfully in the upper 50%, with only restrained editorial grading. In the lower 50%, reinterpret {{sourceAnchors}} as one small centered handmade paper illustration occupying about 10–20% of the lower half. Use delicate imperfect contours and a few matte acrylic color masses, rough warm-white paper, at most four source-derived main colors and generous negative space. Optional tiny editorial text: {{verifiedTitleOrBlank}}. Do not alter faces, stretch subjects, combine photographs or fill the lower half with decoration.",
+      "record": null,
+      "recordNote": "New standardized template; original generation prompt for existing assets not fully recovered",
+      "examples": {
+        "nara": "deer-poetry.png",
+        "fuji": "fuji-postcard.png"
+      },
+      "atlasConcept": "Front/back postcard with source photo and a privately written note"
+    },
+    {
+      "id": "ticket",
+      "name": "藍調票根",
+      "status": "existing-format-contract",
+      "aspectRatio": "3:4",
+      "required": [
+        "one recognizable source scene",
+        "blue and ivory ink palette",
+        "side ticket notches",
+        "fixed bottom information area"
+      ],
+      "layout": "Upper roughly 75% engraved illustration; lower 25% quiet title and verified place/date fields",
+      "avoid": [
+        "invented date",
+        "rainbow colors",
+        "multiple tickets",
+        "busy typography"
+      ],
+      "promptTemplate": "Turn the source photo into one 3:4 vertical collectible travel ticket. Preserve {{sourceAnchors}} as a simple recognizable engraved print in the upper three quarters. Use only deep blue and warm ivory, fine print grain and restrained linework. Include small symmetric ticket notches on both sides. Reserve the lower quarter for {{verifiedTitle}} and only metadata actually supplied: {{verifiedMetadataOrBlank}}. Fixed quiet hierarchy and generous paper margin. No fabricated date, second ticket, extra logo, heavy decoration or full-color photograph.",
+      "record": null,
+      "recordNote": "New standardized template; original generation prompt for existing assets not fully recovered",
+      "examples": {
+        "nara": "deer-ticket.png",
+        "fuji": "fuji-ticket.png"
+      },
+      "atlasConcept": "A location-stamped ticket with original travel record"
+    },
+    {
+      "id": "pin",
+      "replaces": "figurine",
+      "name": "景點琺瑯徽章",
+      "status": "proposal-test",
+      "aspectRatio": "1:1",
+      "required": [
+        "one scene-shaped badge",
+        "front-facing camera",
+        "thin gold edge and dividers",
+        "six to eight restrained enamel colors",
+        "navy textile background"
+      ],
+      "layout": "Badge silhouette centered, about 65% of canvas width; one landmark and at most two supporting cues",
+      "avoid": [
+        "rectangular photograph frame",
+        "multiple badges",
+        "excessive shine",
+        "tiny clutter",
+        "text or invented logos"
+      ],
+      "promptTemplate": "Translate one travel photo into one collectible enamel landscape badge on a square canvas. Use {{mainLandmark}} as the clear main subject and at most two supporting cues: {{supportingCues}}. Preserve recognizable relative positions. Let the badge silhouette follow the landscape shapes; no rectangle around it. Front-on view, thin consistent warm-gold edge and internal dividers, six to eight matte enamel color blocks, subtle metal sheen and soft contact shadow. Center the badge at about 65% of canvas width on dark navy woven cloth. One badge only, no words, logo, extra decorations, collage or photorealistic scenery inside the enamel.",
+      "record": "enamel-travel-tests-prompts.json",
+      "examples": {
+        "kyoto": "kyoto-pin-test.png",
+        "usj": "usj-pin-test.png"
+      },
+      "atlasConcept": "Pin on map or collection board; exchanged copies retain giver and destination"
+    },
+    {
+      "id": "diorama",
+      "name": "場景積木",
+      "status": "user-retained-format",
+      "aspectRatio": "1:1",
+      "required": [
+        "one fully assembled scene",
+        "one ivory hexagonal base",
+        "all objects fixed to same base",
+        "matte scored cardstock"
+      ],
+      "layout": "Three-quarter camera approximately 30 degrees downward; model about 65% of square canvas; complete base visible",
+      "avoid": [
+        "assembled scene mixed with parts inventory",
+        "exploded view",
+        "duplicate objects",
+        "multiple bases",
+        "plastic gloss"
+      ],
+      "promptTemplate": "Rebuild the source photo as one complete assembled papercraft travel scene on one ivory hexagonal base. Preserve {{sourceAnchors}} and their foreground/background relationships. Three-quarter camera about 30 degrees down; the whole model and base occupy about 65% of one square frame, with calm cream studio background. Use tactile matte cardstock, cut edges, scored folds, subtle glued seams and contact shadows. Every object is assembled and attached to the same base. No loose components, parts inventory, duplicate model, split view, photo patch, text or logo. Match the approved series reference only for format, materials and camera, never its destination contents.",
+      "record": "standardized-format-prompts.json",
+      "examples": {
+        "nara": "deer-diorama.png",
+        "fuji": "fuji-diorama-v2.png"
+      },
+      "atlasConcept": "A constructed scene can receive separately prepared objects and a day/night state"
+    },
+    {
+      "id": "companion",
+      "name": "景點限定旅伴",
+      "status": "proposal-test",
+      "aspectRatio": "1:1",
+      "required": [
+        "official yellow right-pointing triangle",
+        "visible cyan back panel",
+        "two large white oval eyes",
+        "destination outfit",
+        "one meaningful action",
+        "coherent wool-felt scene"
+      ],
+      "layout": "Full character in middle foreground, about 40% of canvas width, eye-level lens; legible destination anchor behind",
+      "avoid": [
+        "flat logo pasted in corner",
+        "new animal or human face",
+        "costume concealing identity",
+        "floating feet",
+        "unrelated accessories",
+        "romance"
+      ],
+      "promptTemplate": "Create one square tactile wool-felt travel snapshot. Image 1 supplies official mascot identity; Image 2 supplies destination layout; a series reference, if supplied, locks only camera, scale and materials. Preserve the yellow rounded right-pointing triangular body, cyan vertical back panel and exactly two large white oval eyes with dark pupils. No mouth, human head or animal replacement. Tiny mittens and short feet may support an action. Outfit: {{destinationOutfit}}, adapted to the lower body without hiding identity. At most two props: {{meaningfulProps}}. Action: {{specificAction}}. Rebuild {{sourceAnchors}} in the same handcrafted felt and textile world. Character width about 40%, eye-level 50mm view, physical contact shadows and coherent lighting. No people, romantic story, corner brand overlay, display base, split layout, collage or text.",
+      "record": "mascot-travel-tests-prompts.json",
+      "examples": {
+        "kyoto": "kyoto-companion-test.png",
+        "usj": "usj-companion-test.png"
+      },
+      "atlasConcept": "Destination outfit collection and a small place-specific reaction after clicking the companion"
+    }
+  ],
+  "archivedDirections": [
+    {
+      "type": "ceramic figurine",
+      "reason": "user rejected",
+      "files": [
+        "deer-figurine.png",
+        "fuji-figurine.png"
+      ]
+    },
+    {
+      "type": "flat mascot overlay",
+      "reason": "user rejected watermark-like placement",
+      "files": [
+        "deer-companion-v2.png",
+        "fuji-companion-v2.png"
+      ]
+    },
+    {
+      "type": "snow globe",
+      "reason": "superseded proposal; not adopted",
+      "files": [
+        "deer-globe.png",
+        "fuji-globe.png"
+      ]
+    }
+  ],
+  "research": [
+    {
+      "url": "https://note.com/masato2855/n/n1bd163119737",
+      "published": "2026-09-25",
+      "modelLabel": "ChatGPT",
+      "observed": "2026-10-02",
+      "likes": 140,
+      "evidence": "original creator example; engagement signal, not a trend estimate"
+    },
+    {
+      "url": "https://note.com/midotanuki/n/n9e763b05f17b",
+      "published": "2026-08-19",
+      "modelLabel": "ChatGPT",
+      "observed": "2026-10-02",
+      "likes": 1,
+      "evidence": "original creator example; feasibility, not popularity"
+    },
+    {
+      "url": "https://youmind.club/prompts/landscape-enamel-pin-badge-32850",
+      "published": "2026-08-28",
+      "modelLabel": "GPT Image 2",
+      "observed": "2026-10-02",
+      "metricsAreArchiveSnapshot": true,
+      "likes": 48,
+      "viewsDisplay": "11.8K",
+      "comments": 23,
+      "shares": 4,
+      "bookmarks": 8,
+      "originalUrl": "https://x.com/Emmma__0/status/2093194689222705645",
+      "originalDirectlyVerified": false
+    }
+  ]
+}
