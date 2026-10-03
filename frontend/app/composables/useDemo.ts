@@ -4,7 +4,7 @@ import { esimPlan } from '~/utils/esim';
 import type { TripDay, Member, Usage } from '~/types/trip';
 interface TripDemoState { days: TripDay[]; members: Member[]; usage: Usage; adjusted: boolean; previousStop: TripDay['stops'][0] | null; generated: boolean; esim: { selectedUsage: Usage | null; purchasedUsage: Usage | null; installed: boolean; claimed: boolean } }
 const blankState = (): TripDemoState => ({days:[],members:[],usage:'normal',adjusted:false,previousStop:null,generated:false,esim:{selectedUsage:null,purchasedUsage:null,installed:false,claimed:false}});
-function initialState(id:TripId):TripDemoState { return {...blankState(),days:structuredClone(tripItineraries[id]),members:[{name:'Scott（你）',paid:false,price:299}]}; }
+function initialState(id:TripId):TripDemoState { return {...blankState(),days:structuredClone(tripItineraries[id]),members:[{name:'Scott（你）',paid:false,price:esimPlan('normal',tripSummaries.find(t=>t.id===id)?.dayCount||5).price}]}; }
 export function useDemo() {
     const {activeId,activeTrip}=useTripContext();
     const states=useState<Record<TripId,TripDemoState>>('trip-demo-v2',()=>({tokyo:initialState('tokyo'),kansai:initialState('kansai'),fuji:initialState('fuji')}));
@@ -25,10 +25,11 @@ export function useDemo() {
           if (target.members[0]?.paid) {
             target.esim = { selectedUsage:target.esim.selectedUsage, purchasedUsage: ['light','normal','heavy'].includes(value?.esim?.purchasedUsage) ? value.esim.purchasedUsage : target.members[0].price === 199 ? 'light' : target.members[0].price === 499 ? 'heavy' : 'normal', installed: value?.esim?.installed === true, claimed: value?.esim?.claimed === true };
           }
+          target.members = target.members.map((m,i) => ({...m,price:esimPlan(i===0 ? target.esim.purchasedUsage || target.esim.selectedUsage || target.usage : 'normal',trip.dayCount).price}));
           target.generated=value?.generated===true;
           if(value?.adjusted===true){target.previousStop=structuredClone(tripItineraries[trip.id][0]!.stops[1]!);target.days[0]!.stops[1]=structuredClone(tripAlternatives[trip.id]);target.adjusted=true;}
         }
-        if(!cached){const legacy=JSON.parse(sessionStorage.getItem('chictrip-mobile-members')||'null');if(isMemberList(legacy))states.value.tokyo.members=legacy;}
+        if(!cached){const legacy=JSON.parse(sessionStorage.getItem('chictrip-mobile-members')||'null');if(isMemberList(legacy))states.value.tokyo.members=legacy.map(m=>({...m,price:esimPlan('normal',5).price}));}
       }catch{}
       storageReady.value=true;
     });
@@ -51,15 +52,15 @@ export function useDemo() {
         if (members.value.length >= 8)
             return;
         const names=['Scott（你）',...(activeTrip.value?.companions||[]),'小晴','小恩','小凱','小文'];
-        members.value.push({ name: names[members.value.length]||`旅伴 ${members.value.length}`, paid: false, price: 299 });
+        members.value.push({ name: names[members.value.length]||`旅伴 ${members.value.length}`, paid: false, price: esimPlan('normal',activeTrip.value?.dayCount||5).price });
         notify('旅伴已加入共編，尚未購買 eSIM');
     }
     function buy(index: number) {
         const member = members.value[index];
-        if (!member || member.paid)
+        if (!member || member.paid || !plan.value.available)
             return;
         member.paid = true;
-        member.price = index === 0 ? plan.value.price : 299;
+        member.price = index === 0 ? plan.value.price : esimPlan('normal',activeTrip.value?.dayCount||5).price;
         if(index === 0) esim.value = {selectedUsage:esim.value.selectedUsage,purchasedUsage:esim.value.selectedUsage || usage.value,installed:false,claimed:false};
         notify(group.value.count === 4 ? '4 人購買，已解鎖每人 NT$20 旅伴折扣' : '已完成示範購買');
     }
@@ -81,7 +82,7 @@ export function useDemo() {
     }
     function reset() {
         if(!activeId.value)return;
-        members.value = [{ name: 'Scott（你）', paid: false, price: 299 }];
+        members.value = [{ name: 'Scott（你）', paid: false, price: esimPlan('normal',activeTrip.value?.dayCount||5).price }];
         generated.value = false;
         esim.value = {selectedUsage:null,purchasedUsage:null,installed:false,claimed:false};
         notify('組隊模擬已重設為 1 人共編、0 人購買');

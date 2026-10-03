@@ -24,10 +24,10 @@ async function changeTrip(id: TripId) {
 }
 </script>
 <template>
-  <div class="app-shell" :class="{ 'creation-shell': path === '/memory', 'journey-shell': path.startsWith('/memory/usj') || path.startsWith('/atlas'), 'trips-shell': isTripList, 'plaza-shell': isAtlasPlaza }">
+  <div class="app-shell" :class="{ 'creation-shell': path === '/memory', 'journey-shell': path.startsWith('/memory/usj') || path.startsWith('/atlas') || path === '/wardrobe', 'trips-shell': isTripList, 'plaza-shell': isAtlasPlaza }">
     <header class="app-bar">
       <NuxtLink class="wordmark" to="/trips" aria-label="去趣，我的行程">去趣 <i>chicTrip</i><span aria-hidden="true" /></NuxtLink>
-      <span class="prototype">競賽概念原型</span>
+      <MascotBadge />
       <button class="icon-button" aria-label="查看原型說明" @click="help = true">?</button>
     </header>
     <div v-if="isScoped && ready && activeTrip" class="trip-context">
@@ -72,5 +72,5 @@ async function changeTrip(id: TripId) {
   </AppSheet>
   <div class="toast" :class="{ show: toast }" role="status" aria-live="polite">{{ toast }}</div>
 </template>
-<style>.app-shell.journey-shell{max-width:1160px}.journey-shell .app-bar{padding-inline:24px}@media(max-width:600px){.journey-shell .app-bar{padding-inline:18px}}</style>
+<style>.app-bar .mascot-badge{margin-left:auto}.app-shell.journey-shell{max-width:1160px}.journey-shell .app-bar{padding-inline:24px}@media(max-width:600px){.journey-shell .app-bar{padding-inline:18px}}</style>
 

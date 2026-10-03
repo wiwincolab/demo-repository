@@ -21,7 +21,7 @@ export const atlasParkZones = [
     title: '今天，穿哪一趟旅行？',
     description: '讓去趣吉祥物換上旅途中收集的穿搭。每一頂帽子、每一件小配件，都有一個去過的地方。',
     tags: ['景點穿搭', '去趣吉祥物'],
-    destination: '', action: '',
+    destination: '/wardrobe', action: '挑選我的吉祥物',
   },
   {
     id: 'collection', number: '04', name: '旅行收集冊', short: '旅行收藏館', english: 'THE TRAVEL COLLECTION',

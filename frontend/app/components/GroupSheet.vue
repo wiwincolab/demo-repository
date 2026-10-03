@@ -4,7 +4,7 @@ const mode = ref<'invite' | 'deal'>('deal');
 const props = defineProps<{
     initialMode?: 'invite' | 'deal';
 }>();
-const { members, group, buy, addMember } = useDemo();
+const { members, group, plan, buy, addMember } = useDemo();
 watch(open, value => { if (value)
     mode.value = props.initialMode || 'deal'; });
 const money = (n: number) => n.toLocaleString('zh-TW');
@@ -13,11 +13,11 @@ const money = (n: number) => n.toLocaleString('zh-TW');
   <AppSheet v-model="open" :title="mode === 'invite' ? '旅伴一起排行程' : '旅伴組隊省'">
     <p><b>{{ members.length }} 人共編</b>，其中 <b>{{ group.count }} 人購買 eSIM</b></p>
     <template v-if="mode === 'deal'">
-      <span class="mock">優惠與價格皆為 Mock</span>
+      <span class="mock">組隊優惠為競賽提案，非官方優惠</span>
       <div class="group-total">
         <p>{{ group.count >= 4 ? '旅伴價已解鎖' : '4 人各自購買，每人現省 NT$20' }}</p>
         <strong>{{ group.count ? 'NT$' + money(group.total) : '還沒有人購買' }}</strong>
-        <small>{{ group.count ? group.count + ' 人實付合計 · 比一般價省 NT$' + group.saving : '以每人 NT$299 為例，4 人實付 NT$1,116，合省 NT$80。' }}</small>
+        <small>{{ group.count ? group.count + ' 人實付合計 · 比一般價省 NT$' + group.saving : '以目前方案 NT$'+plan.price+' 為例，4 人提案價合計 NT$'+money((plan.price-20)*4)+'，合省 NT$80。' }}</small>
       </div>
       <div class="unlock-row">
         <div v-for="reward in [{ n: 2, text: '＋500MB' }, { n: 3, text: '30 點回饋' }, { n: 4, text: '現省 NT$20' }]" :key="reward.n" :class="{ unlocked: group.count >= reward.n }">

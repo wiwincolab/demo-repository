@@ -12,6 +12,7 @@ const help = ref(false);
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m14 5-7 7 7 7M7 12h13" /></svg>
       </NuxtLink>
       <div class="town-heading"><h1>場景積木世界</h1><p>東北亞九景 <span>日本 × 韓國</span></p></div>
+      <MascotBadge compact />
       <button class="town-help" aria-label="操作說明" @click="help = true">?</button>
     </header>
     <iframe class="town-frame" :src="`${base}demos/travel-town/index.html`" title="東北亞九景：可旋轉、縮放與切換日夜的 3D 小鎮" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox" />
