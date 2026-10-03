@@ -3,7 +3,8 @@ import trip from '~/data/atlas.json';
 import scenes from '~/data/scenes.json';
 import '~/assets/css/journey-atlas.css';
 const route = useRoute();
-const atlasMode = ref(route.query.view === 'cities' ? 'cities' : 'journey');
+const atlasMode = computed(() => route.query.view === 'cities' ? 'cities' : route.query.view === 'journey' || route.query.journey || route.query.scope ? 'journey' : 'plaza');
+useHead(() => ({ title: atlasMode.value === 'plaza' ? '回憶廣場 · Memory Atlas · 去趣' : 'Memory Atlas · 去趣' }));
 const asset = useAsset();
 const city = ref('all'), selected = ref(-1), three = ref(true), paused = ref(false), autoplay = ref(false), arrived = ref(false);
 const seen = ref<number[]>([]), sceneOpen = ref(false), sceneStyle = ref<'photo' | 'art'>('photo');
@@ -12,7 +13,8 @@ const active = computed(() => trip.stops[selected.value]);
 const scene = computed(() => scenes.find(s => s.id === selected.value));
 const collectibles = computed(() => trip.stickers.filter(s => city.value === 'all' || trip.stops[s.stop]?.city === city.value));
 let timer: ReturnType<typeof setTimeout> | undefined;
-function chooseMode(mode: string) { clearTimeout(timer); autoplay.value = false; paused.value = true; atlasMode.value = mode; }
+function chooseMode(mode: 'cities' | 'journey') { clearTimeout(timer); autoplay.value = false; paused.value = true; navigateTo({ path: '/atlas', query: { view: mode } }); }
+watch(atlasMode, () => { clearTimeout(timer); autoplay.value = false; paused.value = true; sceneOpen.value = false; });
 function visit(id: number) { clearTimeout(timer); paused.value = false; selected.value = id; arrived.value = false; sceneOpen.value = false; }
 function chooseCity(value: string) { clearTimeout(timer); autoplay.value = false; city.value = value; selected.value = -1; arrived.value = false; }
 function arrival(id: number) {
@@ -51,12 +53,16 @@ function sprite(id: number) {
 onBeforeUnmount(() => clearTimeout(timer));
 </script>
 <template>
-  <div class="atlas-mode-tabs" role="group" aria-label="回憶地圖模式">
+  <AtlasPlaza v-if="atlasMode === 'plaza'" />
+  <div v-else class="atlas-return">
+    <NuxtLink to="/atlas"><MemoryMotionIcon name="back"/>回憶樂園</NuxtLink>
+    <div class="atlas-mode-tabs" role="group" aria-label="回憶地圖模式">
     <button :aria-pressed="atlasMode === 'journey'" @click="chooseMode('journey')">旅程收藏</button>
     <button :aria-pressed="atlasMode === 'cities'" @click="chooseMode('cities')">城市漫遊</button>
+    </div>
   </div>
   <TripAtlasCollection v-if="atlasMode === 'journey'" />
-  <section v-else class="screen active atlas-page">
+  <section v-else-if="atlasMode === 'cities'" class="screen active atlas-page">
     <div class="page-heading">
       <span class="eyebrow">MEMORY ATLAS</span>
       <h1>走過的地方，<br>都有一點光。</h1>
@@ -131,4 +137,3 @@ onBeforeUnmount(() => clearTimeout(timer));
     </AppSheet>
   </section>
 </template>
-

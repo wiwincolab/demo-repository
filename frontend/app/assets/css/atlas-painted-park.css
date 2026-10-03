@@ -1,0 +1,103 @@
+/* Artwork coordinates remain fixed while the viewport pans over the park. */
+.painted-plaza{--world-width:clamp(580px,calc((100svh - 200px)*.95),760px);padding:20px 0 96px;background:#edf2e9}
+.painted-plaza .park-heading{padding:0 24px 16px;max-width:800px}
+.park-heading-actions{display:flex;gap:7px;align-items:center}
+.park-view-toggle{display:none;align-items:center;gap:5px;min-height:44px;padding:0 10px;border:1px solid #cbd9cd;border-radius:22px;background:#fffdf3;color:#3b626c;font-size:11px}
+.park-view-toggle svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round}
+.painted-plaza .lobby-viewport{width:100%;margin:0;background:#d3e4da;mask-image:linear-gradient(#000 96%,transparent);height:calc(var(--world-width)*1.12)}
+.painted-plaza .park-stage{width:var(--world-width);height:calc(var(--world-width)*1.333333);margin:-7% auto 0;isolation:isolate}
+.painted-park-image{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;user-select:none}
+.park-landmark-highlights{position:absolute;inset:0;width:100%;height:100%;z-index:2;overflow:visible;pointer-events:none}
+.park-landmark-highlights path{fill:none;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.park-landmark-highlights .park-landmark-hit{fill:#fff1bb00;pointer-events:fill;cursor:pointer;transition:fill .25s}
+.park-landmark-highlights .is-highlighted .park-landmark-hit{fill:#fff1bb26}
+.park-landmark-outline{stroke:#dba63f;stroke-width:1.6px;filter:drop-shadow(0 0 2px #ffd468)}
+.park-landmark-runner{stroke:#fff4b4;stroke-width:2.8px;stroke-dasharray:12 88;filter:drop-shadow(0 0 3px #ffc84d);animation:park-landmark-travel 8s linear infinite;animation-delay:var(--contour-delay)}
+.park-landmark-highlights .is-highlighted .park-landmark-outline{stroke:#ffe391;stroke-width:2.2px}
+@keyframes park-landmark-travel{to{stroke-dashoffset:-100}}
+.motion-paused .park-landmark-runner{animation-play-state:paused}
+.painted-plaza .park-destinations{z-index:3}
+.painted-plaza .park-zone{top:var(--zone-y);width:230px;height:150px;translate:-50% -100%;justify-content:flex-end;border-radius:36px 36px 16px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.painted-plaza .park-zone:focus-visible{outline:3px solid #ffe7a0;outline-offset:5px;background:transparent}
+/* Clear lens edge highlights leave the painted park visible underneath. */
+.painted-plaza .park-zone-label{position:relative;isolation:isolate;width:100%;min-height:66px;padding:8px 10px 8px 6px;gap:7px;justify-content:flex-start;background:transparent;border:1px solid #ffffffa6;border-radius:17px;box-shadow:0 6px 18px #173b4933;transition:box-shadow .22s,border-color .22s,translate .22s}
+.park-glass-surface{position:absolute;inset:0;z-index:-1;overflow:hidden;border-radius:inherit;background:linear-gradient(125deg,#ffffff26,#ffffff08 45%,#f2fbff18);-webkit-backdrop-filter:blur(1.5px) saturate(115%);backdrop-filter:blur(1.5px) saturate(115%);box-shadow:inset 1px 1px 1px #ffffffd9,inset -1px -1px 2px #ffffff80,inset 0 -3px 5px #28556520}
+.park-glass-surface:after{content:'';position:absolute;inset:1px;border-radius:inherit;border:1px solid transparent;border-top-color:#ffffffd9;border-bottom-color:#50706940;box-shadow:inset 0 7px 7px -7px #fff,inset 0 -6px 6px -5px #fff;pointer-events:none}
+.park-glass-sheen{position:absolute;inset:-50% 0;width:65%;opacity:0;background:linear-gradient(105deg,transparent 20%,#ffffff10 35%,#ffffffb3 49%,#ffffff30 58%,transparent 76%);rotate:12deg;pointer-events:none}
+.painted-plaza .park-art-medallion{display:grid;place-items:center;position:relative;flex:0 0 62px;width:62px;height:62px;border-radius:14px;background:none;border:0;margin-top:-21px;box-shadow:none}
+.park-art-silhouette{display:grid;place-items:center;position:relative;width:100%;aspect-ratio:1;filter:drop-shadow(0 2px 2px #24455166)}
+.painted-plaza .park-zone-art{position:relative;width:62px;height:62px;max-width:62px;filter:none}
+.park-label-copy{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0}
+.painted-plaza .park-zone-label strong{font-size:14px;letter-spacing:.015em;color:#193f4b;text-shadow:0 1px 2px #ffffffed,0 0 5px #ffffffbf}
+.painted-plaza .park-zone-caption{margin:0;font-size:10px;color:#304f53;letter-spacing:.035em;text-shadow:0 1px 2px #fffffff2,0 0 4px #ffffffcc}
+.painted-plaza .park-zone-index{color:#a98935;margin-right:4px;font-size:10px;font-weight:700}
+.painted-plaza .park-zone-arrow{margin-left:auto;display:grid;place-items:center;flex:0 0 25px;height:25px;border:1px solid #ffffffa6;border-radius:50%;background:#ffffff40;color:#345e64;box-shadow:inset 0 1px 0 #ffffff80;transition:background .2s,color .2s,translate .2s}
+.park-zone-arrow svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.park-beacon{position:absolute;left:50%;top:8px;translate:-50% 0;width:30px;height:30px;display:grid;place-items:center;filter:drop-shadow(0 2px 2px #173e4c66)}
+.park-beacon>svg{position:relative;width:25px;height:25px;fill:#fff5cd;stroke:#846930;stroke-width:1.2}
+.park-beacon>svg circle{fill:#c9a044;stroke:none}
+.park-beacon-ring{position:absolute;width:37px;height:37px;border:1.5px solid #fff1b2;border-radius:50%;opacity:0}
+.park-place-aura{position:absolute;inset:-22px 4px 18px;border-radius:45%;background:radial-gradient(ellipse,#fff7c046,transparent 68%);opacity:0;pointer-events:none;transition:opacity .3s}
+.park-beacon:after{content:'';position:absolute;top:30px;left:50%;height:43px;border-left:1px dashed #fff8dfbf;opacity:.7}
+.painted-plaza .park-zone:is(.is-highlighted,.is-selected) .park-zone-label{background:transparent;border-color:#fff1bb;box-shadow:0 0 12px #f4c64e20,0 10px 24px #173b4940;translate:0 -3px}
+.painted-plaza .park-zone:is(.is-highlighted,.is-selected) .park-place-aura{opacity:1}
+.painted-plaza .park-zone:is(.is-highlighted,.is-selected) .park-zone-arrow{background:#285867;color:white;border-color:#285867;translate:2px 0}
+.painted-plaza .park-zone:active .park-zone-label{translate:0 1px;box-shadow:inset 0 1px 0 #ffffffbf,0 3px 9px #173b4929}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.painted-plaza .park-glass-surface{background:#f5f8eee8}}
+.park-water-light{position:absolute;inset:0;pointer-events:none;z-index:1}
+.park-water-light i{position:absolute;left:44%;top:39%;width:5%;height:2px;background:#fff5ce;border-radius:50%;opacity:0;animation:park-water-glint 6s ease-in-out infinite;rotate:-9deg}
+.park-water-light i:nth-child(2){left:48%;top:45%;width:3%;animation-delay:2s}
+.park-water-light i:nth-child(3){left:41%;top:53%;width:4%;animation-delay:4s}
+@keyframes park-water-glint{0%,55%,100%{opacity:0;transform:translateX(-3px)}75%{opacity:.65;transform:translateX(3px)}}
+.motion-paused .park-water-light i{animation-play-state:paused;opacity:0}
+.painted-plaza .lobby-pan-controls{margin:10px auto 0;gap:18px}
+.painted-plaza .park-footnote{margin-top:7px}
+@media(min-width:800px){
+ .painted-plaza{--world-width:clamp(480px,calc((100svh - 200px)*.82),760px);background:linear-gradient(90deg,#e8eee5,#f6f5e8 50%,#e8eee5)}
+ .painted-plaza .lobby-viewport{width:var(--world-width);max-width:100%;margin:0 auto;border-radius:24px;background:none}
+ .painted-plaza .park-stage{margin-top:calc(var(--world-width)*-.07)}
+ .painted-plaza .park-heading{max-width:var(--world-width);padding-inline:4px}
+ .painted-plaza .park-zone{width:210px}
+ .painted-plaza .park-art-medallion{flex-basis:54px;width:54px;height:58px}
+ .painted-plaza .park-zone-art{width:54px;height:54px}
+ .painted-plaza .park-zone-label strong{font-size:12px}
+}
+@media(max-width:620px){
+ .painted-plaza{padding:18px 0 90px}
+ .painted-plaza .park-heading{padding:0 20px 16px}
+ .park-heading-actions{flex-direction:column-reverse;align-items:flex-end;gap:4px}
+ .park-heading-actions .park-motion{width:32px;height:32px;min-height:32px;font-size:14px}
+ .park-view-toggle{display:flex;min-height:36px;padding-inline:8px;font-size:10px}
+ .painted-plaza .park-stage{margin-top:-42px}
+ .painted-plaza .park-zone{width:202px;height:137px}
+ .painted-plaza .park-zone-label{gap:6px;padding:6px 8px 6px 5px;min-height:61px}
+ .painted-plaza .park-art-medallion{flex-basis:52px;width:52px;height:56px;border-radius:12px;margin-top:-17px}
+ .painted-plaza .park-zone-art{width:52px;height:52px;max-width:52px}
+ .painted-plaza .park-zone-label strong{font-size:12px}
+ .painted-plaza .park-zone-caption{font-size:9px}
+ .painted-plaza .park-zone-arrow{flex-basis:23px;height:23px}
+ .painted-plaza .park-zone-index{font-size:9px}
+ .painted-plaza .park-beacon{top:7px}
+ .painted-plaza .lobby-pan-guide{width:166px}
+}
+/* Start with all four destinations visible. Close view is a deliberate, reversible action. */
+@media(max-width:620px){
+ .painted-plaza:not(.is-close-view) .lobby-viewport{height:auto;aspect-ratio:3/4;mask-image:none}
+ .painted-plaza:not(.is-close-view) .park-stage{width:100%;height:auto;aspect-ratio:3/4;margin:0}
+ .painted-plaza:not(.is-close-view) .park-zone{width:154px;height:100px}
+ .painted-plaza:not(.is-close-view) .park-zone-label{min-height:50px;padding:4px 5px;gap:4px;border-radius:13px}
+ .painted-plaza:not(.is-close-view) .park-art-medallion{flex-basis:39px;width:39px;height:43px;margin-top:-15px;border-radius:9px}
+ .painted-plaza:not(.is-close-view) .park-zone-art{width:39px;height:39px}
+ .painted-plaza:not(.is-close-view) .park-zone-label strong{font-size:10px;letter-spacing:0}
+ .painted-plaza:not(.is-close-view) .park-zone-caption{font-size:8px;letter-spacing:0}
+ .painted-plaza:not(.is-close-view) .park-zone-index{font-size:8px;margin-right:1px}
+ .painted-plaza:not(.is-close-view) .park-zone-arrow{flex-basis:18px;height:18px}
+ .painted-plaza:not(.is-close-view) .park-zone-arrow svg{width:11px;height:11px}
+ .painted-plaza:not(.is-close-view) .park-beacon{top:4px;width:23px;height:23px}
+ .painted-plaza:not(.is-close-view) .park-beacon:after{height:17px;top:25px}
+ .painted-plaza:not(.is-close-view) .park-beacon>svg{width:21px;height:21px}
+ .painted-plaza:not(.is-close-view) .park-footnote{margin-top:14px;font-size:10px}
+}
+@media(max-width:360px){.painted-plaza:not(.is-close-view) .park-zone{width:137px}.painted-plaza:not(.is-close-view) .park-art-medallion{flex-basis:32px;width:32px;height:38px}.painted-plaza:not(.is-close-view) .park-zone-art{width:32px;height:32px}.painted-plaza:not(.is-close-view) .park-zone-label{gap:3px}}
+
+@media(prefers-reduced-motion:reduce){.park-water-light i{animation:none;opacity:0}.park-landmark-runner{animation:none}.park-glass-sheen{display:none}}

@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-03",
+  "generator": "builtin image_gen",
+  "purpose": "回憶廣場獨立環境裝飾；搭配既有 v3 四入口，不替換主圖",
+  "transparent_background": true,
+  "assets": [
+    {
+      "id": "lakeside-bridge",
+      "prompt": "Create ONE isolated environment prop for the same illustrated travel park as the attached style reference. Match its fine dark navy ink, architectural travel-journal drawing, restrained screen-printed cyan, porcelain cream, ochre and dusty sage, subtle paper grain WITHIN objects only. Axonometric three-quarter view from above, thin elegant outlines, sophisticated handcrafted detail that reads at 120px. No clay, no glossy 3D, no kawaii faces, no floating rectangular tile, no frame, no writing, no letters, no UI. TRUE TRANSPARENT background. Compact composition tightly framed with just 6% clear margin. No cast shadow extending beyond composition. Do not reproduce reference buildings or mountain. Subject: a low elegant cream stone arched pedestrian bridge crossing a short narrow cyan stream, navy-blue metal handrails and a single ochre lantern at each end, few reeds and rounded stones nestling at either end. Broad horizontal silhouette, simple one arch, carefully drawn curved paving. A small environmental connection, not a grand landmark. Landscape 3:2.",
+      "source": "C:\\Users\\scott\\.codex\\generated_images\\01a06564-2da6-7ea0-b469-462e61fad4d4\\exec-fc78210c-e44f-45b1-80f5-0fd4eca1f78c.png",
+      "file": "lakeside-bridge.png",
+      "reference": "../v3/town.png"
+    },
+    {
+      "id": "shaded-bench",
+      "prompt": "Create ONE isolated environment prop for the same illustrated travel park as the attached style reference. Match its fine dark navy ink, architectural travel-journal drawing, restrained screen-printed cyan, porcelain cream, ochre and dusty sage, subtle paper grain WITHIN objects only. Axonometric three-quarter view from above, thin elegant outlines, sophisticated handcrafted detail that reads at 120px. No clay, no glossy 3D, no kawaii faces, no floating rectangular tile, no frame, no writing, no letters, no UI. TRUE TRANSPARENT background. Compact composition tightly framed with just 6% clear margin. No cast shadow extending beyond composition. Do not reproduce reference buildings or mountain. Subject: a quiet park resting spot. One sculptural medium-height leafy gingko tree in sage green, underneath a finely drawn wooden slat bench, a small turquoise travel backpack resting on one end, cream stepping stones and low groundcover. A cohesive intimate vignette with roots planted into an irregular tiny grassy patch. No person. Landscape 4:3.",
+      "source": "C:\\Users\\scott\\.codex\\generated_images\\01a06564-2da6-7ea0-b469-462e61fad4d4\\exec-b8f10467-44a4-442a-ab04-594887a53f5d.png",
+      "file": "shaded-bench.png",
+      "reference": "../v3/town.png"
+    },
+    {
+      "id": "travel-kiosk",
+      "prompt": "Create ONE isolated environment prop for the same illustrated travel park as the attached style reference. Match its fine dark navy ink, architectural travel-journal drawing, restrained screen-printed cyan, porcelain cream, ochre and dusty sage, subtle paper grain WITHIN objects only. Axonometric three-quarter view from above, thin elegant outlines, sophisticated handcrafted detail that reads at 120px. No clay, no glossy 3D, no kawaii faces, no floating rectangular tile, no frame, no writing, no letters, no UI. TRUE TRANSPARENT background. Compact composition tightly framed with just 6% clear margin. No cast shadow extending beyond composition. Do not reproduce reference buildings or mountain. Subject: a small open-sided travel park refreshment kiosk, light cream timber, cyan striped fabric awning, warm ochre trim, a coffee cup on counter, one tiny stool and two terracotta pots with leaves. Low compact shop silhouette, no signboard text or logos, no large building roof. Irregular small ground patch only. Three-quarter view landscape 4:3.",
+      "source": "C:\\Users\\scott\\.codex\\generated_images\\01a06564-2da6-7ea0-b469-462e61fad4d4\\exec-164f85f1-dbb3-452e-bd4c-edf5480dae4b.png",
+      "file": "travel-kiosk.png",
+      "reference": "../v3/town.png"
+    },
+    {
+      "id": "welcome-arbor",
+      "prompt": "Create ONE isolated environment prop for the same illustrated travel park as the attached style reference. Match its fine dark navy ink, architectural travel-journal drawing, restrained screen-printed cyan, porcelain cream, ochre and dusty sage, subtle paper grain WITHIN objects only. Axonometric three-quarter view from above, thin elegant outlines, sophisticated handcrafted detail that reads at 120px. No clay, no glossy 3D, no kawaii faces, no floating rectangular tile, no frame, no writing, no letters, no UI. TRUE TRANSPARENT background. Compact composition tightly framed with just 6% clear margin. No cast shadow extending beyond composition. Do not reproduce reference buildings or mountain. Subject: a simple wide pedestrian entrance arbor for a sophisticated illustrated park. Two slim cream timber posts supporting a gently arched beam, sparse climbing leafy vines on the sides, three little blue and ochre pennants hanging from the upper beam. Open empty walk-through center with visible transparency; tiny hydrangea beds around both feet. No doors, no signboard, no text. Landscape 4:3.",
+      "source": "C:\\Users\\scott\\.codex\\generated_images\\01a06564-2da6-7ea0-b469-462e61fad4d4\\exec-0510c88a-b7a1-44f3-ab62-f46888f56c50.png",
+      "file": "welcome-arbor.png",
+      "reference": "../v3/town.png"
+    },
+    {
+      "id": "garden-wayfinder",
+      "prompt": "Create ONE isolated environment prop for the same illustrated travel park as the attached style reference. Match its fine dark navy ink, architectural travel-journal drawing, restrained screen-printed cyan, porcelain cream, ochre and dusty sage, subtle paper grain WITHIN objects only. Axonometric three-quarter view from above, thin elegant outlines, sophisticated handcrafted detail that reads at 120px. No clay, no glossy 3D, no kawaii faces, no floating rectangular tile, no frame, no writing, no letters, no UI. TRUE TRANSPARENT background. Compact composition tightly framed with just 6% clear margin. No cast shadow extending beyond composition. Do not reproduce reference buildings or mountain. Subject: a small handcrafted park wayfinding post: three slim directional arrow boards in cream, cyan and ochre with NO LETTERS OR TEXT, a little brass compass medallion, flanked by a low flowering sage-green garden bed and two small natural stones, one short cylindrical navy garden lantern. A simple refined environmental prop. No characters, no framed map. Landscape 4:3.",
+      "source": "C:\\Users\\scott\\.codex\\generated_images\\01a06564-2da6-7ea0-b469-462e61fad4d4\\exec-193d54f2-dd24-4c7c-8f03-bb505c068b62.png",
+      "file": "garden-wayfinder.png",
+      "reference": "../v3/town.png"
+    }
+  ]
+}

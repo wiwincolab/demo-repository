@@ -13,6 +13,7 @@ export interface Stop {
     time: string;
     stay: string;
     note: string;
+    transit?: string;
     range: number[];
     photo: {
         src: string;
@@ -27,5 +28,7 @@ export interface Stop {
 export interface TripDay {
     area: string;
     english: string;
+    lodging?: string;
+    transport?: string;
     stops: Stop[];
 }

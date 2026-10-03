@@ -3,7 +3,7 @@
 const route = useRoute();
 onMounted(() => {
     const target = route.hash.slice(1);
-    navigateTo(['trip', 'esim', 'memory', 'proposal', 'atlas'].includes(target) ? { path: `/${target}`, query: route.query } : '/trips', { replace: true });
+    navigateTo(['trip', 'esim', 'memory', 'atlas'].includes(target) ? { path: `/${target}`, query: route.query } : '/trips', { replace: true });
 });
 </script>
 <template>

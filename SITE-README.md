@@ -1,5 +1,7 @@
 # chicTrip eSIM 提案展示
 
+> 歷史版本說明：自 2026-10-03 起，GitHub Pages 改為建置 `frontend/` 的 Nuxt 版本。以下是舊靜態站的原始結構與操作記錄，不代表現行部署。新版請看 `frontend/README.md`。
+
 此為站點主內容（原 `lagacy/` 目錄已升為 repository 根目錄部署）。
 
 ## 入口

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { journeyStops } from '~/data/journey';
 import { tripSummaries, isTripId, type TripId } from '~/data/trips';
 import { styleById, type CreationWork } from '~/data/creation';
 import '~/assets/css/creation.css';
@@ -17,7 +18,7 @@ const periodTrips = computed(() => tripSummaries.filter(trip => trip.status === 
 const recapOpen = ref(false), recapTripIds = ref<TripId[]>([]), recapTitle = ref('');
 function setScope(value: 'trip' | 'period') {
   const { scope: previous, period: previousPeriod, ...query } = route.query;
-  router.replace({ query: { ...query, ...(value === 'period' ? { scope: 'period', period: 'year' } : {}) } });
+  router.replace({ query: { ...query, view: 'journey', ...(value === 'period' ? { scope: 'period', period: 'year' } : {}) } });
 }
 function setPeriod(value: 'year' | 'half') { router.replace({ query: { ...route.query, scope: 'period', period: value } }); }
 function startRecap(id?: TripId) {
@@ -25,10 +26,10 @@ function startRecap(id?: TripId) {
   recapTitle.value = id ? (tripSummaries.find(trip => trip.id === id)?.title || '旅行回顧') : period.value === 'half' ? '2026 上半年回顧' : '2026 旅行回顧';
   recapOpen.value = true;
 }
-function count(id: TripId) { return allWorks.value.filter(work => work.tripId === id).length + (id === 'kansai' ? 3 + Number(state.value.usjSaved) + Number(state.value.friendAccepted) : 0); }
+function count(id: TripId) { return allWorks.value.filter(work => work.tripId === id).length + (id === 'kansai' ? journeyStops.length - 1 + Number(state.value.usjSaved) + Number(state.value.friendAccepted) : 0); }
 function browse(id: TripId | null) {
   const { stop, journey, scope: previousScope, period: previousPeriod, ...query } = route.query;
-  router.replace({ query: { ...query, ...(id ? { journey: id } : {}) } });
+  router.replace({ query: { ...query, view: 'journey', ...(id ? { journey: id } : {}) } });
 }
 function open(work: CreationWork) { detail.value = work; original.value = false; detailOpen.value = true; }
 function create(id: TripId) { selectTrip(id); navigateTo({ path: '/memory', query: { trip: id } }); }

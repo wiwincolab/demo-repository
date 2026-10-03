@@ -22,10 +22,10 @@ watch(() => route.query.stop, value => { if (stops.some(s => s.id === value)) ch
 <template>
   <div class="journey-atlas">
     <header class="journey-header">
-      <div><span class="journey-eyebrow">MEMORY ATLAS / 2026</span><h1>關西旅行<span>日本</span></h1><p>2026.04.03 — 04.07 <i /> 四個地方，四種留下回憶的方式。</p></div>
+      <div><span class="journey-eyebrow">MEMORY ATLAS / 2026</span><h1>關西旅行<span>日本</span></h1><p>2026.04.03 — 04.07 <i /> 從神戶到海之京都，再回到大阪。</p></div>
       <button class="journey-recap-button" @click="emit('recap')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="5" width="18" height="15" rx="3"/><path d="M7 3v4m10-4v4M3 10h18m-12 3 5 2.5-5 2.5z"/></svg><span>重走這一趟<small>關西 · 5 天</small></span><span aria-hidden="true">↗</span></button>
     </header>
-    <div class="journey-context"><span class="journey-travelers"><i>S</i><i>J</i><i>B</i></span><span>與 James、Betty 同行</span><span class="journey-context-count"><b>{{ savedCount }}</b> 件創作 <span>·</span> {{ stops.length }} 個地點</span></div>
+    <div class="journey-context"><span class="journey-travelers"><i>S</i><i>J</i><i>B</i></span><span>與 James、Betty 同行</span><span class="journey-context-count"><b>{{ savedCount }}</b> 件照片與收藏 <span>·</span> {{ stops.length }} 個地點</span></div>
     <div class="journey-workspace">
       <div class="journey-map-column">
         <ClientOnly><JourneyCollectionMap :selected="selected" @select="choose"/><template #fallback><div class="journey-map journey-map-wait">正在打開旅行地圖…</div></template></ClientOnly>
@@ -54,6 +54,7 @@ watch(() => route.query.stop, value => { if (stops.some(s => s.id === value)) ch
         <div class="journey-detail-art" :class="['journey-format-' + active.format, { 'is-source': showOriginal }]"><Transition name="journey-stop" mode="out-in"><img :key="String(showOriginal)" :src="asset(showOriginal ? active.source : active.image)" :alt="active.name + (showOriginal ? (active.id === 'nara' ? '示範照片' : '原照片') : active.formatLabel)"></Transition></div>
         <div class="journey-detail-caption"><span class="journey-eyebrow">{{ active.date }} · {{ active.location }}</span><h3>{{ active.name }}</h3><p>{{ active.caption }}</p></div>
         <p v-if="active.id === 'dotonbori'" class="creation-muted">示範旅程攝影 · <a href="https://commons.wikimedia.org/wiki/File:Osaka_Dotonbori_Ebisu_Bridge.jpg" target="_blank" rel="noopener noreferrer">Type specimen · CC BY-SA 3.0</a></p>
+        <p v-if="active.source.startsWith('assets/photos/kansai/')" class="creation-muted">景點實景參考 · <a href="https://www.besttour.com.tw/itinerary/OSA05BR270104ES" target="_blank" rel="noopener">喜鴻假期／原攝影著作權人</a></p>
         <div class="journey-provenance"><span class="journey-owner-avatar">S</span><div><b>Scott 的旅行收藏</b><small>關西旅行 · {{ active.short }} · {{ active.formatLabel }}<br>{{ active.id === 'nara' ? '奈良照片與貼紙為 AI 示意素材，用於展示不同形式的收藏。' : '這件作品與原照片保存在同一站。' }}</small></div></div>
       </div>
     </CreationDialog>

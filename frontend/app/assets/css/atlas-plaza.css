@@ -1,0 +1,94 @@
+/* An explorable lobby, with independently rendered facilities and a travelling avatar. */
+body:has(.plaza-shell){padding:0}
+.app-shell.journey-shell.plaza-shell{max-width:1160px;margin:0 auto;border-radius:0;min-height:100svh}
+.plaza-shell main{padding-bottom:0}
+.atlas-plaza{--park-ink:#244551;position:relative;isolation:isolate;overflow:hidden;min-height:calc(100svh - 64px);padding:24px 22px 90px;color:var(--park-ink);background:radial-gradient(ellipse at 50% 25%,#f3f7e9 0%,#e1eff0 65%,#cadddf 100%)}
+.park-heading{position:relative;z-index:3;display:flex;align-items:flex-start;justify-content:space-between;max-width:860px;margin:0 auto}
+.park-eyebrow{font-size:10px;font-weight:700;letter-spacing:.2em;color:#48828c}
+.park-heading h1{display:flex;align-items:center;gap:10px;font-size:30px;letter-spacing:.04em;line-height:1.3;margin:6px 0}
+.park-title-dot{width:7px;height:7px;border-radius:50%;background:#d6b34c;align-self:flex-end;margin-bottom:8px}
+.park-heading p{font-size:12px;line-height:1.6;color:#617c7d;margin:0}
+.park-motion{display:grid;place-items:center;border:1px solid #c2d6d4;border-radius:50%;background:#fbfff8b3;width:44px;height:44px;color:#287d9e;flex-shrink:0;font-size:18px}
+.park-motion:disabled{opacity:.6}
+.lobby-viewport{position:relative;width:calc(100% + 44px);margin:0 -22px;isolation:isolate;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-x:contain;touch-action:pan-x pan-y;cursor:grab}
+.lobby-viewport::-webkit-scrollbar{display:none}
+.lobby-viewport.is-dragging{cursor:grabbing;user-select:none}
+.lobby-viewport:focus-visible{outline:2px solid #3c8b9b;outline-offset:-3px}
+.park-stage{--precinct-scale:1;--stage-height:clamp(440px,calc(100svh - 340px),620px);margin-top:calc(305px - var(--stage-height)*.4)}
+.park-stage{position:relative;width:1280px;height:clamp(440px,calc(100svh - 340px),620px);transform-origin:50% 48%;flex-shrink:0}
+.lobby-floor{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.lobby-pad-light{opacity:0;transition:opacity .2s}
+.lobby-pad.is-lit .lobby-pad-light{opacity:1}
+.lobby-cloud{position:absolute;width:150px;height:30px;background:#ffffff70;border-radius:50%;filter:blur(5px);pointer-events:none;z-index:-1}
+.lobby-cloud:before{content:'';position:absolute;left:30px;bottom:5px;width:70px;height:40px;border-radius:50%;background:inherit}
+.lobby-cloud-one{left:-6%;top:32%}.lobby-cloud-two{right:-4%;bottom:12%;width:190px;opacity:.6}
+.park-destinations{position:absolute;inset:0;z-index:2;pointer-events:none}
+.park-zone{position:absolute;left:var(--zone-x);top:var(--zone-y);translate:-50% -50%;width:230px;height:38%;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:22px;color:var(--park-ink);background:none}
+.park-zone{pointer-events:auto}
+.park-zone{top:calc(var(--zone-y) - var(--zone-lift) * var(--precinct-scale))}
+.park-zone:active:not(:disabled){transform:none}
+.park-zone:focus-visible{outline:2px solid #328c9d;outline-offset:2px;background:#ffffff25}
+.park-art-ground{position:absolute;bottom:30%;width:55%;height:10%;border-radius:50%;background:#507b78;opacity:.1;filter:blur(4px)}
+.park-zone-art{position:relative;display:block;width:clamp(136px,18vw,190px);height:clamp(136px,18vw,190px);object-fit:contain;max-width:100%;user-select:none;pointer-events:none;transform-origin:50% 80%;z-index:1;filter:drop-shadow(0 6px 2px #38555419)}
+.park-art-fallback{display:grid;place-items:center;height:150px;width:150px;color:#54849a}
+.park-zone-label{display:flex;align-items:center;justify-content:center;gap:7px;position:relative;z-index:2;white-space:nowrap;padding:8px 12px 7px;border:1px solid #b1bda6;border-bottom:3px solid #9fab97;border-radius:8px;background:#fff9e9;box-shadow:0 4px 7px #3b686618}
+.park-zone-label strong{font-size:15px;font-weight:700;letter-spacing:.02em}
+.park-zone-index{font-size:10px;color:#a68e48;font-family:Georgia,serif}
+.park-zone-arrow{font-size:13px;color:#377f8d}
+.park-zone-caption{font-size:10px;letter-spacing:.06em;color:#527478;margin-top:5px;position:relative;z-index:2}
+.park-zone.is-selected .park-zone-label{background:#fff1bf;border-color:#c3a147}
+.lobby-actor{position:absolute;left:50%;top:51%;width:68px;height:78px;transform:translate(-50%,-88%);z-index:4;pointer-events:none}
+.lobby-actor-body{position:relative;width:100%;height:100%;filter:drop-shadow(1px 3px 0 #42646b33)}
+.lobby-actor-shadow{position:absolute;bottom:0;left:15%;width:75%;height:14%;border-radius:50%;background:#486961;opacity:.23;filter:blur(2px)}
+.lobby-actor-caption{position:absolute;top:-26px;left:50%;transform:translateX(-50%);white-space:nowrap;background:#fffdf5;border:1px solid #c7d6c7;padding:5px 10px;border-radius:9px;font-size:10px;box-shadow:0 3px 8px #365b6c12}
+.lobby-actor-caption:after{content:'';position:absolute;bottom:-4px;left:46%;width:6px;height:6px;transform:rotate(45deg);background:#fffdf5;border-right:1px solid #c7d6c7;border-bottom:1px solid #c7d6c7}
+.lobby-actor.is-walking .lobby-actor-body{animation:lobby-step .14s ease-in-out infinite alternate}
+@keyframes lobby-step{to{translate:0 -4px;rotate:3deg}}
+.park-footnote{position:relative;z-index:3;display:flex;justify-content:center;align-items:center;gap:8px;color:#526e75;font-size:11px;line-height:1.7;margin:6px auto 0;padding:0 12px;width:fit-content;max-width:100%}
+.lobby-pan-controls{display:flex;align-items:center;justify-content:center;gap:18px;position:relative;z-index:3;margin:-6px auto 0}
+.lobby-pan-controls>button{width:44px;height:44px;display:grid;place-items:center;background:#fffdf3;border:1px solid #b9cebd;border-radius:50%;color:#327184;font-size:20px}
+.lobby-pan-controls>button:disabled{opacity:.35;cursor:default}
+.lobby-pan-guide{width:180px;text-align:center;font-size:11px;color:#426e71}
+.lobby-pan-track{height:4px;background:#b4cdca;margin-top:9px;border-radius:5px;position:relative}
+.lobby-pan-track>span{position:absolute;top:0;width:24%;height:4px;border-radius:5px;background:#4a8b94}
+.lobby-status-dot{width:6px;height:6px;border-radius:50%;background:#3491a3}
+.park-dialog{position:fixed;inset:0;margin:auto;width:min(400px,calc(100vw - 36px));max-height:calc(100dvh - 32px);padding:0;border:1px solid #dcebf1;border-radius:24px;background:#fff;color:var(--park-ink);overflow:auto;box-shadow:0 24px 80px #163c4c30;overscroll-behavior:contain}
+.park-dialog::backdrop{background:#1d3d4b55;backdrop-filter:blur(2px)}
+.park-dialog-art{height:190px;display:grid;place-items:center;background:#f4f5ef;border-bottom:1px solid #e5e9e4}
+.park-dialog-illustration{width:185px;height:185px;object-fit:contain}
+.park-dialog-close{position:absolute;right:12px;top:12px;width:44px;height:44px;background:#ffffffed;border:1px solid #dbeaf1;border-radius:50%;display:grid;place-items:center;color:#4c7483}
+.park-dialog-copy{padding:23px 26px 26px}
+.park-dialog-eyebrow{font-size:11px;color:#4293ae}
+.park-dialog-copy h2{font-size:25px;margin:7px 0 17px;letter-spacing:.015em}
+.park-dialog-copy h3{font-size:14px;margin:0 0 9px;line-height:1.5}
+.park-dialog-copy>p{font-size:13px;color:#71858d;line-height:1.9}
+.park-zone-tags{display:flex;gap:6px;flex-wrap:wrap;margin:17px 0 23px}
+.park-zone-tags span{padding:5px 9px;border-radius:6px;font-size:10px;color:#628491;background:#f0f7fa}
+.park-enter{display:flex;justify-content:space-between;align-items:center;border-radius:12px;background:#008cbe;color:#fff;font-size:13px;font-weight:650;min-height:48px;padding:0 18px}
+.park-enter:hover{background:#007bab}
+.park-coming{padding-top:17px;border-top:1px solid #e6eef2}
+.park-coming>span{font-size:10px;color:#876c2d;background:#fff5d6;padding:5px 9px;border-radius:6px}
+.park-coming p{font-size:11px;color:#778b94;margin:14px 0}
+.park-coming button{width:100%;min-height:46px;display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:650;background:#eef7fb;border-radius:10px;padding:0 14px;color:#337f9b}
+.atlas-return{display:flex;align-items:center;gap:10px;padding:16px 28px 0}
+.atlas-return>a{display:flex;gap:7px;align-items:center;font-size:12px;min-height:44px;color:#397788}
+.atlas-return .atlas-mode-tabs{margin:0 0 0 auto}
+@media(max-width:620px){
+.atlas-plaza{padding:18px 9px 92px}
+.park-heading{padding:0 12px}.park-eyebrow{font-size:9px}.park-heading h1{font-size:26px}.park-heading p{font-size:11px}
+.lobby-viewport{width:calc(100% + 18px);margin:0 -9px}
+.park-stage{height:clamp(400px,calc(100svh - 365px),520px);width:720px;margin-top:12px}
+.park-zone{width:170px;height:36%}.park-zone-art{width:136px;height:136px}
+.park-zone-label{gap:4px;padding:7px 7px 6px}.park-zone-label strong{font-size:12px;letter-spacing:0}.park-zone-index{font-size:9px}.park-zone-arrow{font-size:11px}
+.park-zone-caption{font-size:9px;margin-top:4px}.lobby-actor{width:53px;height:64px}.lobby-actor-caption{font-size:9px;top:-23px;padding:4px 8px}
+.park-footnote{font-size:10px;margin-top:6px;padding:0 8px}
+.park-dialog{margin:auto 10px max(10px,env(safe-area-inset-bottom));width:calc(100vw - 20px);max-height:calc(100dvh - 24px);border-radius:23px}
+.park-dialog-art{height:150px}.park-dialog-illustration{width:150px;height:150px}.park-dialog-copy{padding:18px 23px 24px}.park-dialog-copy h2{font-size:23px;margin-bottom:13px}.park-zone-tags{margin:14px 0 18px}
+.atlas-return{padding:10px 15px 0;gap:4px}.atlas-return>a{font-size:11px}.atlas-return .atlas-mode-tabs button{padding:7px 10px;font-size:11px}
+}
+@media(max-width:360px){.park-zone-art{width:116px;height:116px}.park-zone-label strong{font-size:11px}.park-zone-label{padding-inline:5px;gap:3px}.park-stage{height:380px;width:650px}.lobby-actor{width:43px;height:53px}}
+@media(prefers-reduced-motion:reduce){.atlas-plaza *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* Match elevation to the fixed illustration widths; leave room above the hilltop. */
+@media(max-width:620px){.park-stage{--precinct-scale:.7090909;margin-top:44px}}
+@media(max-width:360px){.park-stage{--precinct-scale:.6363636;margin-top:42px}}

@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-03",
+  "generator": "builtin image_gen",
+  "purpose": "四區主題園景；主入口 v3 圖像維持獨立圖層及原尺寸",
+  "assets": [
+    {
+      "id": "cities-garden",
+      "prompt": "Create one WIDE landscape 3:2 modular LANDSCAPED PRECINCT BACKDROP for a handcrafted illustrated theme-park map. Use attached image only to match refined fine navy ink lines, cream stone, cyan, sage, ochre restrained screenprinted paper grain, isometric three-quarter architectural travel journal style. True transparent surrounding background. The composition is a shallow open horseshoe courtyard: decorative scenery around REAR and SIDES, broad empty cream stone clearing in the CENTER/FRONT for a separately layered main attraction icon and UI label. Center must stay empty and calm, no central building. Fine understated low peripheral structures with a few trees. Footprint irregular organically rounded, not rectangular tile, no thick toy pedestal. No text, numbers, UI, frames, characters, no glossy plastic, no candy colors. Keep every element inside image margin and ground-level elements visually connected. The backdrop will be small and secondary to a main illustration. Theme TRAVEL DEPARTURE GARDEN. Rear left a slender navy departure clock with cream circular face, rear right three cypress trees and a compact blue globe sculpture on a low stone plinth. Low ivory curved balustrade, cyan ceramic compass tiles at front edge, two tiny travel trunks and hydrangea beds at side corners. Gentle maritime blue and sage. Do not include an airplane or castle. Keep the central 55% clear cream paved ground.",
+      "source": "C:\\Users\\scott\\.codex\\generated_images\\01a06564-2da6-7ea0-b469-462e61fad4d4\\exec-f65dd3e7-b51b-4da5-871b-0e778cd20501.png",
+      "file": "cities-garden.png",
+      "reference": "../v3/town.png"
+    },
+    {
+      "id": "town-garden",
+      "prompt": "Create one WIDE landscape 3:2 modular LANDSCAPED PRECINCT BACKDROP for a handcrafted illustrated theme-park map. Use attached image only to match refined fine navy ink lines, cream stone, cyan, sage, ochre restrained screenprinted paper grain, isometric three-quarter architectural travel journal style. True transparent surrounding background. The composition is a shallow open horseshoe courtyard: decorative scenery around REAR and SIDES, broad empty cream stone clearing in the CENTER/FRONT for a separately layered main attraction icon and UI label. Center must stay empty and calm, no central building. Fine understated low peripheral structures with a few trees. Footprint irregular organically rounded, not rectangular tile, no thick toy pedestal. No text, numbers, UI, frames, characters, no glossy plastic, no candy colors. Keep every element inside image margin and ground-level elements visually connected. The backdrop will be small and secondary to a main illustration. Theme LANDSCAPE MODEL-MAKING GARDEN. Back perimeter a low terraced green hillside with two carefully shaped pine trees, a narrow turquoise stream running along the rear-right and a very small timber footbridge. Side corner a nursery bench with tiny potted saplings and wooden supply crates. Sage and moss-green emphasis, cream stone low retaining walls. No mountain, no house, no pavilion: main architecture will be layered separately. Keep central 55% clear cream paved ground.",
+      "source": "C:\\Users\\scott\\.codex\\generated_images\\01a06564-2da6-7ea0-b469-462e61fad4d4\\exec-8ef29d61-62b6-4117-8c68-bd0c01d18a58.png",
+      "file": "town-garden.png",
+      "reference": "../v3/town.png"
+    },
+    {
+      "id": "collection-garden",
+      "prompt": "Create one WIDE landscape 3:2 modular LANDSCAPED PRECINCT BACKDROP for a handcrafted illustrated theme-park map. Use attached image only to match refined fine navy ink lines, cream stone, cyan, sage, ochre restrained screenprinted paper grain, isometric three-quarter architectural travel journal style. True transparent surrounding background. The composition is a shallow open horseshoe courtyard: decorative scenery around REAR and SIDES, broad empty cream stone clearing in the CENTER/FRONT for a separately layered main attraction icon and UI label. Center must stay empty and calm, no central building. Fine understated low peripheral structures with a few trees. Footprint irregular organically rounded, not rectangular tile, no thick toy pedestal. No text, numbers, UI, frames, characters, no glossy plastic, no candy colors. Keep every element inside image margin and ground-level elements visually connected. The backdrop will be small and secondary to a main illustration. Theme TRAVEL COLLECTION READING GARDEN. Back-left a delicate timber pergola covered lightly in sage vines, with a little wooden reading bench below. Back-right a low glass-front miniature library cabinet with a few colorful book spines, surrounded by cream daisies. Low curved limestone flowerbed along rear, ochre and muted amber touches, a tiny blue postbox on a side corner. No giant book or album in center. Keep central 55% clear cream paved ground.",
+      "source": "C:\\Users\\scott\\.codex\\generated_images\\01a06564-2da6-7ea0-b469-462e61fad4d4\\exec-41cb71ab-3ce0-438f-ba68-656d1342c518.png",
+      "file": "collection-garden.png",
+      "reference": "../v3/town.png"
+    },
+    {
+      "id": "wardrobe-garden",
+      "prompt": "Create one WIDE landscape 3:2 modular LANDSCAPED PRECINCT BACKDROP for a handcrafted illustrated theme-park map. Use attached image only to match refined fine navy ink lines, cream stone, cyan, sage, ochre restrained screenprinted paper grain, isometric three-quarter architectural travel journal style. True transparent surrounding background. The composition is a shallow open horseshoe courtyard: decorative scenery around REAR and SIDES, broad empty cream stone clearing in the CENTER/FRONT for a separately layered main attraction icon and UI label. Center must stay empty and calm, no central building. Fine understated low peripheral structures with a few trees. Footprint irregular organically rounded, not rectangular tile, no thick toy pedestal. No text, numbers, UI, frames, characters, no glossy plastic, no candy colors. Keep every element inside image margin and ground-level elements visually connected. The backdrop will be small and secondary to a main illustration. Theme TRAVEL COMPANION ATELIER GARDEN. At back-left a petite open timber workshop canopy with understated indigo and cream striped fabric awning; at back-right a slim wooden screen carrying only two little cyan/ochre fabric pennants, with tall pots of herbs. Low cream stone curved wall, very sparing dusty lavender flowers, a little folded textile basket and a travel trunk at side. No mascot or character, no freestanding mirror or clothes rack in center. Keep central 55% clear cream paved ground.",
+      "source": "C:\\Users\\scott\\.codex\\generated_images\\01a06564-2da6-7ea0-b469-462e61fad4d4\\exec-724b61f6-233e-4a7c-a310-c49fd9892455.png",
+      "file": "wardrobe-garden.png",
+      "reference": "../v3/town.png"
+    }
+  ]
+}

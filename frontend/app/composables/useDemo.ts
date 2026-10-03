@@ -1,8 +1,9 @@
 import { tripItineraries, tripAlternatives, tripSummaries, type TripId } from '~/data/trips';
-import { groupPrice, plans, isMemberList } from '~/utils/commerce';
+import { groupPrice, isMemberList } from '~/utils/commerce';
+import { esimPlan } from '~/utils/esim';
 import type { TripDay, Member, Usage } from '~/types/trip';
-interface TripDemoState { days: TripDay[]; members: Member[]; usage: Usage; adjusted: boolean; previousStop: TripDay['stops'][0] | null; generated: boolean }
-const blankState = (): TripDemoState => ({days:[],members:[],usage:'normal',adjusted:false,previousStop:null,generated:false});
+interface TripDemoState { days: TripDay[]; members: Member[]; usage: Usage; adjusted: boolean; previousStop: TripDay['stops'][0] | null; generated: boolean; esim: { selectedUsage: Usage | null; purchasedUsage: Usage | null; installed: boolean; claimed: boolean } }
+const blankState = (): TripDemoState => ({days:[],members:[],usage:'normal',adjusted:false,previousStop:null,generated:false,esim:{selectedUsage:null,purchasedUsage:null,installed:false,claimed:false}});
 function initialState(id:TripId):TripDemoState { return {...blankState(),days:structuredClone(tripItineraries[id]),members:[{name:'Scott（你）',paid:false,price:299}]}; }
 export function useDemo() {
     const {activeId,activeTrip}=useTripContext();
@@ -11,6 +12,7 @@ export function useDemo() {
     const empty=blankState();
     function field<K extends keyof TripDemoState>(key:K){return computed({get:()=>activeId.value?states.value[activeId.value][key]:empty[key],set:(value:TripDemoState[K])=>{if(activeId.value)states.value[activeId.value][key]=value;}});}
     const days=field('days'), members=field('members'), usage=field('usage'), adjusted=field('adjusted'), previousStop=field('previousStop'), generated=field('generated');
+    const esim=field('esim');
     onMounted(()=>{
       if(storageReady.value)return;
       try{
@@ -19,6 +21,10 @@ export function useDemo() {
           const value=cached?.[trip.id], target=states.value[trip.id];
           if(isMemberList(value?.members))target.members=value.members;
           if(['light','normal','heavy'].includes(value?.usage))target.usage=value.usage;
+          if (['light','normal','heavy'].includes(value?.esim?.selectedUsage)) target.esim.selectedUsage=value.esim.selectedUsage;
+          if (target.members[0]?.paid) {
+            target.esim = { selectedUsage:target.esim.selectedUsage, purchasedUsage: ['light','normal','heavy'].includes(value?.esim?.purchasedUsage) ? value.esim.purchasedUsage : target.members[0].price === 199 ? 'light' : target.members[0].price === 499 ? 'heavy' : 'normal', installed: value?.esim?.installed === true, claimed: value?.esim?.claimed === true };
+          }
           target.generated=value?.generated===true;
           if(value?.adjusted===true){target.previousStop=structuredClone(tripItineraries[trip.id][0]!.stops[1]!);target.days[0]!.stops[1]=structuredClone(tripAlternatives[trip.id]);target.adjusted=true;}
         }
@@ -31,11 +37,7 @@ export function useDemo() {
     const toastVersion = useState('toast-version', () => 0);
     watch(activeId,()=>{toast.value='';});
     const group = computed(() => groupPrice(members.value));
-    const plan = computed(() => {
-      const base=plans[usage.value], count=activeTrip.value?.dayCount||5;
-      const ranges={light:[.4,.8],normal:[1,1.6],heavy:[3,4.4]}[usage.value];
-      return {...base,range:`${Math.ceil(ranges[0]!*count)}–${Math.ceil(ranges[1]!*count)}`,desc:`共 ${{light:1,normal:2,heavy:5}[usage.value]*count}GB 高速額度 · 每日重置`};
-    });
+    const plan = computed(() => esimPlan(esim.value.purchasedUsage || esim.value.selectedUsage || usage.value, activeTrip.value?.dayCount || 5));
     const eligible = computed(() => members.value[0]?.paid === true);
     function notify(message: string) {
         toast.value = message;
@@ -58,6 +60,7 @@ export function useDemo() {
             return;
         member.paid = true;
         member.price = index === 0 ? plan.value.price : 299;
+        if(index === 0) esim.value = {selectedUsage:esim.value.selectedUsage,purchasedUsage:esim.value.selectedUsage || usage.value,installed:false,claimed:false};
         notify(group.value.count === 4 ? '4 人購買，已解鎖每人 NT$20 旅伴折扣' : '已完成示範購買');
     }
     function applyAdjustment() {
@@ -80,9 +83,10 @@ export function useDemo() {
         if(!activeId.value)return;
         members.value = [{ name: 'Scott（你）', paid: false, price: 299 }];
         generated.value = false;
+        esim.value = {selectedUsage:null,purchasedUsage:null,installed:false,claimed:false};
         notify('組隊模擬已重設為 1 人共編、0 人購買');
     }
-    return { days, members, usage, adjusted, generated, group, plan, eligible, toast, notify, addMember, buy, applyAdjustment, undoAdjustment, reset };
+    return { days, members, usage, adjusted, generated, group, plan, eligible, esim, toast, notify, addMember, buy, applyAdjustment, undoAdjustment, reset };
 }
 export function useAsset() {
     const base = useRuntimeConfig().app.baseURL;

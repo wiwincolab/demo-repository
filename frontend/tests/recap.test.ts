@@ -6,8 +6,8 @@ import { photoById, workForPhoto } from '../app/data/creation.ts';
 
 test('recap orders completed trips by travel date and excludes the upcoming Tokyo trip',()=>{
   const stops=buildRecapStops(['tokyo','fuji','kansai'],[],emptyJourney());
-  assert.deepEqual(stops.map(stop=>stop.id),['fuji-blue','usj','dotonbori','nara','kyoto']);
-  assert.deepEqual(stops.map(stop=>stop.date),['2026-02-14','2026-04-04','2026-04-04','2026-04-05','2026-04-06']);
+  assert.deepEqual(stops.map(stop=>stop.id),['fuji-blue','kobe','amanohashidate','ine','kyoto','nara','dotonbori','usj']);
+  assert.deepEqual(stops.map(stop=>stop.date),['2026-02-14','2026-04-03','2026-04-04','2026-04-04','2026-04-05','2026-04-05','2026-04-05','2026-04-06']);
   assert(!stops.some(stop=>stop.tripId==='tokyo'));
   assert.deepEqual(buildRecapStops(['kansai','tokyo','fuji'],[],emptyJourney()).map(stop=>stop.id),stops.map(stop=>stop.id));
   assert.deepEqual(buildRecapStops(['tokyo'],[],emptyJourney()),[]);
@@ -19,7 +19,7 @@ test('several formats and photos at USJ remain one stop, with duplicate works re
   const scene=workForPhoto(photoById('usj-scene')!,'scene');
   const state={...emptyJourney(),usjCreated:true,usjSaved:true};
   const stops=buildRecapStops(['kansai'],[photo,companion,scene,{...photo}],state);
-  assert.equal(stops.length,4);
+  assert.equal(stops.length,7);
   const usj=stops.filter(stop=>stop.id==='usj');
   assert.equal(usj.length,1);
   assert.equal(usj[0]!.works.length,3);
@@ -44,7 +44,7 @@ test('cross-trip received souvenirs do not become visited stops or works at thos
   const incompatibleOrigin={...fuji,id:'foreign-origin',sourceTripId:'kansai' as const,receivedFrom:'James'};
   const ownUsj=workForPhoto(photoById('usj-panorama')!,'photo');
   const stops=buildRecapStops(['kansai'],[receivedInKansai,ownUsj],emptyJourney());
-  assert.deepEqual(stops.map(stop=>stop.id),['usj','dotonbori','nara','kyoto']);
+  assert.deepEqual(stops.map(stop=>stop.id),['kobe','amanohashidate','ine','kyoto','nara','dotonbori','usj']);
   assert.deepEqual(stops.flatMap(stop=>stop.works.map(work=>work.id)),[ownUsj.id]);
   const fujiStop=buildRecapStops(['fuji'],[incompatibleOrigin],emptyJourney())[0]!;
   assert.equal(fujiStop.works.length,0);

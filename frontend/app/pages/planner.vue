@@ -8,13 +8,14 @@ const places = computed<Stop[]>(()=>{
   if(!activeId.value)return [];
   const trip=tripItineraries[activeId.value];
   if(activeId.value==='tokyo')return [trip[0]!.stops[0]!,trip[0]!.stops[1]!,trip[0]!.stops[2]!,trip[4]!.stops[0]!,trip[4]!.stops[2]!];
+  if(activeId.value==='kansai')return trip.flatMap(d=>d.stops).filter(s=>[1,2,7,8,9,10,11].includes(s.id));
   return trip.flatMap(d=>d.stops).filter((s,i,all)=>all.findIndex(p=>p.name===s.name)===i).slice(0,5);
 });
 const ids = ref<number[]>([]), drawing = ref(true), preferences = ref(''), pace = ref(3);
 const panel = ref<'preferences' | 'preview' | 'saved' | null>(null);
 const busy = ref(false), draft = ref<Stop[]>([]), previous = ref<Stop[]>([]);
 const selected = computed(() => places.value.filter(p => ids.value.includes(p.id)));
-const regions=computed(()=>activeId.value==='tokyo'?[{name:'淺草河岸範圍',ids:[0,1,2]},{name:'上野文化範圍',ids:[12,14]}]:activeId.value==='kansai'?[{name:'大阪範圍',ids:[0,1,2]},{name:'奈良範圍',ids:[4,5]}]:[{name:'河口湖範圍',ids:places.value.map(p=>p.id)}]);
+const regions=computed(()=>activeId.value==='tokyo'?[{name:'淺草河岸範圍',ids:[0,1,2]},{name:'上野文化範圍',ids:[12,14]}]:activeId.value==='kansai'?[{name:'神戶範圍',ids:[1,2]},{name:'京都東山範圍',ids:[7,8]},{name:'奈良範圍',ids:[9]}]:[{name:'河口湖範圍',ids:places.value.map(p=>p.id)}]);
 let generationTimer: ReturnType<typeof setTimeout> | undefined;
 watch(activeId,()=>{clearTimeout(generationTimer);ids.value=[];draft.value=[];previous.value=[];preferences.value='';panel.value=null;busy.value=false;});
 function select(value: number[]) { ids.value = value; if (!value.length)

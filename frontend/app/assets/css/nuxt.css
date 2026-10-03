@@ -189,3 +189,9 @@
   mix-blend-mode: multiply;
 }
 
+
+/* Keep the day's transport context compact, above its stops. */
+.day-context { margin: 0 20px 18px; padding: 14px 16px; border-left: 3px solid #89b9c4; background: #f1f7f8; border-radius: 0 12px 12px 0; }
+.day-context p { margin: 0; color: #42606c; font-size: 13px; line-height: 1.7; }
+.day-context span { display: block; margin-top: 8px; font-size: 12px; color: #607780; }
+.stop-card .stop-transit { display: block; margin: 8px 0; color: #527580; line-height: 1.6; }

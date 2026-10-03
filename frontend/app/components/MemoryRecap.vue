@@ -21,7 +21,7 @@ const displayWork = computed(() => selectedWork.value || current.value?.works.fi
 const displayImage = computed(() => displayWork.value ? 'assets/memory/'+displayWork.value.image : current.value?.image || '');
 const displayFormat = computed(() => displayWork.value ? styleById(displayWork.value.styleId).name : current.value?.format || '旅行收藏');
 const displayKind = computed(() => displayWork.value?.styleId || current.value?.interaction || 'photo');
-const photoCaption = computed(() => ({'fuji-blue':'天色開始變藍，店裡的燈還亮著。',usj:'照片裡的餐廳和城堡，現在還認得出來。',nara:'在奈良留下的那一張。',kyoto:'走進樹影裡，拍下了鳥居。',dotonbori:'走到橋上，回頭拍下這片街景。'}[current.value?.id || ''] || current.value?.caption));
+const photoCaption = computed(() => ({'fuji-blue':'天色開始變藍，店裡的燈還亮著。',usj:'照片裡的餐廳和城堡，現在還認得出來。',nara:'在奈良留下的那一張。',kyoto:'從清水舞台望出去，是京都的屋頂和山。',dotonbori:'走到橋上，回頭拍下這片街景。'}[current.value?.id || ''] || current.value?.caption));
 const currentTrip = computed(() => tripSummaries.find(t => t.id === current.value?.tripId));
 const eventLabel = computed(() => ({sticker:'拾起這張貼紙',pin:'看看這枚徽章',scene:'走進這座小場景',companion:'和旅伴打個招呼',photo:'看看這一站的收藏'})[current.value?.interaction || 'photo']);
 const canDiscover = computed(() => current.value && (current.value.interaction !== 'photo' || current.value.works.length > 0));

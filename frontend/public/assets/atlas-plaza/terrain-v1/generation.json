@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-03",
+  "generator": "builtin image_gen",
+  "purpose": "石板路、紙感草地與石砌植栽邊界；沿用四張主圖及五張環境裝飾",
+  "assets": [
+    {
+      "id": "sage-meadow",
+      "transparent": false,
+      "prompt": "Create a perfectly top-down SQUARE seamless tileable illustrated grass material texture for a travel-park game floor. Use attached image ONLY as reference for the sophisticated hand-inked / screen-print paper texture. Edge to edge pale dusty sage ground, a subtle blend of moss and scattered tiny fine grass blades, airy mostly quiet surface. Color ground #cbd7af, sage #a6b994, sparse deep blue-green fine ink, warm ivory flecks. Very restrained contrast. No objects, no stones, no paths, no flowers, no trees, no perspective, no lighting gradient, no vignette, no border, no text. Not photorealistic, not plastic. Texture density around 20 delicate tufts over the whole square; 85% calm open ground with gentle handprinted grain. Opposite edges should meet seamlessly. Solid opaque material swatch.",
+      "source": "C:\\Users\\scott\\.codex\\generated_images\\01a06564-2da6-7ea0-b469-462e61fad4d4\\exec-5fd2e21b-ee9f-4bf4-b88f-b96232f6a5d2.png",
+      "file": "sage-meadow.png",
+      "reference": "reference-garden.png"
+    },
+    {
+      "id": "limestone-paving",
+      "transparent": false,
+      "prompt": "Create a perfectly top-down SQUARE seamless tileable illustrated limestone flagstone paving material for a refined travel-park game road. Match the hand-inked limestone stepping stones in the attached style reference. Entire image fully filled by a tessellation of about 12 large closely fitted irregular polygonal flagstones with soft imperfect corners. Warm off-white/cream limestone varied subtly with pale grey, fine thin dark desaturated blue-grey ink cracks between stones, extremely narrow joints, fine paper grain and restrained hand-drawn speckle within each stone. A tiny shade at lower-right edge gives tactile shallow bevel. Crisp sophisticated Japanese architectural travel-guide illustration. No plants, no objects, no moss filling, no huge dark gaps, no frame, no vignette, no text, no perspective. Opposite edges meet seamlessly. Solid opaque material swatch.",
+      "source": "C:\\Users\\scott\\.codex\\generated_images\\01a06564-2da6-7ea0-b469-462e61fad4d4\\exec-02924682-cd6a-40d8-8d6a-2b65c404cbb6.png",
+      "file": "limestone-paving.png",
+      "reference": "reference-garden.png"
+    },
+    {
+      "id": "stone-flower-border",
+      "transparent": true,
+      "prompt": "Create ONE isolated low crescent garden border for a sophisticated hand-illustrated travel park, matching attached reference's exact navy ink and softly printed colors. A gently curving arrangement of dusty sage leafy shrubs, tiny white-and-ochre daisies, several irregular warm ivory limestone edging blocks with narrow deep-blue ink outlines and a couple of rounded granite rocks. Long low silhouette, height about one third its width; the center open edge curves around a walking path. Three-quarter axonometric from above. Individual foliage drawing, subtle paper-grain, restrained colors. No ground tile or pedestal, no buildings, no signs, no tree trunks, no black background, no checkerboard, no text. True transparent background, closely framed, cutout plant-bed asset for use over a separately rendered lawn. Not cute clay or photo-realism.",
+      "source": "C:\\Users\\scott\\.codex\\generated_images\\01a06564-2da6-7ea0-b469-462e61fad4d4\\exec-4b37ca2a-7eb5-4168-9db9-88c87185acea.png",
+      "file": "stone-flower-border.png",
+      "reference": "reference-garden.png"
+    }
+  ]
+}

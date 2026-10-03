@@ -15,7 +15,7 @@ test('each trip has a complete, independently identified route for its advertise
 test('Kansai and Fuji contain their own destinations rather than Tokyo coordinates or draft keys',()=>{
   const kansai=tripItineraries.kansai.flatMap(day=>day.stops),fuji=tripItineraries.fuji.flatMap(day=>day.stops);
   assert(kansai.some(stop=>stop.name==='大阪環球影城'));
-  assert(kansai.some(stop=>stop.name==='野宮神社'));
+  assert(kansai.some(stop=>stop.name==='清水寺'));
   assert(kansai.every(stop=>stop.at[0]!>135&&stop.at[0]!<136&&stop.at[1]!>34&&stop.at[1]!<36));
   assert(fuji.some(stop=>stop.name==='河口湖'));
   assert(fuji.every(stop=>stop.at[0]!>138&&stop.at[0]!<139&&stop.at[1]!>35&&stop.at[1]!<36));

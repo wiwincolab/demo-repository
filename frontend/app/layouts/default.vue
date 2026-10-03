@@ -10,9 +10,10 @@ const asset = useAsset();
 const path = computed(() => route.path.replace(/\/$/, '') || '/');
 const isScoped = computed(() => /^\/(trip|esim|planner|memory)(\/|$)/.test(path.value));
 const isTripList = computed(() => path.value === '/trips');
-const tabs = [{ to: '/trip', name: '行程', icon: 'trip' }, { to: '/esim', name: 'eSIM', icon: 'sim' }, { to: '/memory', name: 'AI 創作', icon: 'memory' }, { to: '/proposal', name: '提案', icon: 'doc' }, { to: '/atlas', name: '回憶地圖', icon: 'atlas' }];
+const isAtlasPlaza = computed(() => path.value === '/atlas' && !['cities', 'journey'].includes(String(route.query.view)) && !route.query.journey && !route.query.scope);
+const tabs = [{ to: '/trip', name: '行程', icon: 'trip' }, { to: '/esim', name: 'eSIM', icon: 'sim' }, { to: '/memory', name: 'AI 創作', icon: 'memory' }, { to: '/atlas', name: '回憶地圖', icon: 'atlas' }];
 function tabLink(to: string) {
-  if (to === '/atlas' || to === '/proposal') return to;
+  if (to === '/atlas') return to;
   return activeId.value ? tripHref(to) : { path: '/trips', query: { next: to } };
 }
 async function changeTrip(id: TripId) {
@@ -23,7 +24,7 @@ async function changeTrip(id: TripId) {
 }
 </script>
 <template>
-  <div class="app-shell" :class="{ 'creation-shell': path === '/memory', 'journey-shell': path.startsWith('/memory/usj') || path.startsWith('/atlas'), 'trips-shell': isTripList }">
+  <div class="app-shell" :class="{ 'creation-shell': path === '/memory', 'journey-shell': path.startsWith('/memory/usj') || path.startsWith('/atlas'), 'trips-shell': isTripList, 'plaza-shell': isAtlasPlaza }">
     <header class="app-bar">
       <NuxtLink class="wordmark" to="/trips" aria-label="去趣，我的行程">去趣 <i>chicTrip</i><span aria-hidden="true" /></NuxtLink>
       <span class="prototype">競賽概念原型</span>

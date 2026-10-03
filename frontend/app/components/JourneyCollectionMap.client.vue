@@ -72,7 +72,7 @@ onBeforeUnmount(() => { disposed = true; markers.forEach(item => item.marker.rem
     <div ref="element" class="journey-map-canvas" />
     <div v-if="!ready" class="journey-map-wait" role="status"><span>關西旅行地圖</span><p>{{ error || '正在打開地圖…' }}</p></div>
     <div class="journey-map-heading"><span>KANSAI, JAPAN</span><strong>沿著走過的地方，<br>找回留下的回憶。</strong></div>
-    <button v-if="ready" class="journey-map-overview" @click="overview" aria-label="顯示整趟旅行的四個地點"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 9V4h5m6 0h5v5m0 6v5h-5m-6 0H4v-5"/></svg>整趟旅行</button>
+    <button v-if="ready" class="journey-map-overview" @click="overview" aria-label="顯示整趟旅行的所有地點"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 9V4h5m6 0h5v5m0 6v5h-5m-6 0H4v-5"/></svg>整趟旅行</button>
     <small class="journey-map-note">連線為回憶順序示意</small>
   </div>
 </template>

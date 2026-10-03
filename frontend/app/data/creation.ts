@@ -36,16 +36,16 @@ export const styleById = (id: CreationId) => creationStyles.find(style => style.
 
 export interface CreationPhoto {
   id: string; tripId: TripId; title: string; location: string; source: string;
-  sourceCrop?: boolean; styles: CreationId[]; featured?: 'usj'; note?: string;
+  sourceCrop?: boolean; styles: CreationId[]; featured?: 'usj'; note?: string; referenceOnly?: boolean;
 }
 export const creationPhotos: CreationPhoto[] = [
   {id:'usj-scene',tripId:'kansai',title:'蘑菇餐廳前',location:'大阪 · 超級任天堂世界',source:'journey/usj-source.png',styles:['scene'],featured:'usj'},
   {id:'usj-panorama',tripId:'kansai',title:'園區全景',location:'大阪 · 超級任天堂世界',source:'references/usj-nintendo-source.png',styles:['photo','companion']},
-  {id:'kyoto-shrine',tripId:'kansai',title:'樹影下的鳥居',location:'京都 · 野宮神社',source:'references/kyoto-shrine-source.png',styles:['pin']},
+  {id:'kyoto-shrine',tripId:'kansai',title:'樹影下的鳥居',location:'京都 · 野宮神社',source:'references/kyoto-shrine-source.png',styles:['pin'],referenceOnly:true,note:'先前京都示範素材，非這次五日路線'},
   {id:'nara-deer',tripId:'kansai',title:'奈良公園的鹿',location:'奈良 · 鹿公園',source:'journey/nara-source.png',styles:['sticker'],note:'AI 示範照片'},
   {id:'fuji-blue',tripId:'fuji',title:'富士山的藍調時刻',location:'富士山 · 藍調時刻',source:'fuji-editorial.png',sourceCrop:true,styles:['sticker','ticket','scene']},
 ];
-export const photosForTrip = (id: TripId | null) => creationPhotos.filter(photo => photo.tripId === id);
+export const photosForTrip = (id: TripId | null) => creationPhotos.filter(photo => photo.tripId === id && !photo.referenceOnly);
 export const photoById = (id?: string) => creationPhotos.find(photo=>photo.id===id);
 export function styleForPhoto(photo: CreationPhoto, id: CreationId): CreationStyle | undefined {
   if(!photo.styles.includes(id))return;

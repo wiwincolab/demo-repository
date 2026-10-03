@@ -26,7 +26,7 @@ const stopPhotoIds: Record<string, string[]> = {
   usj: ['usj-scene', 'usj-panorama'],
   dotonbori: [],
   nara: ['nara-deer'],
-  kyoto: ['kyoto-shrine'],
+  kyoto: [],
   'fuji-blue': ['fuji-blue'],
 };
 const memoryAsset = (path: string) => `assets/memory/${path}`;
@@ -92,6 +92,6 @@ export function buildRecapStops(tripIds: TripId[], allWorks: CreationWork[], jou
       }
     }
   }
-  // Stable same-day ordering follows the existing itinerary fixtures (USJ, then the evening riverwalk).
+  // Same-day ordering follows the itinerary: Kyoto, Nara, then Osaka at night.
   return result.sort((a, b) => a.date.localeCompare(b.date));
 }

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { kansaiReference } from '~/data/kansai';
 import { dayColors } from '~/utils/map';
 import type { Stop } from '~/types/trip';
 import { tripItineraries, tripAlternatives, plannerStorageKey } from '~/data/trips';
@@ -60,7 +61,7 @@ function savedPlan() {
     <div class="trip-summary">
       <div>
         <strong>{{ activeTrip.dateLabel }}</strong>
-        <p>{{ activeTrip.dayCount }} 天 {{ activeTrip.dayCount - 1 }} 夜 · {{ days.flatMap(d=>d.stops).length }} 個景點</p>
+        <p>{{ activeTrip.dayCount }} 天 {{ activeTrip.dayCount - 1 }} 夜 · {{ days.flatMap(d=>d.stops).length }} 個停留點</p>
       </div>
       <button class="invite-button" :aria-label="members.length + ' 人共編，邀請旅伴'" @click="openGroup('invite')">
         <span class="avatars">
@@ -93,6 +94,10 @@ function savedPlan() {
         <button :aria-pressed="view === 'map'" @click="view = 'map'">地圖</button>
       </div>
     </div>
+    <div v-if="day >= 0 && days[day]?.transport" class="day-context">
+      <p>{{ days[day]?.transport }}</p>
+      <span v-if="days[day]?.lodging">今晚住 {{ days[day]?.lodging }}</span>
+    </div>
     <div v-if="view === 'list'" class="stop-list">
       <article v-for="(s, i) in shown" :key="s.id" class="stop-row" :style="{ '--day': dayColors[s.day] }">
         <div class="stop-track">
@@ -103,6 +108,7 @@ function savedPlan() {
             <time>第 {{ s.day + 1 }} 天 · {{ s.time }}</time>
             <h3>{{ s.name }}</h3>
             <p>{{ s.note }}</p>
+            <small v-if="s.transit" class="stop-transit">{{ s.transit }}</small>
             <small>{{ s.stay }} · 看詳情 ›</small>
           </div>
           <img :src="asset(s.photo.src)" :alt="s.photo.alt" loading="lazy" :style="{ objectPosition: s.photo.objectPosition }">
@@ -122,7 +128,7 @@ function savedPlan() {
       </article>
       <p v-else class="page-note">各色實線為單日行程，虛線為日間移動。選一天，看每站照片與流量。</p>
     </template>
-    <p class="page-note">示範行程 · 流量依使用行為估算，不是地區實測。</p>
+    <p class="page-note">{{ activeId === 'kansai' ? '路線參考喜鴻五日行程；日期、時刻與車程為示範估算。' : '示範行程。' }} 流量依使用行為估算。</p>
     <GroupSheet v-model="groupOpen" :initial-mode="groupMode" />
     <AppSheet :model-value="!!stop" :title="stop?.name || ''" @update:model-value="stop = null">
       <StopDetails v-if="stop" :stop="stop" />
@@ -131,7 +137,8 @@ function savedPlan() {
       <template v-if="sheet === 'info'">
         <p>{{ activeTrip.dateLabel }} · 示範旅行日期</p>
         <p>{{ days.map(d=>d.area).join(' → ') }}</p>
-        <p class="small-note">景點資訊與停留時間是展示資料，出發前需另行確認。</p>
+        <template v-if="activeId === 'kansai'"><p class="small-note">{{ kansaiReference.note }}</p><a :href="kansaiReference.url" target="_blank" rel="noopener">路線參考：{{ kansaiReference.name }} ↗</a></template>
+        <p v-else class="small-note">景點資訊與停留時間是展示資料，出發前需另行確認。</p>
       </template>
       <template v-if="sheet === 'adjust'">
         <p>示範：把第 1 天的{{ originalStop?.name }}換成雨天也能去的安排。</p>

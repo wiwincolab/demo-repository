@@ -469,7 +469,7 @@ main {
   width: min(100%,480px);
   padding: 7px 12px calc(9px + env(safe-area-inset-bottom));
   display: grid;
-  grid-template-columns: repeat(5,minmax(0,1fr));
+  grid-template-columns: repeat(4,minmax(0,1fr));
   background: #fffffff5;
   border-top: 1px solid var(--line);
   z-index: 30;
