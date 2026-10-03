@@ -165,3 +165,9 @@ npm run build
 `AtlasLobbyDecor.vue` 在可平移世界中獨立放置五張透明插畫：湖畔小橋、銀杏座椅、咖啡小亭、花圃路牌、入口花架。底部錨點對齊湖岸、環園步道及入口；兩側小景避開四張功能圖與標籤。裝飾不接收點擊、沒有可操作的假入口，亦不進入輔助閱讀順序。GSAP 統一處理淡入與湖面細微變化，支援暫停、系統減少動態和離頁清理。
 
 素材在 `public/assets/atlas-plaza/decor-v1/`；`generation.json` 保存每張完整 prompt、v3/town.png 風格參照、內建 image_gen 原始產物路徑。既有四張 v3 不替換、不放大。裝飾是預製 2D 插畫，並非可操控的 3D 設施。
+# 場景積木世界（2026-10-03）
+
+回憶廣場 → 場景積木世界 →「進入小鎮」，或直接開啟 `/town/`。
+整合使用者提供的東北亞九景 3D Demo：拖曳旋轉、双指／滾輪縮放、九景地圖聚焦、全景復位、日夜光線切換。手機採全畫面與收合式九景選單，返回鈕回到廣場。
+
+這次是現成 3D 展示的整合，尚未加入自由造鎮或與個人收藏連動。`app/pages/town.vue` 負責 App 外框；`public/demos/travel-town/chictrip.css` 負責內頁適配。來源、限制及 Blender 原檔見 [references/travel-town/README.md](references/travel-town/README.md)。

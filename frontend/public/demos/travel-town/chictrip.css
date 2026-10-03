@@ -1,0 +1,28 @@
+/* App integration only. The supplied scene, assets and rendering remain intact. */
+.header{display:none}
+.atlas{top:24px}
+.detail{top:24px}
+.atlas-toggle{top:18px}
+.controls{border-radius:20px}
+.tile-button{min-height:54px}
+.close{width:44px;height:44px;right:2px;top:2px}
+@media(max-width:720px){
+  .atlas-toggle{right:16px;top:16px;min-height:44px}
+  .atlas{top:70px;right:16px;width:224px;max-height:calc(100% - 210px);overflow:auto}
+  .detail{top:16px;left:16px;right:auto;width:calc(100% - 152px);max-height:calc(100% - 158px);overflow:auto;padding:16px}
+  .detail h2{padding-right:8px;font-size:15px;line-height:1.5}
+  .detail p{font-size:12px}.detail .detail-place{font-size:11px}
+  .controls{bottom:max(16px,env(safe-area-inset-bottom));width:calc(100% - 24px)}
+  .modes button{min-height:44px;width:30px}.help{font-size:10px;line-height:1.6}
+}
+@media(max-width:360px){
+  .controls .row{flex-wrap:wrap;gap:4px 10px}
+  .time{width:34px}.rangebox{flex-basis:calc(100% - 50px)}
+  .modes{flex:1}.modes button{flex:1;min-width:44px}
+  .detail{width:calc(100% - 136px);padding:12px}.detail p{font-size:11px}
+}
+@media(max-height:480px){
+  .atlas-toggle{top:12px;left:16px;right:auto}
+  .atlas{top:62px;left:16px;right:auto;max-height:calc(100% - 74px);overflow:auto}
+  .detail{top:12px;left:auto;right:16px;width:220px;max-height:calc(100% - 100px)}
+}

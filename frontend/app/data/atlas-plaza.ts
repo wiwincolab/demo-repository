@@ -11,9 +11,9 @@ export const atlasParkZones = [
     id: 'town', number: '02', name: '場景積木世界', short: '回憶小鎮', english: 'LITTLE MEMORY TOWN',
     x: 75, y: 24, color: '#9e562e', image: 'town.png',
     title: '讓不同旅行，成為鄰居。',
-    description: '山邊的咖啡店、奈良的小徑、環球影城的小世界。把喜歡的場景放在一起，慢慢長成你的小鎮。',
-    tags: ['旅行場景', '一起造鎮'],
-    destination: '', action: '',
+    description: '從富士山、京都到首爾，把日本與韓國的九個風景收進一座小鎮。轉個角度看街區，再等路燈慢慢亮起。',
+    tags: ['九景小鎮', '旋轉探索', '日夜光影'],
+    destination: '/town', action: '進入小鎮',
   },
   {
     id: 'wardrobe', number: '03', name: '去趣旅伴換裝', short: '旅伴換裝屋', english: 'TRAVEL COMPANION',

@@ -191,7 +191,7 @@ onBeforeUnmount(() => { resizeObserver?.disconnect(); context?.revert(); media?.
         <button class="park-dialog-close" aria-label="返回廣場" @click="closeZone"><MemoryMotionIcon name="close" /></button>
         <div class="park-dialog-copy"><span class="park-dialog-eyebrow">{{ selected.short }}</span><h2 id="park-zone-title">{{ selected.name }}</h2><h3>{{ selected.title }}</h3><p>{{ selected.description }}</p><div class="park-zone-tags"><span v-for="tag in selected.tags" :key="tag">{{ tag }}</span></div>
           <NuxtLink v-if="selected.destination" :to="selected.destination" class="park-enter">{{ selected.action }}<MemoryMotionIcon name="arrow" /></NuxtLink>
-          <div v-else class="park-coming"><span>即將開放</span><p>{{ selected.id === 'town' ? '你的場景積木，將在這裡有個家。' : '旅伴的新衣櫥，正在準備中。' }}</p><button @click="closeZone">繼續逛廣場 <span aria-hidden="true">↗</span></button></div>
+          <div v-else class="park-coming"><span>即將開放</span><p>旅伴的新衣櫥，正在準備中。</p><button @click="closeZone">繼續逛廣場 <span aria-hidden="true">↗</span></button></div>
         </div>
       </template>
     </dialog>
