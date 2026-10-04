@@ -5,6 +5,7 @@ import '~/assets/css/atlas-plaza.css';
 import '~/assets/css/atlas-painted-park.css';
 
 const asset = useAsset();
+const { activeId } = useTripContext();
 const root = ref<HTMLElement>(), dialog = ref<HTMLDialogElement>();
 const selected = ref<AtlasParkZone | null>(null);
 const paused = ref(false), reduced = ref(false);
@@ -190,7 +191,7 @@ onBeforeUnmount(() => { resizeObserver?.disconnect(); context?.revert(); media?.
         <div class="park-dialog-art"><img class="park-dialog-illustration" :src="artwork(selected)" alt="" /></div>
         <button class="park-dialog-close" aria-label="返回廣場" @click="closeZone"><MemoryMotionIcon name="close" /></button>
         <div class="park-dialog-copy"><span class="park-dialog-eyebrow">{{ selected.short }}</span><h2 id="park-zone-title">{{ selected.name }}</h2><h3>{{ selected.title }}</h3><p>{{ selected.description }}</p><div class="park-zone-tags"><span v-for="tag in selected.tags" :key="tag">{{ tag }}</span></div>
-          <NuxtLink v-if="selected.destination" :to="selected.destination" class="park-enter">{{ selected.action }}<MemoryMotionIcon name="arrow" /></NuxtLink>
+          <NuxtLink v-if="selected.destination" :to="selected.id==='collection'?{path:'/collection',query:{trip:activeId||'kansai'}}:selected.destination" class="park-enter">{{ selected.action }}<MemoryMotionIcon name="arrow" /></NuxtLink>
           <div v-else class="park-coming"><span>即將開放</span><p>旅伴的新衣櫥，正在準備中。</p><button @click="closeZone">繼續逛廣場 <span aria-hidden="true">↗</span></button></div>
         </div>
       </template>

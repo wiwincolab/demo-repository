@@ -16,7 +16,8 @@ function addPrompt(prompt: string) {
 }
 const { notify } = useDemo();
 const { activeId } = useTripContext();
-const draftKey = computed(()=>`chictrip-thread-draft:${activeId.value || 'unassigned'}`);
+const drafts = useState<Record<string, { text: string; styleId: string; location: string; attachment: boolean; link: boolean; audience: string }>>('creation-demo-thread-drafts', () => ({}));
+const draftKey = computed(()=>`${activeId.value || 'unassigned'}:${props.photoId || props.location}:${props.styleId}`);
 const base = useRuntimeConfig().app.baseURL;
 let opener: HTMLElement | null = null;
 const shareURL = computed(() => {
@@ -39,7 +40,7 @@ watch(open, async (value) => {
         feedback.value = '';
         audience.value = '任何人';
         try {
-            const draft = JSON.parse(sessionStorage.getItem(draftKey.value) || 'null');
+            const draft = drafts.value[draftKey.value];
             if (draft?.styleId === props.styleId && draft?.location === props.location && typeof draft.text === 'string') {
                 text.value = draft.text.slice(0, 500);
                 attachment.value = draft.attachment !== false;
@@ -56,10 +57,7 @@ watch(open, async (value) => {
         opener?.focus();
     }
 });
-function save() { try {
-    sessionStorage.setItem(draftKey.value, JSON.stringify({ text: text.value, styleId: props.styleId, location: props.location, attachment: attachment.value, link: link.value, audience: audience.value }));
-}
-catch { feedback.value = '瀏覽器無法儲存草稿，請先複製或保留目前視窗。'; return; } open.value = false; notify('串文草稿已儲存在這個瀏覽器'); }
+function save() { drafts.value[draftKey.value] = { text: text.value, styleId: props.styleId, location: props.location, attachment: attachment.value, link: link.value, audience: audience.value }; open.value = false; notify('串文草稿已儲存'); }
 function publish() { if (!text.value.trim() && !attachment.value) {
     feedback.value = '請加入文字或回憶圖片。';
     return;
@@ -80,12 +78,12 @@ onBeforeUnmount(() => dialog.value?.close());
       <h2 id="composer-title">新串文</h2>
       <button @click="save">存草稿</button>
     </header>
-    <div class="composer-notice">Threads 發文模擬 · 不會送出</div>
+    <div class="composer-notice">Threads 發文預覽 · 尚未發佈</div>
     <template v-if="!published">
       <div class="thread-body">
         <div class="thread-avatar" aria-hidden="true">你</div>
         <div class="thread-content">
-          <div class="thread-author">an.travels <span>小安 · 示範帳號</span></div>
+          <div class="thread-author">an.travels <span>小安</span></div>
           <label class="sr-only" for="thread-text">串文內容</label>
           <textarea id="thread-text" v-model="text" maxlength="500" placeholder="這趟旅行，有什麼想說的？" />
           <div v-if="attachment" class="thread-attachment">
@@ -113,7 +111,7 @@ onBeforeUnmount(() => dialog.value?.close());
       <p class="page-note" role="status">{{ feedback }}</p>
       <footer class="composer-footer">
         <label class="thread-audience">誰可以回覆<select v-model="audience" aria-label="誰可以回覆"><option>任何人</option><option>你追蹤的人</option><option>僅限提及的帳號</option></select></label>
-        <button @click="publish">模擬發佈</button>
+        <button @click="publish">預覽貼文</button>
       </footer>
     </template>
     <template v-else>
@@ -123,7 +121,7 @@ onBeforeUnmount(() => dialog.value?.close());
         <p>預覽完成，尚未發送到 Threads。</p>
       </div>
       <article class="published-post">
-        <div class="thread-author"><span class="thread-avatar">安</span>an.travels <small>剛剛 · 模擬</small></div>
+        <div class="thread-author"><span class="thread-avatar">安</span>an.travels <small>剛剛</small></div>
         <p>{{ text }}</p>
         <img v-if="attachment" :src="image" alt="串文中的回憶作品">
         <a v-if="link" :href="shareURL" target="_blank" rel="noopener">{{ location }} · 看看回憶風格 ↗</a>

@@ -11,9 +11,8 @@ const intro = ref<HTMLElement>();
 const { gsap, animate, reduced } = useCreationMotion(root);
 const selected = ref<PhotoMemory | null>(null);
 const hints = ref(false), album = ref(false), writing = ref(false), busy = ref(false);
-const collected = ref<string[]>([]), notes = ref<Record<string, string>>({}), draft = ref('');
+const collected = useState<string[]>('creation-demo-exploration-collected', () => []), notes = useState<Record<string, string>>('creation-demo-exploration-notes', () => ({})), draft = ref('');
 const notice = ref('');
-const storageKey = 'chictrip-photo-exploration-v1';
 const size = reactive({ w: 1, h: 1 });
 const camera = reactive({ scale: 1, x: 0, y: 0 });
 const base = computed(() => Math.max(size.w / 1086, size.h / 724));
@@ -34,14 +33,10 @@ watch(reduced, value => { if(value){
 } });
 const clip = useId();
 
-function persist() {
-  try { localStorage.setItem(storageKey, JSON.stringify({ collected: collected.value, notes: notes.value })); }
-  catch { notice.value = '目前無法儲存在瀏覽器；這次開啟期間仍可收藏。'; }
-}
 function saveNote() {
   if (!selected.value) return;
   notes.value[selected.value.id] = draft.value.trim().slice(0, 180);
-  persist(); writing.value = false; notice.value = '已儲存這段回憶。';
+  writing.value = false; notice.value = '已儲存這段回憶。';
 }
 function stopMotion() { timeline?.kill(); busy.value = false; }
 function dismiss() {
@@ -148,9 +143,11 @@ function collect() {
   if (!selected.value || busy.value) return;
   const item = selected.value;
   notes.value[item.id] = draft.value.trim().slice(0,180);
-  if (isSaved.value) { persist(); dismiss(); return; }
+  if (isSaved.value) { dismiss(); return; }
+  // Save on the click, so leaving during the collection animation cannot lose it.
+  collected.value.push(item.id);
   const finish = () => {
-    collected.value.push(item.id); persist(); notice.value=`已收藏「${item.name}」・${collected.value.length} / 3`;
+    notice.value=`已收藏「${item.name}」・${collected.value.length} / 3`;
     selected.value=null; busy.value=false; albumButton.value?.focus({preventScroll:true});
   };
   if(reduced.value) { finish(); return; }
@@ -181,11 +178,6 @@ onMounted(() => {
     gsap.timeline().fromTo('.pe-intro>*',{y:9,opacity:0},{y:0,opacity:1,duration:d(.48),stagger:reduced.value?0:.07,ease:'power3.out'})
       .fromTo('.pe-header .icon-star-main',{scale:.65,rotation:-15},{scale:1,rotation:0,duration:d(.4),ease:'power3.out'},d(.25));
   });
-  try {
-    const saved=JSON.parse(localStorage.getItem(storageKey)||'{}');
-    if(Array.isArray(saved.collected)) collected.value=photoMemories.filter(p=>saved.collected.includes(p.id)).map(p=>p.id);
-    for(const p of photoMemories) if(typeof saved.notes?.[p.id]==='string') notes.value[p.id]=saved.notes[p.id].slice(0,180);
-  } catch { /* A malformed local record starts an empty album. */ }
   observer=new ResizeObserver(([entry])=>{
     if(!entry) return;
     size.w=entry.contentRect.width;size.h=entry.contentRect.height;clampCamera();
@@ -229,7 +221,7 @@ onBeforeUnmount(()=>{ stopMotion();observer?.disconnect();root.value?.close();op
         <button v-if="!writing" class="pe-note-toggle" @click="writing=true"><MemoryMotionIcon name="pen" /><span>{{ draft||'留一句那天的回憶' }}</span></button>
         <div v-else class="pe-note"><label for="pe-note">想記下的事 <span>選填</span></label><textarea id="pe-note" v-model="draft" maxlength="180" :placeholder="selected.prompt" rows="2" /><button @click="saveNote">儲存留言</button></div>
         <button class="pe-collect" :disabled="busy" @click="collect"><MemoryMotionIcon :name="isSaved?'check':'bookmark'" /><span>{{ busy?'整理成貼紙…':isSaved?'已收藏・繼續探索':'收進我的收藏冊' }}</span><MemoryMotionIcon name="arrow" /></button>
-        <small class="pe-local">{{ isSaved?'可從收藏冊再次回到照片中的位置。':'收藏與留言只儲存在這個瀏覽器。' }}</small>
+        <small class="pe-local">{{ isSaved?'可從收藏冊再次回到照片中的位置。':'留一句那天的回憶，和貼紙一起收藏。' }}</small>
       </section>
       <section v-if="album" class="pe-album" aria-label="拾光收藏冊">
         <div class="pe-panel-top"><span><MemoryMotionIcon name="book" />這趟旅行的收藏</span><button class="pe-album-close" aria-label="關閉收藏冊" @click="album=false;albumButton?.focus()"><MemoryMotionIcon name="close" /></button></div>

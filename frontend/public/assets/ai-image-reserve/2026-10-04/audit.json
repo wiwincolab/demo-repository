@@ -1,0 +1,16 @@
+{
+  "sources": 26,
+  "expected": 156,
+  "ready": 150,
+  "pending": [
+    "2025-2:photo",
+    "2025-2:ticket",
+    "2025-2:pin",
+    "2025-2:scene",
+    "kansai-usj-nintendo-source:sticker",
+    "kansai-usj-nintendo-source:scene"
+  ],
+  "duplicates": [],
+  "changed_originals": [],
+  "bytes": 419707518
+}

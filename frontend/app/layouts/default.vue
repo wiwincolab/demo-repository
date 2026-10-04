@@ -8,8 +8,9 @@ const help = ref(false);
 const switcher = ref(false);
 const asset = useAsset();
 const path = computed(() => route.path.replace(/\/$/, '') || '/');
-const isScoped = computed(() => /^\/(trip|esim|planner|memory)(\/|$)/.test(path.value));
+const isScoped = computed(() => /^\/(trip|esim|planner|memory|collection)(\/|$)/.test(path.value));
 const isTripList = computed(() => path.value === '/trips');
+const isRevisit = computed(() => path.value === '/atlas' && route.query.view === 'cities');
 const isAtlasPlaza = computed(() => path.value === '/atlas' && !['cities', 'journey'].includes(String(route.query.view)) && !route.query.journey && !route.query.scope);
 const tabs = [{ to: '/trip', name: '行程', icon: 'trip' }, { to: '/esim', name: 'eSIM', icon: 'sim' }, { to: '/memory', name: 'AI 創作', icon: 'memory' }, { to: '/atlas', name: '回憶地圖', icon: 'atlas' }];
 function tabLink(to: string) {
@@ -24,8 +25,8 @@ async function changeTrip(id: TripId) {
 }
 </script>
 <template>
-  <div class="app-shell" :class="{ 'creation-shell': path === '/memory', 'journey-shell': path.startsWith('/memory/usj') || path.startsWith('/atlas') || path === '/wardrobe', 'trips-shell': isTripList, 'plaza-shell': isAtlasPlaza }">
-    <header class="app-bar">
+  <div class="app-shell" :class="{ 'revisit-shell': isRevisit, 'creation-shell': path === '/memory', 'journey-shell': path.startsWith('/memory/usj') || path.startsWith('/atlas') || path === '/wardrobe' || path === '/collection', 'trips-shell': isTripList, 'plaza-shell': isAtlasPlaza }">
+    <header v-if="!isRevisit" class="app-bar">
       <NuxtLink class="wordmark" to="/trips" aria-label="去趣，我的行程">去趣 <i>chicTrip</i><span aria-hidden="true" /></NuxtLink>
       <MascotBadge />
       <button class="icon-button" aria-label="查看原型說明" @click="help = true">?</button>
@@ -48,8 +49,8 @@ async function changeTrip(id: TripId) {
       </div>
       <div v-else-if="isScoped && !ready" class="trip-context-loading" role="status">正在開啟行程…</div>
     </main>
-    <nav v-if="!isTripList" class="bottom-nav" aria-label="主要功能">
-      <NuxtLink v-for="tab in tabs" :key="tab.to" :to="tabLink(tab.to)" :aria-current="path === tab.to || (tab.to === '/memory' && path.startsWith('/memory/')) ? 'page' : undefined"><span class="nav-icon" :class="'icon-' + tab.icon" aria-hidden="true" />{{ tab.name }}</NuxtLink>
+    <nav v-if="!isTripList && !isRevisit" class="bottom-nav" aria-label="主要功能">
+      <NuxtLink v-for="tab in tabs" :key="tab.to" :to="tabLink(tab.to)" :aria-current="path === tab.to || (tab.to === '/memory' && path.startsWith('/memory/')) || (tab.to === '/atlas' && path === '/collection') ? 'page' : undefined"><span class="nav-icon" :class="'icon-' + tab.icon" aria-hidden="true" />{{ tab.name }}</NuxtLink>
     </nav>
   </div>
   <AppSheet v-model="switcher" title="切換行程">

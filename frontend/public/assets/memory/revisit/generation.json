@@ -1,0 +1,9 @@
+{
+  "file": "kiyomizu-pin.png",
+  "generatedAt": "2026-10-03",
+  "tool": "OpenAI image_gen",
+  "reference": "assets/photos/kansai/kiyomizu.jpg",
+  "purpose": "清水寺照片熱點的示範琺瑯徽章；不写入個人收藏",
+  "transparentBackground": true,
+  "prompt": "Create one elegant collectible hard-enamel travel pin based specifically on the Kiyomizu-dera Kyoto main wooden temple and elevated timber veranda shown in the reference photo. The reference is source evidence of the building, not a background to retain. Isolated pin, transparent background, square composition, entire pin visible with comfortable margin. Premium product macro photography with finely raised brushed warm brass dividers, deep navy enamel timber structure, warm ivory roof highlights and muted jade foliage framing the temple's silhouette. Recognizable sweeping brown hipped temple roof and famous veranda supported on tall wooden stilts, as seen from this exact reference viewpoint. Architectural silhouette cutout with irregular foliage bottom edge, no circular plaque and no rectangular frame. Tactile polished enamel with restrained specular highlights, soft subtle contact shadow confined immediately beneath pin. No text, no letters, no logos, no mascot, no extra temple or shrine gate. Rich but sophisticated, real metal edges, highly detailed collectible travel memorabilia. Output only the isolated finished pin."
+}

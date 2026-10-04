@@ -29,7 +29,7 @@ export const atlasParkZones = [
     title: '那些捨不得丟的小東西。',
     description: '一張貼紙、一枚徽章、一段票根。翻開自己的收藏，也記得哪一件是和朋友交換來的。',
     tags: ['貼紙', '琺瑯徽章', '旅行票根'],
-    destination: '/atlas?view=journey', action: '查看旅程收藏',
+    destination: '/collection', action: '翻開收集冊',
   },
 ] as const;
 export type AtlasParkZone = typeof atlasParkZones[number];

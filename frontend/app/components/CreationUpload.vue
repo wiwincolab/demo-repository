@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { photosForTrip } from '~/data/creation';
+import { creationPhotos, photosForTrip, type CreationPhoto } from '~/data/creation';
 const open = defineModel<boolean>({ default: false });
-const emit = defineEmits<{ upload: [url: string, name: string]; example: [id: string] }>();
+const emit = defineEmits<{ upload: [url: string, name: string, demoPhotoId?: string] }>();
 const { activeId, activeTrip } = useTripContext();
-const photos = computed(()=>photosForTrip(activeId.value));
+const photos = computed(()=>{ const tripPhotos = photosForTrip(activeId.value); return tripPhotos.length ? tripPhotos : creationPhotos.filter(photo=>!photo.referenceOnly).slice(0,3); });
 const asset = useAsset();
 const url = ref(''), name = ref(''), error = ref(''), dragging = ref(false), reading = ref(false);
+const sample = ref<CreationPhoto | null>(null);
 const input = ref<HTMLInputElement>();
 let version = 0;
-function clear() { version++; if (url.value) URL.revokeObjectURL(url.value); url.value = ''; name.value = ''; reading.value = false; }
+function clear() { version++; if (url.value.startsWith('blob:')) URL.revokeObjectURL(url.value); url.value = ''; name.value = ''; sample.value = null; reading.value = false; }
+function chooseSample(photo: CreationPhoto) { clear(); error.value = ''; sample.value = photo; url.value = asset('assets/memory/' + photo.source); name.value = photo.title + '.jpg'; }
 function read(file?: File) {
   if (!file) return;
   error.value = '';
@@ -20,7 +22,7 @@ function read(file?: File) {
 }
 function choose(event: Event) { const target = event.target as HTMLInputElement; read(target.files?.[0]); target.value = ''; }
 function drop(event: DragEvent) { dragging.value = false; read(event.dataTransfer?.files?.[0]); }
-function confirm() { if (!url.value) return; emit('upload', url.value, name.value); url.value = ''; open.value = false; }
+function confirm() { if (!url.value) return; emit('upload', sample.value?.source || url.value, name.value, sample.value?.id); url.value = ''; open.value = false; }
 watch(open, value => { if (!value) clear(); else error.value = ''; });
 onBeforeUnmount(clear);
 </script>
@@ -33,9 +35,8 @@ onBeforeUnmount(clear);
       <input ref="input" type="file" accept="image/jpeg,image/png,image/webp" class="sr-only" aria-label="上傳旅行照片" @change="choose">
     </div>
     <p v-if="name" class="creation-file-name">{{ name }}</p><p v-if="error" class="creation-error" role="alert">{{ error }}</p>
-    <p class="creation-muted">照片只在你的裝置預覽。這個版本不會上傳照片；生成流程使用預製風格範例。</p>
-    <label v-if="photos.length" class="creation-label">這趟旅行的照片</label>
-    <div v-if="photos.length" class="creation-example-grid"><button v-for="photo in photos" :key="photo.id" @click="emit('example', photo.id); open = false"><div :class="{ 'creation-cropped-source': photo.sourceCrop }"><img :src="asset('assets/memory/' + photo.source)" :alt="photo.location"></div><span>{{ photo.title }}</span></button></div>
+    <label class="creation-label">也可以先試試這些照片 <span>選一張，看看能做出什麼收藏</span></label>
+    <div class="creation-example-grid"><button v-for="photo in photos" :key="photo.id" :aria-pressed="sample?.id === photo.id" @click="chooseSample(photo)"><div :class="{ 'creation-cropped-source': photo.sourceCrop }"><img :src="asset('assets/memory/' + photo.source)" :alt="photo.location"></div><span>{{ photo.title }}</span></button></div>
     <template #footer><button class="creation-primary" :disabled="!url || reading" @click="confirm">使用這張照片</button></template>
   </CreationDialog>
 </template>

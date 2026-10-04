@@ -16,5 +16,5 @@ export default defineNuxtConfig({
             link: [{ rel: 'icon', href: 'data:,' }]
         }
     },
-    nitro: { prerender: { routes: ['/trips', '/trip', '/esim', '/memory', '/memory/usj', '/planner', '/atlas', '/town', '/wardrobe'] } }
+    nitro: { prerender: { routes: ['/trips', '/trip', '/esim', '/memory', '/memory/usj', '/planner', '/atlas', '/town', '/wardrobe', '/collection'] } }
 });

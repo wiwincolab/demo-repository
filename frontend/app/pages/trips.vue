@@ -3,8 +3,8 @@ import { tripSummaries, type TripId } from '~/data/trips';
 const route = useRoute();
 const asset = useAsset();
 const { activeId, ready, selectTrip } = useTripContext();
-const nextPath = computed(() => typeof route.query.next === 'string' && /^\/(trip|esim|planner|memory)(\/|\?|$)/.test(route.query.next) ? route.query.next : '/trip');
-const actionName = computed(() => nextPath.value.startsWith('/memory') ? '開啟這趟 AI 創作' : nextPath.value.startsWith('/esim') ? '查看這趟上網準備' : '開啟行程');
+const nextPath = computed(() => typeof route.query.next === 'string' && /^\/(trip|esim|planner|memory|collection)(\/|\?|$)/.test(route.query.next) ? route.query.next : '/trip');
+const actionName = computed(() => nextPath.value.startsWith('/collection') ? '翻開這趟收集冊' : nextPath.value.startsWith('/memory') ? '開啟這趟 AI 創作' : nextPath.value.startsWith('/esim') ? '查看這趟上網準備' : '開啟行程');
 function openTrip(id: TripId) {
   selectTrip(id);
   const url = new URL(nextPath.value, 'https://chictrip.local');

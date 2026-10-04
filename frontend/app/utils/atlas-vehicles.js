@@ -29,10 +29,11 @@ export function createVehicles(map, T, maplibregl) {
     cars.forEach(car=>train.add(car));models['train-front']=train;
     Object.values(models).forEach(m=>{m.visible=false;scene.add(m)});
     scene.add(new T.HemisphereLight(0xffffff,0x667077,2.1));const sun=new T.DirectionalLight(0xfff0d8,2.8);sun.position.set(5,-8,14);scene.add(sun);
-    let renderer,active=null,position=[121.2328,25.0797],angle=0,sampleBehind=null,sizeFactor=1;
+    let renderer,active=null,position=[121.2328,25.0797],angle=0,sampleBehind=null,sizeFactor=1,terrain=false;
     const layer={id:'memory-vehicle-model',type:'custom',renderingMode:'3d',onAdd(m,gl){renderer=new T.WebGLRenderer({canvas:m.getCanvas(),context:gl,antialias:true});renderer.autoClear=false;},render(gl,args){
       if(!active||!renderer)return;const unit=40075016.686*Math.cos(position[1]*Math.PI/180)/(512*Math.pow(2,map.getZoom()))*(active===train?6:12)*sizeFactor;
-      const merc=maplibregl.MercatorCoordinate.fromLngLat(position,unit*(active===models.plane ? .5 : .2)),scale=merc.meterInMercatorCoordinateUnits()*unit;
+      const altitude=terrain?(map.queryTerrainElevation(position)||0):0;
+      const merc=maplibregl.MercatorCoordinate.fromLngLat(position,altitude+unit*(active===models.plane ? .5 : .2)),scale=merc.meterInMercatorCoordinateUnits()*unit;
       active.rotation.z=angle;
       if(active===train){active.rotation.z=0;cars.forEach((car,i)=>{
         const p=sampleBehind?sampleBehind(i*7.15*unit):position;
@@ -46,7 +47,7 @@ export function createVehicles(map, T, maplibregl) {
       camera.projectionMatrix.copy(matrix.multiply(local));renderer.resetState();renderer.clearDepth();renderer.render(scene,camera);renderer.resetState();
     },onRemove(){Object.values(models).forEach(g=>g.traverse(m=>{if(m.geometry)m.geometry.dispose()}));Object.values(palette).forEach(m=>m.dispose());renderer?.dispose();}};
     map.addLayer(layer);
-    return {opacity(value){Object.values(palette).forEach(m=>{m.transparent=true;m.opacity=value;});map.triggerRepaint();},move(type,point,next,sampler,context={}){sizeFactor=context.city==='seoul'?(type==='bus'?.56:type==='train-front'?.68:.85):1;sampleBehind=sampler;const selected=models[type]||models['train-front'];if(active!==selected){if(active)active.visible=false;active=selected;active.visible=true;}position=point;const dx=(next[0]-point[0])*Math.cos(point[1]*Math.PI/180),dy=next[1]-point[1];if(Math.hypot(dx,dy)>1e-10)angle=Math.atan2(dy,dx);map.triggerRepaint();},hide(){if(active)active.visible=false;active=null;map.triggerRepaint();}};
+    return {opacity(value){Object.values(palette).forEach(m=>{m.transparent=true;m.opacity=value;});map.triggerRepaint();},move(type,point,next,sampler,context={}){terrain=context.terrain===true;sizeFactor=context.city==='seoul'?(type==='bus'?.56:type==='train-front'?.68:.85):1;sampleBehind=sampler;const selected=models[type]||models['train-front'];if(active!==selected){if(active)active.visible=false;active=selected;active.visible=true;}position=point;const dx=(next[0]-point[0])*Math.cos(point[1]*Math.PI/180),dy=next[1]-point[1];if(Math.hypot(dx,dy)>1e-10)angle=Math.atan2(dy,dx);map.triggerRepaint();},hide(){if(active)active.visible=false;active=null;map.triggerRepaint();}};
   };
   return createMemoryVehicles(map);
 }

@@ -1,41 +1,27 @@
-import { creationStyles, makeExample, restoreCreationWork, creationFriendsForTrip, type CreationWork, type CreationExchange } from '~/data/creation';
+import { creationStyles, makeExample, photosForTrip, photoById, creationFriendsForTrip, type CreationPhoto, type CreationWork, type CreationExchange } from '~/data/creation';
 
-// Stored globally for migration and Atlas; consumers see only the active trip.
+// Shared through navigation for recording; a full reload starts a fresh take.
 export function useCreation() {
   const { activeId } = useTripContext();
-  const allWorks = useState<CreationWork[]>('creation-works-v2', () => [makeExample(creationStyles[0]!)]);
-  const allExchanges = useState<CreationExchange[]>('creation-exchanges-v2', () => []);
-  const ready = useState('creation-storage-ready-v2', () => false);
-  const { notify } = useDemo();
+  const allWorks = useState<CreationWork[]>('creation-demo-works', () => [makeExample(creationStyles[0]!)]);
+  const allExchanges = useState<CreationExchange[]>('creation-demo-exchanges', () => []);
+  const uploadedPhotos = useState<CreationPhoto[]>('creation-demo-uploads', () => []);
+  const photos = computed(() => [...photosForTrip(activeId.value), ...uploadedPhotos.value.filter(photo => photo.tripId === activeId.value)]);
   const works = computed(() => allWorks.value.filter(work => work.tripId === activeId.value));
   const exchanges = computed(() => allExchanges.value.filter(exchange => exchange.tripId === activeId.value));
   const friends = computed(() => creationFriendsForTrip(activeId.value));
   const pending = computed(() => exchanges.value.filter(item => item.status === 'pending').length);
-  const key = 'chictrip-ai-creation-v2';
-  onMounted(() => {
-    if (ready.value) return;
-    try {
-      const saved = JSON.parse(localStorage.getItem(key) || localStorage.getItem('chictrip-ai-creation-v1') || 'null');
-      if ([1,2].includes(saved?.version) && Array.isArray(saved.works) && Array.isArray(saved.exchanges)) {
-        allWorks.value = saved.works.map(restoreCreationWork).filter((work:CreationWork|undefined):work is CreationWork => !!work);
-        allExchanges.value = saved.exchanges.flatMap((entry:CreationExchange) => {
-          if(!entry || typeof entry.id!=='string') return [];
-          const outgoing=restoreCreationWork(entry.outgoing), incoming=restoreCreationWork(entry.incoming);
-          if(!outgoing || !incoming || !['pending','accepted','declined','cancelled'].includes(entry.status)) return [];
-          return [{...entry,tripId:outgoing.tripId,outgoing,incoming}];
-        });
-      }
-    } catch { /* Preserve existing disk records if they cannot be read. */ }
-    ready.value = true;
-  });
-  function persist() {
-    try { localStorage.setItem(key, JSON.stringify({ version: 2, works: allWorks.value, exchanges: allExchanges.value })); }
-    catch { notify('本次操作已完成，但瀏覽器無法保存紀錄；請勿關閉頁面。'); }
+  function findPhoto(id?: string) { return uploadedPhotos.value.find(photo => photo.id === id) || photoById(id); }
+  function addPhoto(source: string, name: string, demoPhotoId?: string) {
+    if (!activeId.value) return;
+    const template = photoById(demoPhotoId);
+    const photo: CreationPhoto = { id: 'upload-' + crypto.randomUUID(), tripId: activeId.value, title: name.replace(/\.[^.]+$/, '') || '旅行照片', location: template?.location || '這趟旅行 · 我的照片', source, styles: template ? [...template.styles] : [], sourceCrop: template?.sourceCrop, demoPhotoId };
+    uploadedPhotos.value.unshift(photo);
+    return photo;
   }
   function save(work: CreationWork) {
     if (!activeId.value || work.tripId !== activeId.value) return;
     if (!allWorks.value.some(item => item.id === work.id)) allWorks.value.unshift({ ...work });
-    persist();
   }
   function request(friendId: string, outgoing: CreationWork, incoming: CreationWork, note: string) {
     if(!activeId.value || outgoing.tripId!==activeId.value) return null;
@@ -44,7 +30,6 @@ export function useCreation() {
     save(outgoing);
     const exchange: CreationExchange = { id: crypto.randomUUID(), tripId:activeId.value, friendId, outgoing: { ...outgoing }, incoming: { ...incoming }, note: note.trim(), reply: '', direction: 'sent', status: 'pending', createdAt: new Date().toISOString() };
     allExchanges.value.unshift(exchange);
-    persist();
     return exchange;
   }
   function resolve(id: string, status: 'accepted' | 'declined' | 'cancelled', reply = '') {
@@ -58,7 +43,14 @@ export function useCreation() {
       allWorks.value.unshift(received);
       if (!allWorks.value.some(item => item.id === exchange.outgoing.id)) allWorks.value.push({ ...exchange.outgoing });
     }
-    persist();
   }
-  return { works, exchanges, allWorks, pending, friends, save, request, resolve };
+  return { works, exchanges, allWorks, pending, friends, photos, findPhoto, addPhoto, save, request, resolve };
+}
+
+export function useCreationAsset() {
+  const asset = useAsset();
+  return (path: string) => {
+    const candidate = path.replace(/^assets\/memory\//, '');
+    return /^(blob:|data:image\/)/.test(candidate) ? candidate : asset(path);
+  };
 }

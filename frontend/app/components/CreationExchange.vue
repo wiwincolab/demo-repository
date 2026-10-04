@@ -9,7 +9,11 @@ const friendId = ref('yu'), offerId = ref('pin'), note = ref('');
 const stage = ref<'choose' | 'review' | 'sent'>('choose');
 const receipt = ref<CreationExchange | null>(null);
 const friend = computed(() => friends.value.find(f => f.id === friendId.value) || friends.value[0]!);
-const offers = computed(()=>photosForTrip(activeId.value).filter(p=>!p.featured).flatMap(photo=>photo.styles.map(id=>workForPhoto(photo,id,friend.value.name))));
+const offers = computed(()=>{
+  const tripPhotos = photosForTrip(activeId.value);
+  const available = tripPhotos.length ? tripPhotos : photosForTrip('kansai');
+  return available.filter(p=>!p.featured).flatMap(photo=>photo.styles.map(id=>workForPhoto(photo,id,friend.value.name)));
+});
 const offer = computed(() => offers.value.find(work=>work.id===offerId.value) || offers.value[0]!);
 watch(open, value => { if (value) { stage.value = 'choose'; note.value = ''; receipt.value = null; friendId.value=friends.value[0]!.id;offerId.value=''; } });
 function send() { if(!offer.value)return;receipt.value = request(friend.value.id, props.work, offer.value, note.value); if(receipt.value)stage.value = 'sent'; }
@@ -40,10 +44,10 @@ function send() { if(!offer.value)return;receipt.value = request(friend.value.id
       <div v-if="stage === 'sent'" class="creation-receipt-head" :class="{ 'is-complete': receipt?.status === 'accepted' }">
         <span>{{ receipt?.status === 'accepted' ? '✓' : '↗' }}</span>
         <h3>{{ receipt?.status === 'accepted' ? '交換完成，一起的回憶多了一件。' : '邀請已準備好，等待朋友接受。' }}</h3>
-        <p>{{ receipt?.status === 'accepted' ? '作品已收進「我的收藏」，來源與留言也會一起保留。' : '這是本機交換模擬，不會傳送給真實朋友。' }}</p>
+        <p>{{ receipt?.status === 'accepted' ? '作品已收進「我的收藏」，來源與留言也會一起保留。' : '邀請已準備好，看看朋友會和你交換哪一份回憶。' }}</p>
       </div>
       <CreationUnwrap v-if="receipt?.status === 'accepted'" :image="asset('assets/memory/' + offer.image)" :friend="friend.name" :companion="friend.companion" :message="receipt.reply" />
-      <div v-else class="creation-trade-pair"><figure><img :src="asset('assets/memory/' + work.image)" :alt="work.title"><figcaption><small>你送出的收藏副本</small><b>{{ work.title }}</b></figcaption></figure><span>⇄</span><figure><img :src="asset('assets/memory/' + offer.image)" :alt="offer.title"><figcaption><small>來自 {{ friend.name }}</small><b>{{ offer.title }}</b></figcaption></figure></div>
+      <div v-else class="creation-trade-pair"><figure><CreationArtwork :work="work" :alt="work.title" compact /><figcaption><small>你送出的收藏副本</small><b>{{ work.title }}</b></figcaption></figure><span>⇄</span><figure><CreationArtwork :work="offer" :alt="offer.title" compact /><figcaption><small>來自 {{ friend.name }}</small><b>{{ offer.title }}</b></figcaption></figure></div>
       <div v-if="friend.companion" class="creation-companion"><span>↔</span><div><b>同行限定紀念標記</b><small>{{ friend.trip }} · {{ friend.name }} 與你</small></div></div>
       <blockquote v-if="note" class="creation-message">「{{ note }}」<small>你留給 {{ friend.name }} 的話</small></blockquote>
       <p class="creation-muted">交換的是收藏副本，雙方保留原作。每件收到的作品都會記錄原創作者、交換對象、時間與留言。</p>
@@ -51,7 +55,7 @@ function send() { if(!offer.value)return;receipt.value = request(friend.value.id
     <template #footer>
       <template v-if="stage === 'choose'"><button class="creation-primary" :disabled="!offer" @click="stage = 'review'">預覽交換內容 <span>→</span></button></template>
       <template v-else-if="stage === 'review'"><button class="creation-secondary" @click="stage = 'choose'">返回</button><button class="creation-primary" @click="send">送出交換邀請</button></template>
-      <template v-else-if="receipt?.status === 'pending'"><button class="creation-secondary" @click="open = false">稍後查看</button><button class="creation-primary" @click="resolve(receipt.id, 'accepted', '收到啦！把我們一起走過的地方收好。')">模擬 {{ friend.name }} 接受</button></template>
+      <template v-else-if="receipt?.status === 'pending'"><button class="creation-secondary" @click="open = false">稍後查看</button><button class="creation-primary" @click="resolve(receipt.id, 'accepted', '收到啦！把我們一起走過的地方收好。')">查看 {{ friend.name }} 的回覆</button></template>
       <button v-else class="creation-primary" @click="open = false">完成</button>
     </template>
   </CreationDialog>
