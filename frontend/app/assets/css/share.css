@@ -44,6 +44,16 @@
 .gift-code .invite-qr { opacity: .85; }
 .gift-demo-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; background: var(--yellow); color: var(--ink); font-weight: 800; font-size: 12px; }
 
+/* 即時漏斗（pages/stats.vue），投影時字要大 */
+.stats-page { max-width: 760px; }
+.stats-funnel { border: 1px solid var(--line); border-radius: 20px; padding: 16px 18px; background: #fff; display: grid; gap: 10px; }
+.stats-funnel h2 { font-size: 18px; margin: 0 0 4px; }
+.stats-step { display: grid; grid-template-columns: minmax(0, 9em) 1fr auto; grid-template-rows: auto auto; column-gap: 12px; align-items: center; }
+.stats-step span { font-size: 14px; color: var(--muted); }
+.stats-step i { height: 12px; border-radius: 6px; background: linear-gradient(90deg, var(--blue), var(--blue-dark)); transition: width .6s ease; }
+.stats-step b { font-size: 28px; font-weight: 800; color: var(--ink); min-width: 2ch; text-align: right; }
+.stats-step small { grid-column: 3; color: var(--muted); font-size: 11px; text-align: right; }
+
 /* 朋友打開分享、邀請、禮物連結看到的頁面 */
 .share-page { max-width: 560px; margin: 0 auto; padding: 24px 16px 180px; display: grid; gap: 18px; }
 .share-hero { border-radius: 22px; overflow: hidden; background: var(--paper); border: 1px solid var(--line); }
