@@ -118,7 +118,10 @@ jobs:
       KUBECONFIG: /home/chictrip-runner/.kube/config
       KC: kubectl -n chictrip
     steps:
+      # 部署只用得到 deploy/ 的 chart。整個 repo 含 700 MB 素材與歷史，全抓會在 VM 上常駐約 1.8 GB（10/7 第一次部署實測）
       - uses: actions/checkout@v4
+        with:
+          sparse-checkout: deploy
 
       # 跟 CARE、MEDDEMO 一樣先看磁碟：90% 是 kubelet 開始驅逐 pod 的門檻（nodefs.available<10%），
       # 這台同時跑 CARE，到了就不部署，免得一起被趕下線
