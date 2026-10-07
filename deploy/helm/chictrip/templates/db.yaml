@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+  labels:
+    {{- include "chictrip.labels" . | nindent 4 }}
+spec:
+  selector:
+    app: db
+  ports:
+    - port: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+  labels:
+    {{- include "chictrip.labels" . | nindent 4 }}
+spec:
+  serviceName: db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+        - name: postgres
+          image: {{ .Values.db.image }}
+          env:
+            - name: POSTGRES_DB
+              value: chictrip
+            - name: POSTGRES_USER
+              value: chictrip
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.database }}
+                  key: POSTGRES_PASSWORD
+          ports:
+            - containerPort: 5432
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "chictrip", "-d", "chictrip"]
+            periodSeconds: 5
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+  # K3s 內建的 local-path 會把資料放在 VM 的磁碟上，pod 重建資料還在；helm uninstall 也不會刪掉這個 PVC。
+  # 注意：POSTGRES_PASSWORD 只在資料庫第一次初始化時寫入，之後改 GitHub Secret 不會改到資料庫裡的密碼
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: {{ .Values.db.storage }}

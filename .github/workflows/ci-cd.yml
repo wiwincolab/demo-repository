@@ -1,0 +1,172 @@
+# 每次 push 與 PR 都跑測試；推到 main 才建映像檔，並由 care-vm 上的 self-hosted runner 用 Helm 部署到 K3s
+# （chart 在 deploy/helm/chictrip，VM 用 deploy/setup-vm.sh 準備）。做法照 MEDDEMO。
+# GitHub Pages（nuxt-pages.yml）照舊部署，兩邊互不影響。
+# 需要的 repo secrets：POSTGRES_PASSWORD（只能用英數字，會直接放進資料庫連線網址）
+# 需要的 repo variables：SITE_URL
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}/chictrip
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm test
+
+  typecheck:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+
+  lint-chart:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+        with:
+          # 跟 care-vm 上的 helm 同一版
+          version: v3.22.0
+      - run: helm lint deploy/helm/chictrip
+      # 實際渲染一次，模板寫錯在這裡就會失敗，不必等到部署
+      - run: helm template chictrip deploy/helm/chictrip --namespace chictrip --set image.tag=ci > /dev/null
+
+  build:
+    needs: [test, typecheck, lint-chart]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v3
+      # 映像檔在這裡建好再讓 VM 拉，VM 上不 build，build 快取才不會塞滿 VM 的磁碟。
+      # 兩個映像共用同一個建置階段（frontend/Dockerfile），放在同一個 job 裡第二個直接沿用。
+      # 快取分開存：寫進同一個 scope 會蓋掉前一個的紀錄，web 那層 700 MB 的素材就得每次重傳
+      - uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          target: web
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-web:${{ github.sha }}
+            ${{ env.IMAGE_PREFIX }}-web:latest
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+      - uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          target: api
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-api:${{ github.sha }}
+            ${{ env.IMAGE_PREFIX }}-api:latest
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api
+
+  deploy:
+    needs: build
+    # 只在推 main 或手動觸發時部署；PR 只跑上面的測試，碰不到 VM
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    # care-vm 上 chicTrip 專用的 runner（跟 CARE、MEDDEMO 的 runner 分開）
+    runs-on: [self-hosted, Linux, chictrip]
+    environment: production
+    # 同一時間只跑一個部署，後到的排隊，不會把進行中的部署砍掉
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: read
+    env:
+      # 只能動 chictrip namespace 的部署帳號（deploy/setup-vm.sh 建立），不是 K3s 的管理員 kubeconfig
+      KUBECONFIG: /home/chictrip-runner/.kube/config
+      KC: kubectl -n chictrip
+    steps:
+      - uses: actions/checkout@v4
+
+      # 跟 CARE、MEDDEMO 一樣先看磁碟：90% 是 kubelet 開始驅逐 pod 的門檻（nodefs.available<10%），
+      # 這台同時跑 CARE，到了就不部署，免得一起被趕下線
+      - name: 部署前檢查磁碟
+        run: |
+          used=$(df -P / | awk 'NR==2 { gsub(/%/, "", $5); print $5 }')
+          echo "磁碟使用率：${used}%"
+          if [ "$used" -ge 90 ]; then
+            echo "::error::磁碟使用率 ${used}% 已到 kubelet 驅逐門檻，中止部署"
+            exit 1
+          fi
+
+      # GHCR 是私有的：用這次工作的短期 token 把映像拉進 K3s，VM 上不存放長期的映像庫密碼。
+      # 拉映像要 root，runner 只能透過 sudo 跑 setup-vm.sh 裝好的這支腳本
+      - name: 預先拉映像
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "$GHCR_TOKEN" | sudo /usr/local/sbin/chictrip-pull-images "$GITHUB_ACTOR" "$GITHUB_SHA"
+
+      - name: 更新密鑰並用 Helm 部署
+        env:
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        run: |
+          # namespace 由 setup-vm.sh 建好，部署帳號沒有建 namespace 的權限。
+          # Secret 不放進 chart（跟 MEDDEMO 一樣），要比 chart 先建好，pod 一啟動就讀得到
+          $KC create secret generic chictrip-secrets \
+            --from-literal=POSTGRES_PASSWORD="$POSTGRES_PASSWORD" \
+            --dry-run=client -o yaml | $KC apply -f -
+          # --wait：所有 pod 就緒才算成功。第一次部署要下載 Postgres 映像，上限放寬到 10 分鐘
+          helm upgrade --install chictrip deploy/helm/chictrip --namespace chictrip \
+            --set image.tag="$GITHUB_SHA" --wait --timeout 10m
+
+      # 要看到 chicTrip 自己的回應才算過：同一個 Traefik 上 CARE 的 /health 一樣回 200。
+      # 剛部署完 Traefik 可能還沒換上新規則，等一下再試
+      - name: 健康檢查
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: |
+          for attempt in $(seq 1 20); do
+            body=$(curl -fsS "$SITE_URL/health" 2>/dev/null || true)
+            if [ "$body" = '{"status":"ok","app":"chictrip"}' ]; then
+              echo "$body"
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "::error::$SITE_URL/health 回的不是 chicTrip 的健康檢查：${body:-（沒有回應）}"
+          exit 1
+
+      # 舊映像不在這裡清：CARE 的每日排程（care-image-prune.timer）會回收整台 VM 的映像，
+      # 每個 repository 保留 3 個 tag、使用中的不刪。要退版就重跑舊的那次 workflow

@@ -1,0 +1,22 @@
+# 本機開發用的資料庫：docker compose up -d 之後 npm run dev，/health 就連得到。
+# 映像跟 care-vm 上的一樣（MEDDEMO 也用這個），VM 不必多下載一份
+services:
+  db:
+    image: pgvector/pgvector:0.8.0-pg16
+    environment:
+      POSTGRES_DB: chictrip
+      POSTGRES_USER: chictrip
+      POSTGRES_PASSWORD: chictrip
+    # 5432 常被 Homebrew Postgres 占用、5433 是 MEDDEMO 的，這裡用 5434
+    ports:
+      - "127.0.0.1:5434:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chictrip -d chictrip"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  pgdata:

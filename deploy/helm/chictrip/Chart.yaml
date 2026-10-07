@@ -1,0 +1,6 @@
+apiVersion: v2
+name: chictrip
+description: 去趣 chicTrip（web、api、Postgres）在 care-vm 的 K3s 上的部署
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

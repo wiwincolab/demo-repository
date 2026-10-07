@@ -46,6 +46,8 @@ MapLibre 保留縮放途中未完成的粗階圖磚，渲染倍率上限 2；車
 
 正式 Demo：https://wiwincolab.github.io/demo-repository/ 。`main` 推送由 `.github/workflows/nuxt-pages.yml` 自動檢查、建置並部署此 Nuxt 專案；部署成功後可用 `/demo-repository/build-info.json` 核對 commit。根目錄舊 HTML 保留但不包含在新站產物。
 
+GCP 版：https://chictrip.jamessu2016.com 。跑在 care-vm 的 K3s 上（跟 CARE、MEDDEMO 同一台），有 Nitro 伺服器與 Postgres，之後串 AI、存資料都在這版做；GitHub Pages 版照舊同時部署。`main` 推送由 `.github/workflows/ci-cd.yml` 測試、在 GitHub 建 web（Nginx＋靜態檔）與 api（Nitro）兩個映像，再由 VM 上的 runner 用 `deploy/helm/chictrip` 部署，最後打 `/health` 確認回 `{"status":"ok","app":"chictrip"}`。資料庫資料放在 VM 磁碟的 PVC，重新部署不會清掉。VM 的一次性設定在 `deploy/setup-vm.sh`；repo 是公開的，runner 只拿到 chictrip namespace 的權限，網址的 Ingress 也不歸它管。本機要測 `/health` 先 `docker compose up -d` 開資料庫。
+
 需要 Node.js 24 LTS 與 npm。
 
 ```sh

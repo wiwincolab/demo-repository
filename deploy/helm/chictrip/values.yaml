@@ -1,0 +1,21 @@
+# 部署流程用 --set image.tag=<commit SHA> 指定這次的版本，每一版都對得回原始碼
+image:
+  api: ghcr.io/wiwincolab/chictrip-api
+  web: ghcr.io/wiwincolab/chictrip-web
+  tag: latest
+  # GHCR 是私有的，映像由部署流程用短期 token 先拉進 K3s；這裡不能設 Always，否則 pod 會自己去映像庫拉而失敗
+  pullPolicy: IfNotPresent
+
+# 對外網址（chictrip.jamessu2016.com）的 Ingress 不在這個 chart 裡，由 deploy/setup-vm.sh 用管理員權限建立：
+# repo 是公開的，部署帳號若能建 Ingress，就能把 CARE 的網域導走
+
+db:
+  # 跟 MEDDEMO 同一個映像，care-vm 上已經有，不必再下載
+  image: pgvector/pgvector:0.8.0-pg16
+  # K3s 內建的 local-path 不會強制這個上限，資料直接放在 VM 的磁碟上；這裡只是宣告
+  storage: 5Gi
+
+# Secret 由部署流程從 GitHub Secrets 建立，不放進 chart（跟 MEDDEMO 一樣）
+secrets:
+  # POSTGRES_PASSWORD
+  database: chictrip-secrets
