@@ -10,7 +10,7 @@ const { usage, eligible, members, group, days, esim, notify, addMember, buy } = 
 const { available: live } = useApi();
 const { activeId, activeTrip, tripHref } = useTripContext();
 const asset = useAsset();
-type Panel = 'habits' | 'analysis' | 'plans' | 'group' | 'benefits' | 'points' | 'checkout' | 'success' | 'install' | 'help';
+type Panel = 'habits' | 'analysis' | 'plans' | 'group' | 'benefits' | 'points' | 'checkout' | 'success' | 'install' | 'help' | 'gift';
 const panel = ref<Panel | null>(null);
 const page = ref<HTMLElement>();
 watch(panel, async (value, previous) => {
@@ -20,7 +20,7 @@ watch(panel, async (value, previous) => {
   if (dialog) { dialog.scrollTop = 0; dialog.querySelector('button')?.focus(); }
 });
 const sheetOpen = computed({ get: () => panel.value !== null, set: (open: boolean) => { if (!open) panel.value = null; } });
-const titles: Record<Panel,string> = { habits:'找到適合你的流量', analysis:'這趟旅行，會用多少網路？', plans:'選擇流量', group:'旅伴一起省', benefits:'這張 eSIM，還多了這些', points:'旅後回饋提案', checkout:'確認你的上網方案', success:'上網方案準備好了', install:'安裝你的 eSIM', help:'方案與展示說明' };
+const titles: Record<Panel,string> = { habits:'找到適合你的流量', analysis:'這趟旅行，會用多少網路？', plans:'選擇流量', group:'旅伴一起省', benefits:'這張 eSIM，還多了這些', points:'旅後回饋提案', checkout:'確認你的上網方案', success:'上網方案準備好了', install:'安裝你的 eSIM', help:'方案與展示說明', gift:'送一張 eSIM 給朋友' };
 const title = computed(() => titles[panel.value || 'help']);
 const selectedUsage = computed(() => eligible.value ? esim.value.purchasedUsage || (members.value[0]?.price === 199 ? 'light' : members.value[0]?.price === 499 ? 'heavy' : 'normal') : esim.value.selectedUsage || usage.value);
 const card = computed(() => esimPlan(selectedUsage.value, activeTrip.value?.dayCount || 5));
@@ -79,6 +79,13 @@ useHead({title:'旅行上網 · eSIM · 去趣'});
       </button>
     </section>
 
+    <!-- 有後端時才有：真的產生禮物連結，朋友領取後這裡看得到（GiftPanel.vue） -->
+    <button v-if="live" class="esim-advisor-entry" @click="open('gift')">
+      <span class="esim-advisor-symbol"><EsimIcon name="sim" :size="25"/><i/></span>
+      <span><small>送朋友上網</small><strong>送一張 eSIM 給朋友</strong><span>朋友掃 QR 就能領取（示範）</span></span>
+      <span class="esim-entry-arrow"><EsimIcon name="arrow" :size="18"/></span>
+    </button>
+
     <div class="esim-checkout-dock"><div><small>{{ eligible?'我的方案':quote.discount?'含組隊優惠提案':'方案參考價' }}</small><strong>{{ eligible?esim.installed?'已安裝':'待安裝':'NT$'+quote.total }}</strong></div><button class="esim-cta" :disabled="!card.available" @click="open(eligible?'install':'checkout')">{{ eligible?'查看 eSIM':'選擇這個方案' }}<EsimIcon name="arrow" :size="17"/></button></div>
 
     <AppSheet v-model="sheetOpen" :title="title" class="esim-sheet">
@@ -125,6 +132,9 @@ useHead({title:'旅行上網 · eSIM · 去趣'});
       </template>
       <template v-else-if="panel==='success'">
         <div class="esim-success"><span><EsimIcon name="check" :size="34"/></span><h3>這趟的網路，準備好了。</h3><p>{{ card.name }} · {{ card.days }} 天</p><small>已儲存這趟行程的示範訂單</small></div><button class="esim-cta esim-full" @click="open(completed?'points':'install')">{{ completed?'查看旅後回饋':'接著安裝 eSIM' }}<EsimIcon name="arrow" :size="18"/></button><button class="esim-text-button" @click="panel=null">回到我的方案</button>
+      </template>
+      <template v-else-if="panel==='gift'">
+        <GiftPanel :days="activeTrip.dayCount" />
       </template>
       <template v-else-if="panel==='install'">
         <div class="esim-install-card"><EsimIcon name="sim" :size="34"/><span><strong>日本 {{ card.name }}</strong><small>{{ esim.installed?'已完成安裝示範':'尚未安裝' }} · {{ card.days }} 天</small></span></div>
