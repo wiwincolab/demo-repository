@@ -43,12 +43,13 @@ export async function writeText(config: AppConfig, prompt: string, timeoutMs = 1
     return text;
 }
 
-// 照 JSON schema 回答（Bingo 出題、看照片判斷任務）；有照片就一起送。回傳原始文字，呼叫端自己驗證格式
-export async function writeJson(config: AppConfig, prompt: string, schema: Record<string, unknown>, timeoutMs: number, image?: SourceImage) {
+// 照 JSON schema 回答（Bingo 出題與判斷、照片分類、每日卡片挑照片）；有照片就依序一起送。回傳原始文字，呼叫端自己驗證格式
+export async function writeJson(config: AppConfig, prompt: string, schema: Record<string, unknown>, timeoutMs: number, images: SourceImage | SourceImage[] = []) {
+    const list = Array.isArray(images) ? images : [images];
     const interaction = await ai(config).interactions.create({
         model: config.textModel,
         store: false,
-        input: image ? [imageInput(image), { type: 'text', text: prompt }] : [{ type: 'text', text: prompt }],
+        input: [...list.map(imageInput), { type: 'text', text: prompt }],
         response_format: { type: 'text', mime_type: 'application/json', schema },
     }, { maxRetries: 0, timeout: timeoutMs });
     return interaction.output_text ?? '';

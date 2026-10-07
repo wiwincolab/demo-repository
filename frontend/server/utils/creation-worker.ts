@@ -5,6 +5,8 @@ import type { AppConfig } from './config.ts';
 import { db } from './db.ts';
 import { analyzePhoto, generateStyledImage, writeJson, type SourceImage } from './gemini.ts';
 import { parseVerdict, verdictPrompt, VERDICT_SCHEMA, type BingoCell } from './bingo.ts';
+import { DAILY_SCHEMA, dailyPrompt, parsePicks, parseTag, TAG_SCHEMA, tagPrompt, type DailyPicks } from './journal.ts';
+import { tripTitle } from './share.ts';
 import { buildPrompt, nearestAspect, needsAnalysis, STYLE_ASPECT } from './creation-prompts.ts';
 import { mediaRelativePath, readMedia, sniffImageType, writeMedia } from './media.ts';
 import { creationQueue, QUEUE_NAME, redisConnection, type CreationJob } from './queue.ts';
@@ -82,7 +84,56 @@ async function requeueWaiting(config: AppConfig) {
     const marks = await sql<{ id: string }[]>`
         select id from bingo_marks where status = 'checking' and created_at > now() - ${config.queueStaleMs} * interval '1 millisecond'`;
     for (const { id } of marks) await creationQueue().add('bingo', { markId: id }, { jobId: `bingo-${id}` });
-    return rows.length + marks.length;
+    // 每日卡片同理：太久沒做的退回（第一張當代表、不配文字），還在時間內的補回佇列
+    await sql`
+        update daily_cards set status = 'fallback', picks = ${sql.json(fallbackPicks as never)}, finished_at = now()
+        where status = 'queued' and created_at <= now() - ${config.queueStaleMs} * interval '1 millisecond'`;
+    const cards = await sql<{ id: string }[]>`
+        select id from daily_cards where status = 'queued' and created_at > now() - ${config.queueStaleMs} * interval '1 millisecond'`;
+    for (const { id } of cards) await creationQueue().add('daily', { cardId: id }, { jobId: `daily-${id}` });
+    return rows.length + marks.length + cards.length;
+}
+
+// 照片標類別（食物／風景／人物／其他），共同遊記的趣味統計用。失敗就留空，不影響任何畫面
+export async function processPhotoTag(config: AppConfig, id: string) {
+    const sql = await db();
+    const [photo] = await sql<{ media_path: string; mime: SourceImage['mime'] }[]>`select media_path, mime from photos where id = ${id} and tag is null`;
+    if (!photo) return;
+    try {
+        const image = { bytes: await readMedia(config.mediaDir, photo.media_path), mime: photo.mime, width: null, height: null };
+        const tag = parseTag(await writeJson(config, tagPrompt, TAG_SCHEMA, 20_000, image));
+        if (tag) await sql`update photos set tag = ${tag} where id = ${id}`;
+        console.info(`[worker] stage=photo_tag result=${tag ?? 'invalid'}`);
+    } catch (error) {
+        console.warn(`[worker] stage=photo_tag result=error error=${error instanceof Error ? error.message.slice(0, 160) : error}`);
+    }
+}
+
+// 每日卡片：當天的照片依序送給 Flash，挑出代表、食物、意外並配字。失敗就退回（第一張當代表、不配文字），畫面照樣有卡片
+export const fallbackPicks: DailyPicks = { title: '今天的旅行', cover: 0, food: null, surprise: null, coverCaption: '', foodCaption: '', surpriseCaption: '' };
+export async function processDailyCard(config: AppConfig, id: string) {
+    const sql = await db();
+    const [card] = await sql<{ trip_id: TripId; media_ids: string[] }[]>`select trip_id, media_ids from daily_cards where id = ${id} and status = 'queued'`;
+    if (!card) return;
+    const started = Date.now();
+    try {
+        const rows = await sql<{ id: string; media_path: string; mime: SourceImage['mime'] }[]>`
+            select id, media_path, mime from photos where id = any(${card.media_ids})
+            union all select id, media_path, mime from bingo_marks where id = any(${card.media_ids})`;
+        const ordered = card.media_ids.map(mediaId => rows.find(row => row.id === mediaId)).filter((row): row is NonNullable<typeof row> => !!row);
+        const images = await Promise.all(ordered.map(async row => ({ bytes: await readMedia(config.mediaDir, row.media_path), mime: row.mime, width: null, height: null })));
+        const picks = parsePicks(await writeJson(config, dailyPrompt(tripTitle(card.trip_id), images.length), DAILY_SCHEMA, config.jobTimeoutMs, images), images.length);
+        if (!picks) throw new Error('挑照片的結果格式不對');
+        // 「今日美食」只認標成食物的照片：10/7 實測當天沒有食物照，模型還是硬挑了奈良的鹿當美食
+        const tags = await sql<{ id: string; tag: string | null }[]>`select id, tag from photos where id = any(${card.media_ids})`;
+        const foodTag = picks.food === null ? null : tags.find(row => row.id === ordered[picks.food!]?.id)?.tag;
+        if (picks.food !== null && foodTag !== 'food') { picks.food = null; picks.foodCaption = ''; }
+        await sql`update daily_cards set status = 'done', picks = ${sql.json(picks as never)}, finished_at = now() where id = ${id} and status = 'queued'`;
+        console.info(`[worker] stage=daily_card result=done photos=${images.length} ms=${Date.now() - started}`);
+    } catch (error) {
+        await sql`update daily_cards set status = 'fallback', picks = ${sql.json(fallbackPicks as never)}, finished_at = now() where id = ${id} and status = 'queued'`;
+        console.warn(`[worker] stage=daily_card result=fallback ms=${Date.now() - started} error=${error instanceof Error ? error.message.slice(0, 160) : error}`);
+    }
 }
 
 // 看 Bingo 照片判斷有沒有完成任務（寬鬆）。Gemini 失敗或逾時記成 noted：照樣算完成，標「已記下」，評審不會卡住
@@ -117,7 +168,13 @@ async function recoverOnStart(config: AppConfig) {
 const warn = (label: string) => (error: unknown) => console.warn(`[worker] ${label}：${error instanceof Error ? error.message : error}`);
 
 export function startCreationWorker(config: AppConfig) {
-    const worker = new Worker<CreationJob>(QUEUE_NAME, job => job.name === 'bingo' ? processBingoMark(config, job.data.markId!) : processCreation(config, job.data.creationId!), {
+    const handlers: Record<string, (job: { data: CreationJob }) => Promise<void>> = {
+        create: job => processCreation(config, job.data.creationId!),
+        bingo: job => processBingoMark(config, job.data.markId!),
+        tag: job => processPhotoTag(config, job.data.photoId!),
+        daily: job => processDailyCard(config, job.data.cardId!),
+    };
+    const worker = new Worker<CreationJob>(QUEUE_NAME, async job => { await (handlers[job.name] ?? handlers.create!)(job); }, {
         connection: redisConnection(config.redisUrl),
         concurrency: config.workerConcurrency,
     });

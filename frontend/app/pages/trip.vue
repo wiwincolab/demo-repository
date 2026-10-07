@@ -88,6 +88,15 @@ function savedPlan() {
       </span>
       <span aria-hidden="true">›</span>
     </NuxtLink>
+    <!-- 有後端時才有：旅伴照片依天排好、每天一張 AI 回憶卡、旅行長圖（pages/journal.vue） -->
+    <NuxtLink v-if="live" class="deal-banner" :to="tripHref('/journal')">
+      <span class="sim-mark" aria-hidden="true">✦</span>
+      <span>
+        <strong>我們的旅行紀錄</strong>
+        <small>每天一張 AI 回憶卡，最後拼成旅行長圖</small>
+      </span>
+      <span aria-hidden="true">›</span>
+    </NuxtLink>
     <div class="trip-tools">
       <NuxtLink class="ai-link" :to="tripHref('/planner')">✦ 圈選 AI 排程</NuxtLink>
       <button @click="sheet = 'adjust'">AI 微調</button>

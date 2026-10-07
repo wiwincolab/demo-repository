@@ -28,7 +28,7 @@ export function workFromServer(creation: ServerCreation, findUploaded: (id: stri
     return { ...work, fallback: true };
 }
 
-export const uploadPhoto = (tripId: TripId, blob: Blob, meta: { title: string; location: string; demoPhotoId?: string; stopId?: string; width: number; height: number }) =>
+export const uploadPhoto = (tripId: TripId, blob: Blob, meta: { title: string; location: string; demoPhotoId?: string; stopId?: string; width: number; height: number; hash?: string }) =>
     $fetch<ServerPhoto>('/api/photos', { method: 'POST', query: { tripId, ...meta }, body: blob, headers: { 'Content-Type': 'image/jpeg' } });
 export const listPhotos = (tripId: TripId) => $fetch<ServerPhoto[]>('/api/photos', { query: { tripId } });
 export const listCreations = (tripId: TripId) => $fetch<ServerCreation[]>('/api/creations', { query: { tripId } });

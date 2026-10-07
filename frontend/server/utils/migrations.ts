@@ -155,4 +155,26 @@ create table bingo_marks (
 );
 `,
     },
+    {
+        // 共同遊記與每日卡片：照片指紋（手機上算的 dHash，收起重複照片）、AI 標的類別（食物／風景／人物，趣味統計用），
+        // 每日卡片照「群組或裝置＋行程＋台北日期」一張，重產就覆蓋
+        name: '005_journal',
+        sql: `
+alter table photos add column hash text;
+alter table photos add column tag text check (tag in ('food', 'scenery', 'people', 'other'));
+
+create table daily_cards (
+    id uuid primary key,
+    scope text not null,
+    trip_id text not null,
+    day date not null,
+    status text not null default 'queued' check (status in ('queued', 'done', 'fallback')),
+    media_ids uuid[] not null,
+    picks jsonb,
+    created_at timestamptz not null default now(),
+    finished_at timestamptz,
+    unique (scope, trip_id, day)
+);
+`,
+    },
 ];

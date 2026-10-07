@@ -2,10 +2,10 @@ import { Queue } from 'bullmq';
 import { readConfig } from './config.ts';
 
 // 生成工作排在 Redis（BullMQ，Node 版的 RQ），由 worker（server/plugins/worker.ts）一張張做。
-// 兩種工作共用一個佇列、用 job name 分：create（AI 創作生圖，帶 creationId）、bingo（看 Bingo 照片判斷，帶 markId）。
-// 工作本身只帶 id，內容與狀態都在 Postgres
+// 幾種工作共用一個佇列、用 job name 分：create（AI 創作生圖，帶 creationId）、bingo（看 Bingo 照片判斷，帶 markId）、
+// tag（照片標類別，帶 photoId）、daily（每日卡片，帶 cardId）。工作本身只帶 id，內容與狀態都在 Postgres
 export const QUEUE_NAME = 'creations';
-export interface CreationJob { creationId?: string; markId?: string }
+export interface CreationJob { creationId?: string; markId?: string; photoId?: string; cardId?: string }
 
 // BullMQ 要求 maxRetriesPerRequest 為 null：Redis 斷線時由 BullMQ 自己重連，不讓單一指令失敗就丟錯
 export function redisConnection(url: string) {

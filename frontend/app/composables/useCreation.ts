@@ -58,7 +58,7 @@ export function useCreation() {
         // 範例照片也上傳一份：範例可能屬於別趟行程（伺服器只接受同一趟的示範照片），上傳後重新整理也還在
         const original = file ?? await (await fetch(source.startsWith('blob:') ? source : asset('assets/memory/' + source))).blob();
         const resized = await resizeToJpeg(original);
-        const photo = photoFromServer(await uploadPhoto(tripId, resized.blob, { title, location, demoPhotoId, stopId, width: resized.width, height: resized.height }));
+        const photo = photoFromServer(await uploadPhoto(tripId, resized.blob, { title, location, demoPhotoId, stopId, width: resized.width, height: resized.height, hash: resized.hash }));
         uploadedPhotos.value.unshift(photo);
         if (source.startsWith('blob:')) URL.revokeObjectURL(source);
         return photo;

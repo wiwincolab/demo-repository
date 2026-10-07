@@ -28,10 +28,14 @@ export default defineEventHandler(async event => {
     // 這張照片在行程的哪一站（立體重遊靠它把作品放回去）；手機只會送 recap.ts 的站名
     const stopId = typeof query.stopId === 'string' && /^[a-z0-9-]{1,40}$/.test(query.stopId) ? query.stopId : null;
     const width = size(query.width), height = size(query.height);
+    // 照片指紋（手機上算的 dHash，app/utils/image-hash.ts）：共同遊記用它收起重複的照片
+    const hash = typeof query.hash === 'string' && /^[0-9a-f]{16}$/.test(query.hash) ? query.hash : null;
     const sql = await db();
     const [row] = await sql<{ created_at: Date }[]>`
-        insert into photos (id, device_id, trip_id, title, location, demo_photo_id, stop_id, media_path, mime, width, height)
-        values (${id}, ${device}, ${tripId}, ${title}, ${location}, ${demoPhotoId}, ${stopId}, ${mediaPath}, ${mime}, ${width}, ${height})
+        insert into photos (id, device_id, trip_id, title, location, demo_photo_id, stop_id, media_path, mime, width, height, hash)
+        values (${id}, ${device}, ${tripId}, ${title}, ${location}, ${demoPhotoId}, ${stopId}, ${mediaPath}, ${mime}, ${width}, ${height}, ${hash})
         returning created_at`;
+    // 讓 worker 標類別（食物／風景／人物，共同遊記的趣味統計用）；排不進去就算了，照片照樣收下
+    await withTimeout(creationQueue().add('tag', { photoId: id }, { jobId: `tag-${id}` }), 3000, '排入佇列').catch(() => {});
     return { id, url: `/api/media/${id}`, tripId, title, location, demoPhotoId, stopId, width, height, createdAt: row!.created_at };
 });
