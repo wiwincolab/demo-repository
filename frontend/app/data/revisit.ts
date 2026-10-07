@@ -1,4 +1,4 @@
-import { buildRecapStops, type RecapStop } from './recap.ts';
+import { buildRecapStops, photoForStop, type RecapStop } from './recap.ts';
 import { journeyStops, type JourneyState } from './journey.ts';
 import { tripSummaries, tripItineraries, type TripId } from './trips.ts';
 import type { CreationWork } from './creation.ts';
@@ -21,6 +21,8 @@ export interface RevisitStop extends Omit<RecapStop, 'tripId'> {
   groupLabel?: string;
   english?: string;
   transport?: { vehicle: RevisitVehicle; label: string };
+  /** The trip photo a visitor can turn into their own souvenir of this stop. */
+  photoId?: string;
 }
 export interface RevisitSouvenir {
   id: string; kind: 'sticker' | 'pin' | 'ticket'; title: string; image: string;
@@ -82,11 +84,13 @@ export function buildRevisitStops(scope: RevisitScope, works: CreationWork[], st
     const view = views[stop.id] || [15.5, 0];
     const fixture = demoSouvenirs[stop.id];
     const saved = fixture && stop.works.find(work => work.styleId === fixture.kind);
+    // AI or locally rendered works keep the photo in `image`; what the visitor made is `renderedImage`.
+    const workImage = (work: CreationWork) => work.renderedImage || `assets/memory/${work.image}`;
     const primary: RevisitSouvenir[] = fixture && (saved || demo)
-      ? [{ ...fixture, ...(saved ? { id:saved.id, image:`assets/memory/${saved.image}`, demo:false } : {}) }] : [];
+      ? [{ ...fixture, ...(saved ? { id:saved.id, image:workImage(saved), demo:false } : {}) }] : [];
     for(const work of stop.works){
       if(!['sticker','pin','ticket'].includes(work.styleId)||primary.some(item=>item.kind===work.styleId))continue;
-      primary.push({id:work.id,kind:work.styleId as RevisitSouvenir['kind'],title:work.title,image:`assets/memory/${work.image}`,x:30,y:70,demo:false});
+      primary.push({id:work.id,kind:work.styleId as RevisitSouvenir['kind'],title:work.title,image:workImage(work),x:30,y:70,demo:false});
     }
     const souvenirs=[...primary,...(demo?reserveSouvenirs(stop.source).filter(item=>!primary.some(existing=>existing.kind===item.kind)):[])];
     return {
@@ -97,7 +101,7 @@ export function buildRevisitStops(scope: RevisitScope, works: CreationWork[], st
       // A preset asset is not evidence that this user has collected it.
       sticker: stop.id === 'nara' ? stop.works.find(work => work.styleId === 'sticker') : undefined,
       sourceNote: stop.id === 'nara' ? '奈良 AI 示範照片' : stop.id === 'fuji-blue' ? '富士山示範影像 · 位置為周邊示意' : undefined,
-      souvenirs,
+      souvenirs, photoId: photoForStop(stop.id),
     };
   });
 }

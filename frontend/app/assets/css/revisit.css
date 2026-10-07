@@ -135,6 +135,9 @@ body:has(.revisit-shell){padding:0;overflow:hidden}
 .revisit-photo-hotspot>i{width:15px;height:15px;border:3px solid #fff7ce;background:#d6b568;border-radius:50%;box-shadow:0 0 0 9px #fff5cc40,0 0 0 10px #fff1aa99;animation:revisit-travel-pulse 2.8s ease-in-out infinite}
 .revisit-photo-hotspot>span{position:absolute;top:calc(100% + 2px);padding:6px 10px;background:#244c55df;border:1px solid #ffffff4d;border-radius:7px;white-space:nowrap;font-size:10px;letter-spacing:.04em}
 .revisit-photo-hotspot:hover>i{box-shadow:0 0 0 12px #fff5cc60,0 0 0 13px #fff1aacc}
+.revisit-photo-hotspot.is-own>i{background:#3fae8f;border-color:#e6fff4;box-shadow:0 0 0 9px #c9f5e440,0 0 0 10px #b4efd999}
+.revisit-photo-hotspot.is-own>span{background:#1f6b5adf}
+.revisit-make-own{display:inline-flex;width:auto;justify-content:center;margin-top:6px;text-decoration:none}
 .revisit-photo-room-footer{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:20px 26px}
 .revisit-photo-story{max-width:65%}.revisit-photo-story>p{font-size:13px;line-height:1.9;color:#496b76}
 .revisit-photo-story>small{display:block;font-size:10px;line-height:1.8;color:#8b9c9c;margin-top:5px}

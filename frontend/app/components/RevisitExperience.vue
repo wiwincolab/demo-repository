@@ -7,6 +7,9 @@ import '~/assets/css/revisit.css';
 
 const route = useRoute(), router = useRouter(), asset = useAsset();
 const { allWorks } = useCreation();
+// 網址沒指定旅程時，接著目前選的那趟（已結束的才有得重遊）
+const { activeId } = useTripContext();
+const currentJourney = () => tripSummaries.find(trip => trip.id === activeId.value && trip.status === 'completed')?.id;
 const { state: collection } = useJourneyCollection();
 const scope = ref<RevisitScope>('kansai');
 const demo = computed(() => route.query.demo !== '0');
@@ -110,7 +113,7 @@ function overview(updateUrl = true) {
 function changeScope(value: string) { scope.value = revisitScope(value); resetSession(); overview(); }
 function readQuery() {
   if(writingQuery)return;
-  const nextScope = revisitScope(route.query.scope === 'last-year' ? 'last-year' : route.query.scope === 'year' || route.query.scope === 'period' ? 'year' : route.query.journey);
+  const nextScope = revisitScope(route.query.scope === 'last-year' ? 'last-year' : route.query.scope === 'year' || route.query.scope === 'period' ? 'year' : route.query.journey ?? currentJourney());
   const changed = nextScope !== scope.value; scope.value = nextScope;
   if (changed) resetSession();
   const id = typeof route.query.stop === 'string' ? route.query.stop : null;

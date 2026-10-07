@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildCollectionEntries, collectionOpeningOrder } from '../app/data/collection.ts';
-import { photoById, workForPhoto, type CreationWork } from '../app/data/creation.ts';
+import { buildCollectionEntries, collectedWorks, collectionOpeningOrder } from '../app/data/collection.ts';
+import { exampleCreator, photoById, workForPhoto, type CreationWork } from '../app/data/creation.ts';
 
 test('catalogue examples never become owned works and never leak across trips',()=>{
   const saved:CreationWork[]=[];
@@ -49,4 +49,17 @@ test('the opening spread introduces each available format without losing the rem
   assert.equal(ordered.length,entries.length);
   assert.equal(new Set(ordered.map(item=>item.id)).size,entries.length);
   assert.deepEqual(ordered.slice(0,5).map(item=>item.work.styleId),['sticker','pin','photo','scene','companion']);
+});
+
+test('every page counts the same collection: own and received works, never examples, remakes once',()=>{
+  const photo=photoById('kiyomizu')!;
+  const remade=workForPhoto(photo,'pin','你','-new'), first=workForPhoto(photo,'pin','你','-old');
+  const example=workForPhoto(photo,'pin',exampleCreator);
+  const received={...workForPhoto(photoById('fuji-blue')!,'ticket','阿霖'),id:'received-2',tripId:'kansai' as const,sourceTripId:'fuji' as const,receivedFrom:'lin'};
+  const fuji=workForPhoto(photoById('fuji-blue')!,'sticker');
+  const counted=collectedWorks('kansai',[remade,example,first,received,fuji]);
+  assert.deepEqual(counted.map(work=>work.id),[remade.id,received.id]);
+  assert.equal(collectedWorks(null,[remade]).length,0);
+  const entries=buildCollectionEntries('kansai',[example]);
+  assert.equal(entries.filter(item=>item.collected).length,0,'an example saved by mistake still is not a collection');
 });

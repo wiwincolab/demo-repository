@@ -23,7 +23,12 @@ export interface CreationWork {
   tripId: TripId; photoId?: string; source?: string; sourceCrop?: boolean; sourceTripId?: TripId; preset?: boolean; renderedImage?: string;
   // 有後端時：serverId 對到資料表 creations；fallback 表示 AI 沒做成、顯示的是預製或合成的示範圖
   serverId?: string; fallback?: boolean;
+  // 上傳的照片由使用者指定在哪一站（內建照片看 recap.ts 的 stopPhotoIds），立體重遊靠它把作品放回那一站
+  stopId?: string;
 }
+// 範例只是讓人看各風格長什麼樣子，自己做或朋友交換來的才算「我的收藏」
+export const exampleCreator = 'AI 示範';
+export const isExampleWork = (work: Pick<CreationWork, 'creator'>) => work.creator === exampleCreator;
 export function makeExample(style: CreationStyle, creator = '你', suffix = ''): CreationWork {
   const photo = creationPhotos.find(p => p.styles.includes(style.id) && p.source === style.source)!;
   return { id: `${creator}-${style.id}${suffix}`, styleId: style.id, title: style.name, image: style.image, location: style.location, creator, createdAt: '2026-04-08T10:30:00+08:00',tripId:photo.tripId,photoId:photo.id,source:photo.source,sourceCrop:photo.sourceCrop,preset:true };
@@ -42,7 +47,7 @@ export const isRealStyle = (id: unknown): id is CreationId => realStyles.include
 
 export interface CreationPhoto {
   id: string; tripId: TripId; title: string; location: string; source: string;
-  sourceCrop?: boolean; styles: CreationId[]; featured?: 'usj'; note?: string; referenceOnly?: boolean; demoPhotoId?: string;
+  sourceCrop?: boolean; styles: CreationId[]; featured?: 'usj'; note?: string; referenceOnly?: boolean; demoPhotoId?: string; stopId?: string;
 }
 export const creationPhotos: CreationPhoto[] = [
   {id:'usj-scene',tripId:'kansai',title:'蘑菇餐廳前',location:'大阪 · 超級任天堂世界',source:'journey/usj-source.png',styles:['scene'],featured:'usj'},
@@ -50,6 +55,11 @@ export const creationPhotos: CreationPhoto[] = [
   {id:'kyoto-shrine',tripId:'kansai',title:'樹影下的鳥居',location:'京都 · 野宮神社',source:'references/kyoto-shrine-source.png',styles:['pin'],referenceOnly:true,note:'先前京都示範素材，非這次五日路線'},
   {id:'nara-deer',tripId:'kansai',title:'奈良公園的鹿',location:'奈良 · 鹿公園',source:'journey/nara-source.png',styles:['sticker'],note:'AI 示範照片'},
   {id:'kiyomizu',tripId:'kansai',title:'清水舞台的綠意',location:'京都 · 清水寺',source:'../photos/kansai/kiyomizu.jpg',styles:['pin']},
+  // 立體重遊每一站的照片也能拿來做收藏；沒有預製成品，有後端交給 AI，沒有後端用本機版型合成
+  {id:'kobe-night',tripId:'kansai',title:'港邊的夜色',location:'神戶 · Harborland',source:'../photos/kansai/kobe-night.jpg',styles:[]},
+  {id:'amanohashidate',tripId:'kansai',title:'橫過海面的沙洲',location:'海之京都 · 傘松公園',source:'../photos/kansai/amanohashidate.jpg',styles:[]},
+  {id:'ine-cruise',tripId:'kansai',title:'海灣邊的舟屋',location:'海之京都 · 伊根灣',source:'../photos/kansai/ine-cruise.jpg',styles:[]},
+  {id:'dotonbori',tripId:'kansai',title:'戎橋的招牌',location:'大阪 · 戎橋',source:'../../atlas-assets/scenes/1.jpg',styles:[]},
   {id:'fuji-blue',tripId:'fuji',title:'富士山的藍調時刻',location:'富士山 · 藍調時刻',source:'fuji-editorial.png',sourceCrop:true,styles:['sticker','ticket','scene']},
 ];
 export const photosForTrip = (id: TripId | null) => creationPhotos.filter(photo => photo.tripId === id && !photo.referenceOnly);
@@ -66,7 +76,7 @@ export function styleForPhoto(photo: CreationPhoto, id: CreationId): CreationSty
 }
 export function workForPhoto(photo:CreationPhoto,id:CreationId,creator='你',suffix=''):CreationWork {
   const style=styleForPhoto(photo,id);
-  return {id:`${photo.tripId}-${photo.id}-${id}-${creator}${suffix}`,tripId:photo.tripId,photoId:photo.id,source:photo.source,sourceCrop:photo.sourceCrop,styleId:id,title:style.name,image:style.image,location:photo.location,creator,createdAt:new Date().toISOString(),preset:style.preset};
+  return {id:`${photo.tripId}-${photo.id}-${id}-${creator}${suffix}`,tripId:photo.tripId,photoId:photo.id,source:photo.source,sourceCrop:photo.sourceCrop,styleId:id,title:style.name,image:style.image,location:photo.location,creator,createdAt:new Date().toISOString(),preset:style.preset,...(photo.stopId?{stopId:photo.stopId}:{})};
 }
 
 /** Preserve legacy works in the trip of their source, never the currently selected trip. */

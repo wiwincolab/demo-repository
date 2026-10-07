@@ -15,6 +15,8 @@ test('Nara and Fuji stickers use their own independent motifs; arbitrary photos 
   assert.equal(nara.motifs.length,6);assert.equal(fuji.motifs.length,6);
   assert(nara.motifs[0]!.name.includes('小鹿'));assert.equal(fuji.motifs[0]!.name,'富士山');
   assert.notEqual(nara.sheet,fuji.sheet);
+  const rendered=stickerKit({...workForPhoto(photoById('nara-deer')!,'sticker'),renderedImage:'/api/media/sticker'});
+  assert.equal(rendered.sheet,'/api/media/sticker','an AI-made Nara sticker is not swapped for the preset motifs');
   const custom=stickerKit(workForPhoto(photoById('usj-panorama')!,'sticker'));
   assert.equal(custom.sheet,'assets/memory/references/usj-nintendo-source.png');
   assert.equal(custom.motifs.length,1);

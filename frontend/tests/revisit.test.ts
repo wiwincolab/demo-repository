@@ -123,3 +123,15 @@ test('last-year continuous overseas travel retains flights, metro, taxi and tram
   assert(legs[4]!.label.includes('大阪 → 首爾'));
   assert(legs[8]!.label.includes('首爾 → 香港'));
 });
+
+test('a revisit hotspot made by the visitor shows their own rendered work and every 2026 stop can make one',()=>{
+  const pin={...workForPhoto(photoById('kobe-night')!,'pin'),renderedImage:'/api/media/abc'};
+  const stops=buildRevisitStops('kansai',[pin],emptyJourney(),true);
+  const kobe=stops.find(stop=>stop.id==='kobe')!;
+  const own=kobe.souvenirs.find(item=>item.kind==='pin')!;
+  assert.equal(own.demo,false);
+  assert.equal(own.image,'/api/media/abc');
+  assert.equal(kobe.souvenirs.filter(item=>item.kind==='pin').length,1,'the example of the same kind steps aside');
+  assert(buildRevisitStops('year',[],emptyJourney()).every(stop=>photoById(stop.photoId)?.tripId===stop.tripId));
+  assert(buildRevisitStops('last-year',[],emptyJourney()).every(stop=>!stop.photoId));
+});

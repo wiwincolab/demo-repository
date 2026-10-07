@@ -25,11 +25,13 @@ export default defineEventHandler(async event => {
     const title = text(query.title, '旅行照片');
     const location = text(query.location, '這趟旅行 · 我的照片');
     const demoPhotoId = typeof query.demoPhotoId === 'string' && query.demoPhotoId ? query.demoPhotoId.slice(0, 40) : null;
+    // 這張照片在行程的哪一站（立體重遊靠它把作品放回去）；手機只會送 recap.ts 的站名
+    const stopId = typeof query.stopId === 'string' && /^[a-z0-9-]{1,40}$/.test(query.stopId) ? query.stopId : null;
     const width = size(query.width), height = size(query.height);
     const sql = await db();
     const [row] = await sql<{ created_at: Date }[]>`
-        insert into photos (id, device_id, trip_id, title, location, demo_photo_id, media_path, mime, width, height)
-        values (${id}, ${device}, ${tripId}, ${title}, ${location}, ${demoPhotoId}, ${mediaPath}, ${mime}, ${width}, ${height})
+        insert into photos (id, device_id, trip_id, title, location, demo_photo_id, stop_id, media_path, mime, width, height)
+        values (${id}, ${device}, ${tripId}, ${title}, ${location}, ${demoPhotoId}, ${stopId}, ${mediaPath}, ${mime}, ${width}, ${height})
         returning created_at`;
-    return { id, url: `/api/media/${id}`, tripId, title, location, demoPhotoId, width, height, createdAt: row!.created_at };
+    return { id, url: `/api/media/${id}`, tripId, title, location, demoPhotoId, stopId, width, height, createdAt: row!.created_at };
 });

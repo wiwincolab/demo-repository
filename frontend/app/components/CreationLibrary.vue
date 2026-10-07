@@ -1,20 +1,15 @@
 <script setup lang="ts">
-import { creationFriends, workForPhoto, type CreationWork, type CreationExchange } from '~/data/creation';
+import { creationFriends, type CreationWork, type CreationExchange } from '~/data/creation';
 const open = defineModel<boolean>({ default: false });
 const props = defineProps<{ startTab: 'collection' | 'history' }>();
 const emit = defineEmits<{ select: [work: CreationWork]; exchange: [work: CreationWork]; generate: [photoId: string]; browse: [] }>();
-const { works, exchanges, resolve, friends, photos: sourcePhotos } = useCreation();
+const { collected, exchanges, resolve, friends, photos: sourcePhotos } = useCreation();
 const { activeId, activeTrip } = useTripContext();
 const { state: journey } = useJourneyCollection();
 const showJourney = computed(()=>activeId.value==='kansai');
 const hasFriend = computed(()=>showJourney.value && journey.value.friendAccepted);
-const displayedWorks = computed(() => {
-  const saved = works.value;
-  const presets = sourcePhotos.value
-    .flatMap(photo => photo.styles.map(id => workForPhoto(photo, id, 'AI 示範')))
-    .filter(item => !saved.some(work => work.photoId === item.photoId && work.styleId === item.styleId));
-  return [...saved, ...presets];
-});
+// 只有自己做的與交換來的；範例在創作頁的風格預覽與收集冊的圖鑑裡看
+const displayedWorks = collected;
 const asset = useCreationAsset();
 const tab = ref('collection'), reply = ref('');
 const selected = ref<CreationExchange | null>(null);

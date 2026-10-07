@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildRecapStops } from '../app/data/recap.ts';
-import { emptyJourney } from '../app/data/journey.ts';
+import { buildRecapStops, photoForStop, stopForPhoto, stopsForTrip } from '../app/data/recap.ts';
+import { emptyJourney, journeyStops } from '../app/data/journey.ts';
 import { photoById, workForPhoto } from '../app/data/creation.ts';
 
 test('recap orders completed trips by travel date and excludes the upcoming Tokyo trip',()=>{
@@ -49,4 +49,27 @@ test('cross-trip received souvenirs do not become visited stops or works at thos
   const fujiStop=buildRecapStops(['fuji'],[incompatibleOrigin],emptyJourney())[0]!;
   assert.equal(fujiStop.works.length,0);
   assert.equal(fujiStop.format,'旅行照片');
+});
+
+test('every Kansai stop has its own trip photo, so a souvenir can be made where it was seen',()=>{
+  for(const stop of journeyStops){
+    const photo=photoById(photoForStop(stop.id));
+    assert(photo,`${stop.id} needs a photo to create from`);
+    assert.equal(photo.tripId,'kansai');
+    assert.equal(stopForPhoto(photo.id),stop.id);
+    assert.equal(new URL('assets/memory/'+photo.source,'https://x/').pathname,'/'+stop.source,'the photo is the one the revisit shows');
+  }
+  assert.deepEqual(stopsForTrip('kansai').map(stop=>stop.id),journeyStops.map(stop=>stop.id));
+  assert.deepEqual(stopsForTrip('fuji').map(stop=>stop.id),['fuji-blue']);
+  assert.deepEqual(stopsForTrip('tokyo'),[]);
+});
+
+test('an uploaded photo filed under a stop puts its works at that stop and nowhere else',()=>{
+  const upload={id:'upload-1',tripId:'kansai' as const,title:'我的神戶',location:'神戶・Harborland',source:'blob:kobe',styles:[],stopId:'kobe'};
+  const work={...workForPhoto(upload,'pin'),renderedImage:'data:image/png;base64,pin'};
+  assert.equal(work.stopId,'kobe');
+  const stops=buildRecapStops(['kansai'],[work],emptyJourney());
+  assert.deepEqual(stops.filter(stop=>stop.works.length).map(stop=>stop.id),['kobe']);
+  const unfiled={...workForPhoto({...upload,stopId:undefined},'pin'),id:'unfiled'};
+  assert(buildRecapStops(['kansai'],[unfiled],emptyJourney()).every(stop=>!stop.works.length));
 });

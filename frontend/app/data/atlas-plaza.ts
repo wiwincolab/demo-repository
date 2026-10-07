@@ -8,10 +8,11 @@ export const atlasParkZones = [
     destination: '/atlas?view=cities', action: '出發漫遊',
   },
   {
-    id: 'town', number: '02', name: '場景積木世界', short: '回憶小鎮', english: 'LITTLE MEMORY TOWN',
+    // 跟創作的「場景積木」分開命名：小鎮是做好的九景展示，你做的積木不會放進來
+    id: 'town', number: '02', name: '九景小鎮', short: '3D 小鎮展示', english: 'NINE-SCENE TOWN',
     x: 75, y: 24, color: '#9e562e', image: 'town.png',
-    title: '讓不同旅行，成為鄰居。',
-    description: '從富士山、京都到首爾，把日本與韓國的九個風景收進一座小鎮。轉個角度看街區，再等路燈慢慢亮起。',
+    title: '九段風景，連成一座小鎮。',
+    description: '富士山、京都到首爾，日本與韓國的九個風景透過街道連在一起。轉個角度看街區，再等路燈慢慢亮起。',
     tags: ['九景小鎮', '旋轉探索', '日夜光影'],
     destination: '/town', action: '進入小鎮',
   },
@@ -19,7 +20,7 @@ export const atlasParkZones = [
     id: 'wardrobe', number: '03', name: '去趣旅伴換裝', short: '旅伴換裝屋', english: 'TRAVEL COMPANION',
     x: 75, y: 76, color: '#8b641a', image: 'wardrobe.png',
     title: '今天，穿哪一趟旅行？',
-    description: '讓去趣吉祥物換上旅途中收集的穿搭。每一頂帽子、每一件小配件，都有一個去過的地方。',
+    description: '六套景點限定穿搭，挑一套讓去趣吉祥物陪你出門。每一頂帽子、每一件小配件，都來自一個旅行地點。',
     tags: ['景點穿搭', '去趣吉祥物'],
     destination: '/wardrobe', action: '挑選我的吉祥物',
   },

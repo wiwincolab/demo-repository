@@ -2,6 +2,7 @@
 import { creationStyles, styleForPhoto, workForPhoto, makeExample, type CreationWork, type CreationId, type CreationPhoto } from '~/data/creation';
 import { renderDemoArtwork } from '~/utils/creation-artwork';
 import { tripSummaries } from '~/data/trips';
+import { stopsForTrip } from '~/data/recap';
 import '~/assets/css/creation.css';
 import '~/assets/css/photo-exploration.css';
 import '~/assets/css/trip-studio.css';
@@ -9,7 +10,7 @@ const asset = useCreationAsset();
 const route = useRoute();
 const { notify } = useDemo();
 const { activeId, activeTrip, tripHref } = useTripContext();
-const { works, exchanges, pending, save, friends, photos, findPhoto, addPhoto, generateOnServer } = useCreation();
+const { works, collected, exchanges, pending, save, friends, photos, findPhoto, addPhoto, generateOnServer } = useCreation();
 // 有後端（GCP 版）：分享走真的連結與限動圖卡（ShareSheet）；Pages 版維持 Threads 預覽
 const { available: apiAvailable } = useApi();
 const selectedPhoto = ref<CreationPhoto | null>(null);
@@ -40,16 +41,12 @@ const originExchange = computed(() => exchanges.value.find(e => e.id === work.va
 const giver = computed(() => friends.value.find(f => f.id === work.value?.receivedFrom));
 const received = computed(() => !!activeWork.value?.receivedFrom);
 const sourceTrip = computed(() => tripSummaries.find(trip => trip.id === (activeWork.value?.sourceTripId || selectedPhoto.value?.tripId)));
-const count = computed(() => works.value.length + photos.value.reduce((total, photo) => total + photo.styles.filter(id => !works.value.some(work => work.photoId === photo.id && work.styleId === id)).length, 0));
+const count = computed(() => collected.value.length);
+// 從 3D 重遊某一站點「用這張照片做一件」過來的：做完給一條回去那一站的路
+const returnStop = computed(() => stopsForTrip(activeId.value).find(stop => stop.id === route.query.stop));
 const canPlay = computed(() => !!style.value?.interactive);
-const photoWorks = computed(() => {
-  if (!selectedPhoto.value) return [];
-  const savedForPhoto = works.value.filter(item => item.photoId === selectedPhoto.value!.id);
-  const presets = selectedPhoto.value.styles
-    .filter(id => !savedForPhoto.some(item => item.styleId === id))
-    .map(id => workForPhoto(selectedPhoto.value!, id, 'AI 示範'));
-  return [...savedForPhoto, ...presets];
-});
+// 只列自己做的與交換來的；風格範例在上方預覽，不混進「這張照片的作品」
+const photoWorks = computed(() => selectedPhoto.value ? works.value.filter(item => item.photoId === selectedPhoto.value!.id) : []);
 const guideStyle = computed(() => creationStyles.find(item => item.id === guideSelected.value) || creationStyles[0]!);
 const guideWork = computed(() => makeExample(guideStyle.value, 'AI 示範'));
 const aliases: Record<string, CreationId> = { editorial: 'photo', enamel: 'pin', postcard: 'photo', diorama: 'scene' };
@@ -85,15 +82,17 @@ function selectWork(item: CreationWork) {
 function openLibrary(tab: 'collection' | 'history') { libraryTab.value = tab; library.value = true; }
 function generateFromLibrary(photoId: string) { const photo = findPhoto(photoId); if (photo) choosePhoto(photo); }
 function startExchange(item?: CreationWork | null) {
-  const fallbackPhoto = photos.value[0];
-  const candidate = item || (hasResult.value ? work.value : null) || works.value[0] || (fallbackPhoto?.styles[0] ? workForPhoto(fallbackPhoto, fallbackPhoto.styles[0]) : null);
-  if (!candidate) { openLibrary('collection'); notify('先選一張照片製作作品，再開始交換'); return; }
+  const candidate = item || (hasResult.value ? work.value : null) || collected.value[0];
+  if (!candidate) { openLibrary('collection'); notify('先做一件自己的作品，才能拿來交換'); return; }
   exchangeTarget.value = candidate;
   exchanging.value = true;
 }
-async function upload(url: string, name: string, demoPhotoId?: string, file?: File) { const photo = await addPhoto(url, name, demoPhotoId, file); if (photo) { choosePhoto(photo); notify('照片已加入，選一種風格開始創作'); } }
+async function upload(url: string, name: string, demoPhotoId?: string, file?: File, stopId?: string) { const photo = await addPhoto(url, name, demoPhotoId, file, stopId); if (photo) { choosePhoto(photo); notify('照片已加入，選一種風格開始創作'); } }
+const isUsjScene = computed(() => (selectedPhoto.value?.id === 'usj-scene' || selectedPhoto.value?.demoPhotoId === 'usj-scene') && selected.value === 'scene');
 async function generate() {
   if (generating.value || !selectedPhoto.value || !style.value) return;
+  // 環球影城的場景積木只有一條路：專屬頁做好、加入回憶地圖，各頁才看到同一件
+  if (isUsjScene.value) { navigateTo(tripHref('/memory/usj')); return; }
   generating.value = true; complete.value = false; original.value = false; progress.value = '';
   const token = ++run, photo = selectedPhoto.value, id = selected.value;
   const stale = () => token !== run || selectedPhoto.value?.id !== photo.id || selected.value !== id || !generating.value;
@@ -114,12 +113,12 @@ async function generate() {
   }
   if (stale()) return;
   activeWork.value = generated; save(generated); generating.value = false; complete.value = true; progress.value = '';
-  notify(generated.fallback ? 'AI 這次沒做成，先放上示範圖' : '已加入這趟旅行的作品');
+  notify(generated.fallback ? 'AI 這次沒做成，先放上示範圖' : returnStop.value ? `已收進${returnStop.value.name}，回到 3D 重遊就看得到` : '已加入這趟旅行的作品');
 }
 useHead({ title: '回憶製造所 · 去趣 chicTrip' });
 function play() {
   if (!hasResult.value) { openFormats(); return; }
-  if ((selectedPhoto.value?.id === 'usj-scene' || selectedPhoto.value?.demoPhotoId === 'usj-scene') && selected.value === 'scene') navigateTo(tripHref('/memory/usj'));
+  if (isUsjScene.value) navigateTo(tripHref('/memory/usj'));
   else playing.value = true;
 }
 onBeforeUnmount(() => { run++; generating.value = false; });
@@ -175,7 +174,7 @@ onBeforeUnmount(() => { run++; generating.value = false; });
             </section>
           </template>
           <div v-else class="studio-exchanged-info"><span class="creation-eyebrow">交換來的旅行收藏</span><h2>{{ work.title }}</h2><p>{{ work.creator }} 的作品，來自「{{ sourceTrip?.title }}」。</p><button class="creation-text-button" @click="details = true">查看交換與原作紀錄 ›</button></div>
-          <template v-if="hasResult"><div class="creation-divider" /><div class="creation-quick-actions"><button class="creation-exchange-result" @click="startExchange(work)"><img class="creation-exchange-illustration" :src="asset('assets/memory/exchange-collectibles.png')" alt="" /><b>與朋友交換</b><small>留句話，交換風景</small></button><button v-if="apiAvailable" @click="shareOpen = true"><span>↗</span><b>分享給朋友</b><small>限動圖卡＋連結</small></button><button v-else @click="sharing = true"><span>＠</span><b>分享到 Threads</b><small>把作品變成話題</small></button></div><div class="creation-bottom-links"><button @click="details = true">作品資訊</button><a :href="image" :download="downloadName">下載圖片 ↓</a><NuxtLink :to="tripHref('/atlas', { journey: activeId || undefined })">回憶地圖 ↗</NuxtLink></div></template>
+          <template v-if="hasResult"><div class="creation-divider" /><div class="creation-quick-actions"><button class="creation-exchange-result" @click="startExchange(work)"><img class="creation-exchange-illustration" :src="asset('assets/memory/exchange-collectibles.png')" alt="" /><b>與朋友交換</b><small>留句話，交換風景</small></button><button v-if="apiAvailable" @click="shareOpen = true"><span>↗</span><b>分享給朋友</b><small>限動圖卡＋連結</small></button><button v-else @click="sharing = true"><span>＠</span><b>分享到 Threads</b><small>把作品變成話題</small></button></div><div class="creation-bottom-links"><button @click="details = true">作品資訊</button><a :href="image" :download="downloadName">下載圖片 ↓</a><NuxtLink v-if="returnStop" :to="{ path: '/atlas', query: { view: 'cities', journey: activeId || undefined, stop: returnStop.id } }">回到 3D 重遊 · {{ returnStop.name }} ↗</NuxtLink><NuxtLink v-else :to="tripHref('/atlas', { journey: activeId || undefined })">回憶地圖 ↗</NuxtLink></div></template>
         </aside>
       </div>
     </template>

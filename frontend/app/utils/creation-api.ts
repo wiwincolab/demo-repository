@@ -3,7 +3,7 @@ import type { TripId } from '../data/trips.ts';
 
 // AI 創作的後端（frontend/server/api）。只有 GCP 版有後端；GitHub Pages 版打不到，useApi() 偵測後整套維持原本的模擬
 export type CreationStatus = 'queued' | 'running' | 'done' | 'fallback';
-export interface ServerPhoto { id: string; url: string; tripId: TripId; title: string; location: string; demoPhotoId: string | null; width: number | null; height: number | null; createdAt: string }
+export interface ServerPhoto { id: string; url: string; tripId: TripId; title: string; location: string; demoPhotoId: string | null; stopId: string | null; width: number | null; height: number | null; createdAt: string }
 export interface ServerCreation { id: string; tripId: TripId; styleId: CreationId; photoId: string | null; demoPhotoId: string | null; location: string; status: CreationStatus; imageUrl: string | null; createdAt: string }
 interface CreationProgress { id: string; status: CreationStatus; imageUrl: string | null; position: number | null }
 
@@ -15,7 +15,7 @@ export function statusText(status: CreationStatus, position?: number | null) {
 // 上傳的照片沿用它取自的示範照片的風格與裁切（「也可以先試試這些照片」挑的那張）
 export function photoFromServer(photo: ServerPhoto): CreationPhoto {
     const template = photoById(photo.demoPhotoId ?? undefined);
-    return { id: photo.id, tripId: photo.tripId, title: photo.title, location: photo.location, source: photo.url, styles: template ? [...template.styles] : [], sourceCrop: template?.sourceCrop, demoPhotoId: photo.demoPhotoId ?? undefined };
+    return { id: photo.id, tripId: photo.tripId, title: photo.title, location: photo.location, source: photo.url, styles: template ? [...template.styles] : [], sourceCrop: template?.sourceCrop, demoPhotoId: photo.demoPhotoId ?? undefined, stopId: photo.stopId ?? undefined };
 }
 
 // 資料表的一筆作品 → 畫面用的作品。還在排隊的不算（頁面另外輪詢），找不到原照的也先不顯示
@@ -28,7 +28,7 @@ export function workFromServer(creation: ServerCreation, findUploaded: (id: stri
     return { ...work, fallback: true };
 }
 
-export const uploadPhoto = (tripId: TripId, blob: Blob, meta: { title: string; location: string; demoPhotoId?: string; width: number; height: number }) =>
+export const uploadPhoto = (tripId: TripId, blob: Blob, meta: { title: string; location: string; demoPhotoId?: string; stopId?: string; width: number; height: number }) =>
     $fetch<ServerPhoto>('/api/photos', { method: 'POST', query: { tripId, ...meta }, body: blob, headers: { 'Content-Type': 'image/jpeg' } });
 export const listPhotos = (tripId: TripId) => $fetch<ServerPhoto[]>('/api/photos', { query: { tripId } });
 export const listCreations = (tripId: TripId) => $fetch<ServerCreation[]>('/api/creations', { query: { tripId } });

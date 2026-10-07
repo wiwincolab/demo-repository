@@ -115,4 +115,11 @@ create table gifts (
 );
 `,
     },
+    {
+        // 上傳照片時選「這張是哪一站」，作品才會出現在立體重遊的那一站；舊照片沒有站，維持 null
+        name: '003_photo_stop',
+        sql: `
+alter table photos add column stop_id text;
+`,
+    },
 ];

@@ -13,8 +13,9 @@ const naraKit: StickerKit = {
   motifs:['散步的小鹿','小鹿的耳朵','池邊涼亭','櫻花枝','池水與石頭','步道圍欄'].map((name,i)=>({name,box:['75 20 375 565','510 110 490 430','995 100 540 450','20 610 515 330','545 625 500 335','1080 605 445 340'][i]!})),
 };
 /** Use independent motifs when they exist; a composed photo stays its own paper sticker. */
-export function stickerKit(work?: Pick<CreationWork,'photoId'|'image'|'location'|'preset'>):StickerKit {
-  if(!work || work.image==='fuji-sticker.png')return fujiKit;
-  if(work.image==='journey/nara-sticker.png')return naraKit;
-  return {sheet:`assets/memory/${work.image}`,width:1000,height:1000,title:work.location,motifs:[{name:'這一站的風景',box:'0 0 1000 1000'}]};
+export function stickerKit(work?: Pick<CreationWork,'photoId'|'image'|'location'|'preset'|'renderedImage'>):StickerKit {
+  // AI 或本機合成的貼紙在 renderedImage（image 仍是原照或預製圖），一律用它自己的成品
+  if(!work || (!work.renderedImage && work.image==='fuji-sticker.png'))return fujiKit;
+  if(!work.renderedImage && work.image==='journey/nara-sticker.png')return naraKit;
+  return {sheet:work.renderedImage || `assets/memory/${work.image}`,width:1000,height:1000,title:work.location,motifs:[{name:'這一站的風景',box:'0 0 1000 1000'}]};
 }

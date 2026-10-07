@@ -1,17 +1,15 @@
 <script setup lang="ts">
-import { journeyStops } from '~/data/journey';
 import { tripSummaries, isTripId, type TripId } from '~/data/trips';
 import { styleById, type CreationWork } from '~/data/creation';
 import '~/assets/css/creation.css';
 import '~/assets/css/trip-atlas.css';
 const route = useRoute(), router = useRouter(), asset = useCreationAsset();
 const workImage = (work: CreationWork) => work.renderedImage || asset('assets/memory/' + work.image);
-const { allWorks } = useCreation();
-const { state } = useJourneyCollection();
+const { collectedFor } = useCreation();
 const { selectTrip } = useTripContext();
 const selectedId = computed(() => isTripId(route.query.journey) ? route.query.journey : null);
 const selectedTrip = computed(() => tripSummaries.find(trip => trip.id === selectedId.value));
-const works = computed(() => allWorks.value.filter(work => work.tripId === selectedId.value));
+const works = computed(() => selectedId.value ? collectedFor(selectedId.value) : []);
 const detail = ref<CreationWork | null>(null), detailOpen = ref(false), original = ref(false), newWorksOpen = ref(false);
 const scope = computed(() => route.query.scope === 'period' ? 'period' : 'trip');
 const period = computed(() => route.query.period === 'half' ? 'half' : 'year');
@@ -24,7 +22,7 @@ function setPeriod(value: 'year' | 'half') { router.replace({ query: { ...route.
 function startRecap(id?: TripId) {
   navigateTo({path:'/atlas',query:{view:'cities',...(id?{journey:id}:{scope:'year'})}});
 }
-function count(id: TripId) { return allWorks.value.filter(work => work.tripId === id).length + (id === 'kansai' ? journeyStops.length - 1 + Number(state.value.usjSaved) + Number(state.value.friendAccepted) : 0); }
+function count(id: TripId) { return collectedFor(id).length; }
 function browse(id: TripId | null) {
   const { stop, journey, scope: previousScope, period: previousPeriod, ...query } = route.query;
   router.replace({ query: { ...query, view: 'journey', ...(id ? { journey: id } : {}) } });

@@ -22,23 +22,40 @@ export interface RecapStop {
   works: CreationWork[];
 }
 
+// The first photo of each stop is the one its revisit photo shows, so "make your own" starts from it.
 const stopPhotoIds: Record<string, string[]> = {
-  usj: ['usj-scene', 'usj-panorama'],
-  dotonbori: [],
+  kobe: ['kobe-night'],
+  amanohashidate: ['amanohashidate'],
+  ine: ['ine-cruise'],
+  kyoto: ['kiyomizu'],
   nara: ['nara-deer'],
-  kyoto: [],
+  dotonbori: ['dotonbori'],
+  usj: ['usj-scene', 'usj-panorama'],
   'fuji-blue': ['fuji-blue'],
 };
 const memoryAsset = (path: string) => `assets/memory/${path}`;
+
+/** Places of a completed trip that an uploaded photo can be filed under. */
+export function stopsForTrip(tripId: TripId | null): { id: string; name: string; location: string }[] {
+  if (tripId === 'kansai') return journeyStops.map(stop => ({ id: stop.id, name: stop.name, location: stop.location }));
+  if (tripId === 'fuji') return [{ id: 'fuji-blue', name: '富士山', location: photoById('fuji-blue')!.location }];
+  return [];
+}
+export const stopForPhoto = (photoId?: string) => Object.keys(stopPhotoIds).find(id => photoId && stopPhotoIds[id]!.includes(photoId));
+export const photoForStop = (stopId: string) => stopPhotoIds[stopId]?.[0];
 
 function worksAtStop(stopId: string, tripId: TripId, allWorks: CreationWork[]): CreationWork[] {
   const ids = stopPhotoIds[stopId] || [];
   const seen = new Set<string>();
   return allWorks.filter(work => {
     // An exchanged souvenir from another trip is not evidence of visiting its place on this trip.
-    if (work.tripId !== tripId || (work.sourceTripId && work.sourceTripId !== tripId)) return false;
-    const photo = photoById(work.photoId) || creationPhotos.find(item => item.tripId === tripId && item.source === work.source);
-    if (!photo || photo.tripId !== tripId || !ids.includes(photo.id) || seen.has(work.id)) return false;
+    if (work.tripId !== tripId || (work.sourceTripId && work.sourceTripId !== tripId) || seen.has(work.id)) return false;
+    if (work.stopId) {
+      if (work.stopId !== stopId) return false;
+    } else {
+      const photo = photoById(work.photoId) || creationPhotos.find(item => item.tripId === tripId && item.source === work.source);
+      if (!photo || photo.tripId !== tripId || !ids.includes(photo.id)) return false;
+    }
     seen.add(work.id);
     return true;
   }).map(work => ({ ...work }));

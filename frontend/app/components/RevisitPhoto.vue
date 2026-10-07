@@ -14,6 +14,11 @@ const playWork=computed<CreationWork | null>(()=>active.value && props.stop.trip
   location:props.stop.location,creator:'你',createdAt:props.stop.date,tripId:props.stop.tripId,
   photoId:props.stop.id==='nara'?'nara-deer':props.stop.id,source:props.stop.source.replace('assets/memory/',''),preset:true,
 } : null);
+// 示範收藏只給人看樣子；真的想要，用這一站的照片自己做一件，做好就換成你的
+const kinds = {sticker:'貼紙',pin:'徽章',ticket:'票根'} as const;
+const amounts = {sticker:'一組',pin:'一枚',ticket:'一張'} as const;
+const makeLink = computed(() => active.value?.demo && props.stop.photoId && props.stop.tripId !== 'last-year'
+  ? { path:'/memory', query:{ trip:props.stop.tripId, photo:props.stop.photoId, style:active.value.kind, stop:props.stop.id } } : null);
 const ratio = ref(1.5), failed = ref(false), ready = ref(false);
 const friendOpen = ref(false);
 watch([active, friendOpen], () => emit('hold', !!active.value || friendOpen.value));
@@ -46,7 +51,7 @@ onBeforeUnmount(()=>emit('hold',false));
     <div class="revisit-photo-board">
       <figure class="revisit-hotspot-photo" :inert="!!active" :style="{'--photo-ratio':ratio}">
         <img :src="asset(stop.source)" :alt="stop.title+'的旅行照片'" :class="{'is-source-crop':stop.sourceCrop}" @load="loaded" @error="failed=true;emit('pause')"/>
-        <template v-if="ready"><button v-for="item in stop.souvenirs" :key="item.id" class="revisit-photo-hotspot" :style="{left:item.x+'%',top:item.y+'%'}" :aria-label="'打開'+item.title+'的'+({sticker:'貼紙',pin:'徽章',ticket:'票根'}[item.kind])" @click="discover(item)"><i/><span>{{ {sticker:'揭貼紙',pin:'翻徽章',ticket:'抽票根'}[item.kind] }}</span></button></template>
+        <template v-if="ready"><button v-for="item in stop.souvenirs" :key="item.id" class="revisit-photo-hotspot" :class="{'is-own':!item.demo}" :style="{left:item.x+'%',top:item.y+'%'}" :aria-label="'打開'+(item.demo?'':'我的')+item.title+'的'+kinds[item.kind]" @click="discover(item)"><i/><span>{{ item.demo ? {sticker:'揭貼紙',pin:'翻徽章',ticket:'抽票根'}[item.kind] : '我的'+kinds[item.kind] }}</span></button></template>
       </figure>
       <p v-if="failed" class="revisit-photo-error" role="status">照片暫時載入失敗，倒數已暫停。<button @click="emit('next')">先看下一站 →</button></p>
       <div v-if="active" class="revisit-souvenir-stage">
@@ -56,7 +61,7 @@ onBeforeUnmount(()=>emit('hold',false));
           <CreationPinPlay v-else-if="active.kind==='pin'" creator="你" :image="asset(active.image)" :location="stop.location" :date="stop.date.replaceAll('-','.')" :work="savedWork" />
           <CreationTicketPlay v-else :image="asset(active.image)" creator="你" :location="stop.location" :date="stop.date.replaceAll('-','.')" :caption="stop.caption" />
         </div>
-        <div class="revisit-souvenir-description"><small v-if="active.demo">旅程示範收藏 · 不會寫入你的個人收藏</small></div>
+        <div class="revisit-souvenir-description"><template v-if="makeLink"><p>這是{{ kinds[active.kind] }}的示範樣式，還不是你的收藏。</p><NuxtLink class="revisit-primary revisit-make-own" :to="makeLink">用這張照片做{{ amounts[active.kind] }}{{ kinds[active.kind] }} <span aria-hidden="true">✦</span></NuxtLink></template><small v-else-if="active.demo">旅程示範收藏 · 不會寫入你的個人收藏</small><small v-else>你的收藏 · 跟著這一站保存</small></div>
       </div>
     </div>
     <footer class="revisit-photo-room-footer">
