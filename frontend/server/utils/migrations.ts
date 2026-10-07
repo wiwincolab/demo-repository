@@ -47,4 +47,72 @@ create index creations_device_trip on creations (device_id, trip_id, created_at 
 create index creations_status_created on creations (status, created_at);
 `,
     },
+    {
+        // 分享循環：分享 → 朋友打開 → 存成行程／我也做一張 → 邀請旅伴 → 購買／送 eSIM。
+        // share_events 每台裝置每種事件只記一次，/stats 的漏斗數字就是不重複的人數
+        name: '002_share_loop',
+        sql: `
+create table shares (
+    id text primary key,
+    device_id uuid not null references devices(id),
+    kind text not null check (kind in ('creation', 'trip')),
+    trip_id text not null,
+    style_id text,
+    location text not null,
+    stop_ids int[] not null,
+    caption text not null default '',
+    media_path text,
+    mime text,
+    created_at timestamptz not null default now()
+);
+
+create table share_events (
+    id bigserial primary key,
+    share_id text not null references shares(id),
+    device_id uuid not null references devices(id),
+    event text not null check (event in ('view', 'save', 'create', 'join', 'buy', 'claim')),
+    created_at timestamptz not null default now(),
+    unique (share_id, device_id, event)
+);
+
+create table saved_trips (
+    device_id uuid not null references devices(id),
+    trip_id text not null,
+    share_id text not null references shares(id),
+    stop_ids int[] not null,
+    title text not null,
+    created_at timestamptz not null default now(),
+    primary key (device_id, trip_id)
+);
+
+create table trip_groups (
+    id text primary key,
+    owner_device_id uuid not null references devices(id),
+    trip_id text not null,
+    share_id text references shares(id),
+    created_at timestamptz not null default now(),
+    unique (owner_device_id, trip_id)
+);
+
+create table group_members (
+    group_id text not null references trip_groups(id),
+    device_id uuid not null references devices(id),
+    joined_at timestamptz not null default now(),
+    paid boolean not null default false,
+    paid_usage text,
+    paid_at timestamptz,
+    primary key (group_id, device_id)
+);
+
+create table gifts (
+    id text primary key,
+    sender_device_id uuid not null references devices(id),
+    trip_id text not null,
+    usage text not null,
+    created_at timestamptz not null default now(),
+    claimed_device_id uuid references devices(id),
+    claimed_at timestamptz
+);
+`,
+    },
 ];
