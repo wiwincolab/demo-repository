@@ -39,6 +39,7 @@ create table creations (
     mime text,
     error text,
     created_at timestamptz not null default now(),
+    started_at timestamptz,
     finished_at timestamptz,
     check (photo_id is not null or demo_photo_id is not null)
 );

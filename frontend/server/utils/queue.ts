@@ -15,12 +15,14 @@ export function redisConnection(url: string) {
 let queue: Queue<CreationJob> | undefined;
 
 export function creationQueue() {
-    // 失敗不自動重試：重試等於讓評審多等一輪，直接退回預製圖。完成與失敗紀錄各留 1,000 筆方便查問題
-    queue ??= new Queue<CreationJob>(QUEUE_NAME, {
-        connection: redisConnection(readConfig().redisUrl),
-        defaultJobOptions: { attempts: 1, removeOnComplete: 1000, removeOnFail: 1000 },
-    });
-    // 沒掛 error 事件時，Redis 斷線期間每次重連都印整段錯誤堆疊；改成一行，log 看得出原因又不洗版
-    queue.on('error', error => console.warn(`[queue] Redis 連線失敗：${error.message}`));
+    if (!queue) {
+        // 失敗不自動重試：重試等於讓評審多等一輪，直接退回預製圖。完成與失敗紀錄各留 1,000 筆方便查問題
+        queue = new Queue<CreationJob>(QUEUE_NAME, {
+            connection: redisConnection(readConfig().redisUrl),
+            defaultJobOptions: { attempts: 1, removeOnComplete: 1000, removeOnFail: 1000 },
+        });
+        // 沒掛 error 事件時，Redis 斷線期間每次重連都印整段錯誤堆疊；改成一行，log 看得出原因又不洗版
+        queue.on('error', error => console.warn(`[queue] Redis 連線失敗：${error.message}`));
+    }
     return queue;
 }

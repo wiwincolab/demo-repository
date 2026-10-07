@@ -8,9 +8,15 @@ export function limitDecision(counts: { deviceToday: number; globalToday: number
     return 'ok' as const;
 }
 
-// Redis 不存檔：Redis 重啟時排隊中的工作會消失，資料表裡就一直是 queued。
-// 讀取時超過 QUEUE_STALE_MS 就當作退回預製圖，不讓評審的畫面一直轉圈
-export function effectiveStatus(row: { status: CreationStatus; created_at: Date }, now: Date, staleMs: number): CreationStatus {
-    const pending = row.status === 'queued' || row.status === 'running';
-    return pending && now.getTime() - row.created_at.getTime() > staleMs ? 'fallback' : row.status;
+// 製作中最多多久：看照片、生圖各有一次 JOB_TIMEOUT_MS，再加 30 秒讀檔寫檔的餘裕。超過代表 worker 掛了
+export const runningLimitMs = (jobTimeoutMs: number) => jobTimeoutMs * 2 + 30_000;
+
+// 讀取時決定畫面要顯示什麼，不讓評審一直轉圈：
+// - 排隊超過 QUEUE_STALE_MS：當作退回預製圖。worker 也不會再接這件（creation-worker.ts 接工作時同樣檢查），前後說法一致
+// - 製作中從「開始做」算起，超過 runningLimitMs：worker 多半掛了，當作退回
+export function effectiveStatus(row: { status: CreationStatus; created_at: Date; started_at: Date | null }, now: Date, limits: { queueStaleMs: number; jobTimeoutMs: number }): CreationStatus {
+    if (row.status === 'queued' && now.getTime() - row.created_at.getTime() > limits.queueStaleMs) return 'fallback';
+    const started = row.started_at ?? row.created_at;
+    if (row.status === 'running' && now.getTime() - started.getTime() > runningLimitMs(limits.jobTimeoutMs)) return 'fallback';
+    return row.status;
 }
