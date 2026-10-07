@@ -1,28 +1,29 @@
 <script setup lang="ts">
 import { creationPhotos, photosForTrip, type CreationPhoto } from '~/data/creation';
 const open = defineModel<boolean>({ default: false });
-const emit = defineEmits<{ upload: [url: string, name: string, demoPhotoId?: string] }>();
+// file：從裝置選的原檔，有後端時縮圖後上傳（useCreation 的 addPhoto）；範例照片沒有原檔
+const emit = defineEmits<{ upload: [url: string, name: string, demoPhotoId?: string, file?: File] }>();
 const { activeId, activeTrip } = useTripContext();
 const photos = computed(()=>{ const tripPhotos = photosForTrip(activeId.value); return tripPhotos.length ? tripPhotos : creationPhotos.filter(photo=>!photo.referenceOnly).slice(0,3); });
 const asset = useAsset();
 const url = ref(''), name = ref(''), error = ref(''), dragging = ref(false), reading = ref(false);
 const sample = ref<CreationPhoto | null>(null);
 const input = ref<HTMLInputElement>();
-let version = 0;
-function clear() { version++; if (url.value.startsWith('blob:')) URL.revokeObjectURL(url.value); url.value = ''; name.value = ''; sample.value = null; reading.value = false; }
+let version = 0, file: File | undefined;
+function clear() { version++; if (url.value.startsWith('blob:')) URL.revokeObjectURL(url.value); url.value = ''; name.value = ''; sample.value = null; reading.value = false; file = undefined; }
 function chooseSample(photo: CreationPhoto) { clear(); error.value = ''; sample.value = photo; url.value = asset('assets/memory/' + photo.source); name.value = photo.title + '.jpg'; }
-function read(file?: File) {
-  if (!file) return;
+function read(picked?: File) {
+  if (!picked) return;
   error.value = '';
-  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 20 * 1024 * 1024) { error.value = '請選擇 20 MB 以內的 JPG、PNG 或 WebP 圖片。'; return; }
-  clear(); const token = version; const candidate = URL.createObjectURL(file); const probe = new Image(); reading.value = true;
-  probe.onload = () => { if (version !== token) { URL.revokeObjectURL(candidate); return; } url.value = candidate; name.value = file.name; reading.value = false; };
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(picked.type) || picked.size > 20 * 1024 * 1024) { error.value = '請選擇 20 MB 以內的 JPG、PNG 或 WebP 圖片。'; return; }
+  clear(); const token = version; const candidate = URL.createObjectURL(picked); const probe = new Image(); reading.value = true;
+  probe.onload = () => { if (version !== token) { URL.revokeObjectURL(candidate); return; } url.value = candidate; name.value = picked.name; file = picked; reading.value = false; };
   probe.onerror = () => { URL.revokeObjectURL(candidate); if (version === token) { error.value = '圖片無法讀取，請換一張試試。'; reading.value = false; } };
   probe.src = candidate;
 }
 function choose(event: Event) { const target = event.target as HTMLInputElement; read(target.files?.[0]); target.value = ''; }
 function drop(event: DragEvent) { dragging.value = false; read(event.dataTransfer?.files?.[0]); }
-function confirm() { if (!url.value) return; emit('upload', sample.value?.source || url.value, name.value, sample.value?.id); url.value = ''; open.value = false; }
+function confirm() { if (!url.value) return; emit('upload', sample.value?.source || url.value, name.value, sample.value?.id, sample.value ? undefined : file); url.value = ''; open.value = false; }
 watch(open, value => { if (!value) clear(); else error.value = ''; });
 onBeforeUnmount(clear);
 </script>

@@ -21,6 +21,8 @@ export interface CreationWork {
   id: string; styleId: CreationId; title: string; image: string; location: string;
   creator: string; createdAt: string; receivedFrom?: string; exchangeId?: string;
   tripId: TripId; photoId?: string; source?: string; sourceCrop?: boolean; sourceTripId?: TripId; preset?: boolean; renderedImage?: string;
+  // 有後端時：serverId 對到資料表 creations；fallback 表示 AI 沒做成、顯示的是預製或合成的示範圖
+  serverId?: string; fallback?: boolean;
 }
 export function makeExample(style: CreationStyle, creator = '你', suffix = ''): CreationWork {
   const photo = creationPhotos.find(p => p.styles.includes(style.id) && p.source === style.source)!;
