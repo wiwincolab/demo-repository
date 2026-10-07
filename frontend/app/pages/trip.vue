@@ -3,12 +3,11 @@ import { kansaiReference } from '~/data/kansai';
 import { dayColors } from '~/utils/map';
 import type { Stop } from '~/types/trip';
 import { tripItineraries, tripAlternatives, plannerStorageKey } from '~/data/trips';
-const { days, members, group, adjusted, applyAdjustment, undoAdjustment, notify, saved: sharedTrip } = useDemo();
+const { days, members, adjusted, applyAdjustment, undoAdjustment, notify, saved: sharedTrip } = useDemo();
 const { activeId,activeTrip,tripHref }=useTripContext();
 const asset = useAsset();
-const { available: live } = useApi();
 const day = ref(0), view = ref<'list' | 'map'>('list'), selected = ref(0);
-const groupOpen = ref(false), groupMode = ref<'invite' | 'deal'>('deal');
+const groupOpen = ref(false);
 const sheet = ref<'info' | 'adjust' | 'compare' | 'done' | 'saved' | null>(null);
 const stop = ref<Stop | null>(null);
 const adjustText = ref(''), lockPlan = ref(true);
@@ -25,7 +24,6 @@ const keptStops=computed(()=>days.value[0]?.stops.filter(s=>s.id!==originalStop.
 function dayLabel(i:number){const date=new Date((activeTrip.value?.startDate||'2026-01-01')+'T12:00:00');date.setDate(date.getDate()+i);return `${date.getMonth()+1}/${date.getDate()}`;}
 function chooseDay(n: number) { day.value = n; selected.value = days.value[Math.max(0,n)]?.stops[0]?.id||0; }
 watch(activeId,()=>{chooseDay(0);sheet.value=null;stop.value=null;groupOpen.value=false;adjustText.value='';saved.value=[];});
-function openGroup(mode: 'invite' | 'deal') { groupMode.value = mode; groupOpen.value = true; }
 function preview() {
     if (!lockPlan.value)
         return notify('此示範請保留鎖定安排，再比較局部變更');
@@ -64,30 +62,13 @@ function savedPlan() {
         <strong>{{ activeTrip.dateLabel }}</strong>
         <p>{{ activeTrip.dayCount }} 天 {{ activeTrip.dayCount - 1 }} 夜 · {{ days.flatMap(d=>d.stops).length }} 個停留點</p>
       </div>
-      <button class="invite-button" :aria-label="members.length + ' 人共編，邀請旅伴'" @click="openGroup('invite')">
+      <button class="invite-button" :aria-label="members.length + ' 人共編，邀請旅伴'" @click="groupOpen = true">
         <span class="avatars">
           <span v-for="m in members.slice(0, 4)" :key="m.name" class="avatar">{{ m.name[0] }}</span>
         </span>
         <span>邀請旅伴 ＋</span>
       </button>
     </div>
-    <button class="deal-banner" aria-haspopup="dialog" @click="openGroup('deal')">
-      <span class="sim-mark" aria-hidden="true">e</span>
-      <span>
-        <strong>旅伴一起買，上網一起省</strong>
-        <small>{{ group.count >= 4 ? '已解鎖旅伴價，每人現省 NT$20' : group.count + ' 人已購買 · 4 人成團，每人現省 NT$20' }}</small>
-      </span>
-      <span aria-hidden="true">›</span>
-    </button>
-    <!-- 有後端時才有：旅伴照片依天排好、每天一張 AI 回憶卡、旅行長圖（pages/journal.vue） -->
-    <NuxtLink v-if="live" class="deal-banner" :to="tripHref('/journal')">
-      <span class="sim-mark" aria-hidden="true">✦</span>
-      <span>
-        <strong>我們的旅行紀錄</strong>
-        <small>每天一張 AI 回憶卡，最後拼成旅行長圖</small>
-      </span>
-      <span aria-hidden="true">›</span>
-    </NuxtLink>
     <div class="trip-tools">
       <NuxtLink class="ai-link" :to="tripHref('/planner')">✦ 圈選 AI 排程</NuxtLink>
       <button @click="sheet = 'adjust'">AI 微調</button>
@@ -139,7 +120,7 @@ function savedPlan() {
       <p v-else class="page-note">各色實線為單日行程，虛線為日間移動。選一天，看每站照片與流量。</p>
     </template>
     <p class="page-note">{{ activeId === 'kansai' ? '路線參考喜鴻五日行程；日期、時刻與車程為示範估算。' : '示範行程。' }} 流量依使用行為估算。</p>
-    <GroupSheet v-model="groupOpen" :initial-mode="groupMode" />
+    <GroupSheet v-model="groupOpen" />
     <AppSheet :model-value="!!stop" :title="stop?.name || ''" @update:model-value="stop = null">
       <StopDetails v-if="stop" :stop="stop" />
     </AppSheet>

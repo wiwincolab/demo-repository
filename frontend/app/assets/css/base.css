@@ -247,45 +247,6 @@ main {
   background: #fae9e4;
   color: #995740;
 }
-.deal-banner {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  background: var(--tint);
-  border: 1px solid #cfedfd;
-  margin: 0 16px 14px;
-  padding: 12px 14px;
-  border-radius: 12px;
-  width: calc(100% - 32px);
-  text-align: left;
-}
-.sim-mark {
-  display: grid;
-  place-items: center;
-  border: 1.8px solid var(--blue);
-  border-radius: 5px;
-  width: 28px;
-  height: 34px;
-  color: var(--blue-dark);
-  font-weight: 800;
-  font-size: 20px;
-}
-.deal-banner strong {
-  font-size: 14px;
-  font-weight: 650;
-  display: block;
-}
-.deal-banner small {
-  display: block;
-  color: var(--blue-dark);
-  font-size: 11px;
-  margin-top: 4px;
-}
-.deal-banner>span:last-child {
-  margin-left: auto;
-  font-size: 25px;
-  color: var(--blue-dark);
-}
 .trip-tools {
   display: flex;
   gap: 6px;
@@ -1150,50 +1111,6 @@ input[type=range] {
 .sheet .primary {
   margin-top: 16px;
 }
-.group-total {
-  background: var(--tint);
-  border-radius: 13px;
-  padding: 17px;
-  margin: 16px 0;
-}
-.group-total>p {
-  color: var(--blue-dark);
-  font-size: 12px;
-  margin: 0;
-}
-.group-total strong {
-  font-size: 32px;
-  display: block;
-  margin: 7px 0;
-}
-.group-total small {
-  color: var(--muted);
-}
-.unlock-row {
-  display: flex;
-  gap: 10px;
-  margin: 18px 0;
-}
-.unlock-row>div {
-  flex: 1;
-  font-size: 11px;
-  background: var(--paper);
-  border: 1px solid var(--line);
-  padding: 13px 5px;
-  text-align: center;
-  border-radius: 10px;
-}
-.unlock-row b {
-  display: block;
-  font-size: 13px;
-  margin-bottom: 8px;
-}
-.unlock-row .unlocked {
-  border-color: #86d1fa;
-  background: var(--tint);
-  color: var(--blue-dark);
-  animation: unlock .4s;
-}
 .member-row {
   display: flex;
   align-items: center;
@@ -1552,11 +1469,6 @@ input[type=range] {
 @keyframes pulse {
   50% {
     box-shadow: 0 0 0 6px #ffd83e80;
-  }
-}
-@keyframes unlock {
-  50% {
-    box-shadow: 0 0 0 3px #59bdec35;
   }
 }
 @media(prefers-reduced-motion:reduce) {
