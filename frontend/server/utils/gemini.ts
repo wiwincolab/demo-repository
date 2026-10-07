@@ -31,6 +31,18 @@ export async function analyzePhoto(config: AppConfig, image: SourceImage, locati
     return analysis;
 }
 
+// 短文字（貼文文案、推薦理由）：api 直接呼叫、不排隊，純文字幾秒就回來；呼叫端自己準備失敗時的範本
+export async function writeText(config: AppConfig, prompt: string, timeoutMs = 15_000) {
+    const interaction = await ai(config).interactions.create({
+        model: config.textModel,
+        store: false,
+        input: [{ type: 'text', text: prompt }],
+    }, { maxRetries: 0, timeout: timeoutMs });
+    const text = (interaction.output_text ?? '').trim();
+    if (!text) throw new Error('模型沒有回傳文字');
+    return text;
+}
+
 export async function generateStyledImage(config: AppConfig, prompt: string, image: SourceImage, aspectRatio: string) {
     // 1K：一張 US$0.0336，手機畫面與分享卡都夠用；2K 價格多五成
     const interaction = await ai(config).interactions.create({

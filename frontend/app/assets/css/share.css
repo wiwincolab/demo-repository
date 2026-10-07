@@ -1,0 +1,34 @@
+/* 分享面板、朋友落地頁、邀請與禮物頁共用（ShareSheet.vue、pages/s、j、g） */
+.share-preview { display: flex; gap: 14px; align-items: center; padding: 12px; border: 1px solid var(--line); border-radius: 16px; background: var(--paper); margin-bottom: 18px; }
+.share-preview img { width: 84px; height: 84px; object-fit: contain; border-radius: 10px; background: #fff; flex-shrink: 0; }
+.share-preview span { display: grid; gap: 4px; }
+.share-preview small { color: var(--muted); font-size: 12px; line-height: 1.5; }
+.share-input { width: 100%; border: 1px solid #dce6e9; border-radius: 11px; padding: 11px 13px; font: inherit; font-size: 15px; margin: 6px 0 16px; background: #fff; color: var(--ink); }
+.share-input:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
+.share-textarea { resize: vertical; line-height: 1.6; min-height: 104px; }
+.share-caption-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.share-stops { border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px; margin-bottom: 10px; }
+.share-stops summary { cursor: pointer; font-weight: 600; font-size: 14px; display: flex; justify-content: space-between; }
+.share-stops summary span { color: var(--muted); font-weight: 500; }
+.share-stops label { display: flex; gap: 10px; align-items: center; padding: 7px 0; font-size: 14px; border-top: 1px solid var(--line); }
+.share-stops label:first-of-type { border-top: 0; }
+.share-done { display: grid; gap: 16px; justify-items: center; text-align: center; }
+.share-done img { width: min(240px, 60vw); border-radius: 14px; box-shadow: 0 12px 40px #15334426; }
+.share-done p { display: grid; gap: 6px; }
+.share-done small { color: var(--muted); }
+.share-done a { color: var(--blue-dark); word-break: break-all; font-size: 13px; }
+
+/* 朋友打開分享、邀請、禮物連結看到的頁面 */
+.share-page { max-width: 560px; margin: 0 auto; padding: 24px 16px 120px; display: grid; gap: 18px; }
+.share-hero { border-radius: 22px; overflow: hidden; background: var(--paper); border: 1px solid var(--line); }
+.share-hero img { width: 100%; display: block; max-height: 62vh; object-fit: contain; background: #fff; }
+.share-hero p { padding: 14px 16px; margin: 0; line-height: 1.7; white-space: pre-line; }
+.share-eyebrow { color: var(--blue-dark); font-weight: 700; font-size: 13px; letter-spacing: .02em; }
+.share-page h1 { font-size: clamp(24px, 6vw, 32px); line-height: 1.25; margin: 4px 0 0; }
+.share-stop-list { display: grid; gap: 8px; padding: 0; margin: 0; list-style: none; }
+.share-stop-list li { display: flex; gap: 12px; align-items: center; padding: 8px; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+.share-stop-list img { width: 56px; height: 56px; object-fit: cover; border-radius: 10px; flex-shrink: 0; }
+.share-stop-list small { display: block; color: var(--muted); font-size: 12px; }
+.share-actions { position: sticky; bottom: 12px; display: grid; gap: 10px; padding: 12px; border-radius: 18px; background: #ffffffeb; box-shadow: 0 10px 40px #15334424; backdrop-filter: blur(8px); }
+.share-actions .creation-primary, .share-actions .creation-secondary { width: 100%; font-size: 15px; }
+.share-note { color: var(--muted); font-size: 12px; text-align: center; margin: 0; }

@@ -10,6 +10,8 @@ const route = useRoute();
 const { notify } = useDemo();
 const { activeId, activeTrip, tripHref } = useTripContext();
 const { works, exchanges, pending, save, friends, photos, findPhoto, addPhoto, generateOnServer } = useCreation();
+// 有後端（GCP 版）：分享走真的連結與限動圖卡（ShareSheet）；Pages 版維持 Threads 預覽
+const { available: apiAvailable } = useApi();
 const selectedPhoto = ref<CreationPhoto | null>(null);
 const selected = ref<CreationId>('sticker');
 const activeWork = ref<CreationWork | null>(null);
@@ -20,7 +22,7 @@ const work = computed(() => activeWork.value || (selectedPhoto.value && style.va
 const image = computed(() => work.value ? work.value.renderedImage || asset('assets/memory/' + work.value.image) : '');
 const sourceImage = computed(() => selectedPhoto.value ? asset('assets/memory/' + selectedPhoto.value.source) : '');
 const downloadName = computed(() => `chictrip-${work.value?.styleId || 'memory'}.png`);
-const uploading = ref(false), exchanging = ref(false), library = ref(false), sharing = ref(false), details = ref(false), zoom = ref(false), sourceZoom = ref(false), playing = ref(false), formats = ref(false);
+const uploading = ref(false), exchanging = ref(false), library = ref(false), sharing = ref(false), shareOpen = ref(false), details = ref(false), zoom = ref(false), sourceZoom = ref(false), playing = ref(false), formats = ref(false);
 const guideSelected = ref<CreationId>('sticker');
 const libraryTab = ref<'collection' | 'history'>('collection');
 const generating = ref(false), complete = ref(false), original = ref(false), exploring = ref(false);
@@ -173,7 +175,7 @@ onBeforeUnmount(() => { run++; generating.value = false; });
             </section>
           </template>
           <div v-else class="studio-exchanged-info"><span class="creation-eyebrow">交換來的旅行收藏</span><h2>{{ work.title }}</h2><p>{{ work.creator }} 的作品，來自「{{ sourceTrip?.title }}」。</p><button class="creation-text-button" @click="details = true">查看交換與原作紀錄 ›</button></div>
-          <template v-if="hasResult"><div class="creation-divider" /><div class="creation-quick-actions"><button class="creation-exchange-result" @click="startExchange(work)"><img class="creation-exchange-illustration" :src="asset('assets/memory/exchange-collectibles.png')" alt="" /><b>與朋友交換</b><small>留句話，交換風景</small></button><button @click="sharing = true"><span>＠</span><b>分享到 Threads</b><small>把作品變成話題</small></button></div><div class="creation-bottom-links"><button @click="details = true">作品資訊</button><a :href="image" :download="downloadName">下載圖片 ↓</a><NuxtLink :to="tripHref('/atlas', { journey: activeId || undefined })">回憶地圖 ↗</NuxtLink></div></template>
+          <template v-if="hasResult"><div class="creation-divider" /><div class="creation-quick-actions"><button class="creation-exchange-result" @click="startExchange(work)"><img class="creation-exchange-illustration" :src="asset('assets/memory/exchange-collectibles.png')" alt="" /><b>與朋友交換</b><small>留句話，交換風景</small></button><button v-if="apiAvailable" @click="shareOpen = true"><span>↗</span><b>分享給朋友</b><small>限動圖卡＋連結</small></button><button v-else @click="sharing = true"><span>＠</span><b>分享到 Threads</b><small>把作品變成話題</small></button></div><div class="creation-bottom-links"><button @click="details = true">作品資訊</button><a :href="image" :download="downloadName">下載圖片 ↓</a><NuxtLink :to="tripHref('/atlas', { journey: activeId || undefined })">回憶地圖 ↗</NuxtLink></div></template>
         </aside>
       </div>
     </template>
@@ -182,6 +184,7 @@ onBeforeUnmount(() => { run++; generating.value = false; });
     <CreationPhotoExplore v-if="exploring" @close="exploring = false" @notebook="exploring = false; playing = true" />
     <template v-if="work && style">
       <ThreadsComposer v-model="sharing" :image="image" :location="work.location" :style-id="selected" :photo-id="work.photoId" />
+      <ShareSheet v-if="activeId" v-model="shareOpen" :trip-id="activeId" :image="image" :location="work.location" :style-id="selected" />
       <CreationDialog v-model="details" title="作品的旅行紀錄">
         <div class="creation-detail-art"><img :src="image" :alt="work.title" /><div><h3>{{ work.title }}</h3><p>{{ work.location }}</p><small>原作旅程 · {{ sourceTrip?.title }}<br />原創作者 · {{ work.creator }}</small></div></div>
         <div v-if="giver?.companion" class="creation-companion"><span>↔</span><div><b>同行限定收藏</b><small>{{ giver.trip }} · 與 {{ giver.name }} 一起</small></div></div>
