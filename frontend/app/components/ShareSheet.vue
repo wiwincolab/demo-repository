@@ -16,6 +16,7 @@ const nickname = ref(''), savedNickname = ref(''), caption = ref('');
 const writing = ref(false), sharing = ref(false), error = ref('');
 const done = ref<{ url: string; card: string; result: string } | null>(null);
 
+// immediate：Bingo 頁是圖卡畫好才掛上這個面板、一掛上就是打開的，沒有「從關到開」也要初始化（10/7 實測公開景點變成 0 個）
 watch(open, async value => {
     if (!value) return;
     picked.value = stops.value.map(stop => stop.id);
@@ -23,8 +24,9 @@ watch(open, async value => {
     if (done.value) URL.revokeObjectURL(done.value.card);
     done.value = null;
     caption.value = `把 ${props.location.split(' · ')[0]} 捨不得忘記的一刻，留成一張回憶。\n#旅行回憶 #去趣`;
-    try { savedNickname.value = nickname.value = (await getMe()).nickname || ''; } catch { /* 讀不到就讓評審自己填 */ }
-});
+    // 只在欄位還空著時帶入：線上要等網路回應，評審可能已經先打了名字，不能蓋掉（10/7 線上實測踩到）
+    try { savedNickname.value = (await getMe()).nickname || ''; if (!nickname.value.trim()) nickname.value = savedNickname.value; } catch { /* 讀不到就讓評審自己填 */ }
+}, { immediate: true });
 
 async function aiCaption() {
     writing.value = true;

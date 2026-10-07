@@ -22,7 +22,8 @@ const ready = ref(false);
 onMounted(() => { ready.value = true; });
 const nickname = ref(''), saved = ref(''), busy = ref(false), error = ref('');
 const already = computed(() => !!invite.value?.members.some(member => member.me));
-onMounted(async () => { try { saved.value = nickname.value = (await getMe()).nickname || ''; } catch { /* 讓旅伴自己填 */ } });
+// 只在欄位還空著時帶入：網路慢時旅伴可能已經先打了名字，不能蓋掉
+onMounted(async () => { try { saved.value = (await getMe()).nickname || ''; if (!nickname.value.trim()) nickname.value = saved.value; } catch { /* 讓旅伴自己填 */ } });
 
 async function accept() {
     if (!invite.value || busy.value) return;
