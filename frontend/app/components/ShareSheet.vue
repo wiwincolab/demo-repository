@@ -16,7 +16,7 @@ const nickname = ref(''), savedNickname = ref(''), caption = ref('');
 const writing = ref(false), sharing = ref(false), error = ref('');
 const done = ref<{ url: string; card: string; result: string } | null>(null);
 
-// immediate：Bingo 頁是圖卡畫好才掛上這個面板、一掛上就是打開的，沒有「從關到開」也要初始化（10/7 實測公開景點變成 0 個）
+// immediate：旅行紀錄頁是長圖畫好才掛上這個面板、一掛上就是打開的，沒有「從關到開」也要初始化，不然公開景點是 0 個
 watch(open, async value => {
     if (!value) return;
     picked.value = stops.value.map(stop => stop.id);

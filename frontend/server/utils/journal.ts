@@ -16,22 +16,18 @@ export function dedupe<T extends { hash: string | null; day: string }>(photos: T
     return { kept, hidden: photos.length - kept.length };
 }
 
-// 趣味統計：每個稱號給領先的人；沒人拍過那一類就不給。Bingo 照片另外算
-export function memberStats(photos: { owner: string; nickname: string | null; tag: PhotoTag | null }[], bingo: { owner: string; nickname: string | null }[], me: string) {
-    const people = new Map<string, { nickname: string; me: boolean; photos: number; food: number; scenery: number; people: number; bingo: number }>();
-    const entry = (owner: string, nickname: string | null) => {
-        if (!people.has(owner)) people.set(owner, { nickname: nickname || '旅伴', me: owner === me, photos: 0, food: 0, scenery: 0, people: 0, bingo: 0 });
-        return people.get(owner)!;
-    };
+// 趣味統計：每個稱號給領先的人；沒人拍過那一類就不給
+export function memberStats(photos: { owner: string; nickname: string | null; tag: PhotoTag | null }[], me: string) {
+    const people = new Map<string, { nickname: string; me: boolean; photos: number; food: number; scenery: number; people: number }>();
     for (const photo of photos) {
-        const person = entry(photo.owner, photo.nickname);
+        if (!people.has(photo.owner)) people.set(photo.owner, { nickname: photo.nickname || '旅伴', me: photo.owner === me, photos: 0, food: 0, scenery: 0, people: 0 });
+        const person = people.get(photo.owner)!;
         person.photos++;
         if (photo.tag === 'food' || photo.tag === 'scenery' || photo.tag === 'people') person[photo.tag]++;
     }
-    for (const mark of bingo) entry(mark.owner, mark.nickname).bingo++;
     const members = [...people.values()].sort((a, b) => b.photos - a.photos || Number(b.me) - Number(a.me));
-    const lead = (key: 'photos' | 'food' | 'scenery' | 'people' | 'bingo') => [...members].sort((a, b) => b[key] - a[key])[0];
-    const titles = ([['photos', '拍最多張'], ['food', '最愛拍食物'], ['scenery', '風景攝影師'], ['people', '人像擔當'], ['bingo', 'Bingo 達人']] as const)
+    const lead = (key: 'photos' | 'food' | 'scenery' | 'people') => [...members].sort((a, b) => b[key] - a[key])[0];
+    const titles = ([['photos', '拍最多張'], ['food', '最愛拍食物'], ['scenery', '風景攝影師'], ['people', '人像擔當']] as const)
         .map(([key, title]) => ({ key, title, leader: lead(key) }))
         .filter(item => item.leader && item.leader[item.key] > 0)
         .map(item => ({ title: item.title, nickname: item.leader!.nickname, count: item.leader![item.key] }));

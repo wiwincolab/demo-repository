@@ -5,7 +5,7 @@ import '~/assets/css/creation.css';
 import '~/assets/css/share.css';
 import '~/assets/css/journal.css';
 
-// 我們的旅行紀錄（social loop 的 ②：把旅行做成作品）：旅伴所有照片（含 Bingo）依天排好、重複的收起來；
+// 我們的旅行紀錄（social loop 的 ②：把旅行做成作品）：旅伴所有照片依天排好、重複的收起來；
 // 每天一張 AI 挑的回憶卡（代表、食物、意外）；誰最愛拍食物這類稱號；最後拼成旅行長圖分享出去
 const { activeId, activeTrip, tripHref } = useTripContext();
 const { notify } = useDemo();
@@ -50,7 +50,7 @@ useHead({ title: '我們的旅行紀錄 · 去趣 chicTrip' });
     <header>
       <span class="share-eyebrow">{{ activeTrip?.title.replace(/。$/, '') }}</span>
       <h1 id="journal-title">我們的旅行紀錄</h1>
-      <p class="creation-muted">旅伴的照片和 Bingo 都在這裡，每天一張 AI 挑的回憶卡。</p>
+      <p class="creation-muted">旅伴的照片都在這裡，每天一張 AI 挑的回憶卡。</p>
     </header>
     <p v-if="available === false" class="share-hero"><span>共同遊記需要後端，請到 GCP 版看。</span></p>
     <p v-else-if="!activeId" class="share-hero"><span>先選一趟旅行。</span><NuxtLink class="creation-primary" to="/trips?next=/journal">選擇行程</NuxtLink></p>
@@ -59,7 +59,7 @@ useHead({ title: '我們的旅行紀錄 · 去趣 chicTrip' });
       <section v-if="journal.stats.titles.length" class="journal-titles" aria-label="旅伴稱號">
         <span v-for="title in journal.stats.titles" :key="title.title"><b>{{ title.title }}</b>{{ title.nickname }} · {{ title.count }}</span>
       </section>
-      <div v-if="!journal.days.length" class="share-hero"><p>還沒有照片。到 <NuxtLink :to="tripHref('/memory')">AI 創作</NuxtLink> 加照片、或玩 <NuxtLink :to="tripHref('/bingo')">旅行 Bingo</NuxtLink>，這裡就會出現。</p></div>
+      <div v-if="!journal.days.length" class="share-hero"><p>還沒有照片。到 <NuxtLink :to="tripHref('/memory')">AI 創作</NuxtLink> 加照片，這裡就會出現。</p></div>
       <article v-for="day in journal.days" :key="day.day" class="journal-day">
         <h2>{{ dayLabel(day.day) }}<small>{{ day.items.length }} 張</small></h2>
         <div v-if="day.card?.status === 'queued' || making === day.day" class="journal-card is-waiting" role="status">AI 正在挑今天的照片…</div>
@@ -74,7 +74,7 @@ useHead({ title: '我們的旅行紀錄 · 去趣 chicTrip' });
         </div>
         <button v-else class="creation-primary journal-make" :disabled="!!making" @click="makeCard(day.day)">產生這天的回憶卡 ✦</button>
         <ul class="journal-album">
-          <li v-for="item in day.items" :key="item.id"><img :src="item.url" :alt="item.title" loading="lazy" /><span>{{ item.nickname }}{{ item.me ? '（你）' : '' }}</span><i v-if="item.kind === 'bingo'">Bingo</i><i v-else-if="item.tag && tagLabel[item.tag]">{{ tagLabel[item.tag] }}</i></li>
+          <li v-for="item in day.items" :key="item.id"><img :src="item.url" :alt="item.title" loading="lazy" /><span>{{ item.nickname }}{{ item.me ? '（你）' : '' }}</span><i v-if="item.tag && tagLabel[item.tag]">{{ tagLabel[item.tag] }}</i></li>
         </ul>
       </article>
       <p v-if="journal.hidden" class="share-note">收起了 {{ journal.hidden }} 張重複的照片（連拍或同一張傳兩次）。</p>

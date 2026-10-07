@@ -8,7 +8,7 @@ export default defineEventHandler(async event => {
     const days = [...new Set(journal.kept.map(item => item.day))].sort().reverse().map(day => ({
         day,
         items: journal.kept.filter(item => item.day === day).map(item => ({
-            id: item.id, kind: item.kind, url: `/api/media/${item.id}`, title: item.title, tag: item.tag,
+            id: item.id, url: `/api/media/${item.id}`, title: item.title, tag: item.tag,
             nickname: item.nickname || '旅伴', me: item.owner === device,
         })),
         card: cards.find(card => card.day === day) ?? null,

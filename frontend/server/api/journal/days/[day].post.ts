@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-// 產生（或重產）某一天的每日卡片：當天照片最多 8 張（一般照片優先、再補 Bingo 照片）排進佇列，worker 挑代表、食物、意外並配字。
+// 產生（或重產）某一天的每日卡片：當天照片最多 8 張排進佇列，worker 挑代表、食物、意外並配字。
 // 同一組同一天只有一張，重產就覆蓋。Redis 連不上就直接退回（第一張當代表），畫面照樣有卡片
 const MAX_PHOTOS = 8;
 export default defineEventHandler(async event => {
@@ -9,8 +9,7 @@ export default defineEventHandler(async event => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || !isTripId(tripId)) throw createError({ statusCode: 400 });
     const device = await requireDevice(event);
     const journal = await loadJournal(device, tripId);
-    const ofDay = journal.kept.filter(item => item.day === day);
-    const chosen = [...ofDay.filter(item => item.kind === 'photo'), ...ofDay.filter(item => item.kind === 'bingo')].slice(0, MAX_PHOTOS);
+    const chosen = journal.kept.filter(item => item.day === day).slice(0, MAX_PHOTOS);
     if (!chosen.length) throw createError({ statusCode: 400, statusMessage: '這天還沒有照片' });
 
     const sql = await db();

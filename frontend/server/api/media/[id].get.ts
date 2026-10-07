@@ -8,8 +8,6 @@ export default defineEventHandler(async event => {
         select media_path, mime from photos where id = ${id}
         union all
         select media_path, mime from creations where id = ${id} and media_path is not null
-        union all
-        select media_path, mime from bingo_marks where id = ${id}
         limit 1`;
     if (!row) throw createError({ statusCode: 404 });
     setResponseHeaders(event, { 'Content-Type': row.mime, 'Cache-Control': 'public, max-age=31536000, immutable' });

@@ -35,10 +35,10 @@ test('stats give each fun title to whoever leads it, and skip titles nobody earn
         { owner: 'me', nickname: '小安', tag: 'food' }, { owner: 'me', nickname: '小安', tag: 'food' },
         { owner: 'b', nickname: '阿哲', tag: 'scenery' }, { owner: 'b', nickname: '阿哲', tag: 'people' }, { owner: 'b', nickname: '阿哲', tag: null },
     ];
-    const stats = memberStats(photos, [{ owner: 'b', nickname: '阿哲' }], 'me');
-    assert.deepEqual(stats.titles.map(t => `${t.title}:${t.nickname}`), ['拍最多張:阿哲', '最愛拍食物:小安', '風景攝影師:阿哲', '人像擔當:阿哲', 'Bingo 達人:阿哲']);
+    const stats = memberStats(photos, 'me');
+    assert.deepEqual(stats.titles.map(t => `${t.title}:${t.nickname}`), ['拍最多張:阿哲', '最愛拍食物:小安', '風景攝影師:阿哲', '人像擔當:阿哲']);
     // 沒人拍過的類別不給稱號
-    assert.ok(!memberStats([{ owner: 'me', nickname: '小安', tag: 'scenery' }], [], 'me').titles.some(t => t.title === '最愛拍食物'));
+    assert.ok(!memberStats([{ owner: 'me', nickname: '小安', tag: 'scenery' }], 'me').titles.some(t => t.title === '最愛拍食物'));
     assert.deepEqual(stats.members.map(m => [m.nickname, m.photos, m.me]), [['阿哲', 3, false], ['小安', 2, true]]);
 });
 
