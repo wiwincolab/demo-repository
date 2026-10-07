@@ -33,6 +33,10 @@ export interface CreationExchange {
   createdAt: string; resolvedAt?: string; tripId: TripId;
 }
 export const styleById = (id: CreationId) => creationStyles.find(style => style.id === id)!;
+// 有後端時真的交給 Gemini 生成的風格（server/utils/creation-prompts.ts）。
+// 場景積木要 3D 零件、景點限定旅伴要透明角色與動畫素材，生圖模型產不出能直接用的，維持預製
+export const realStyles: CreationId[] = ['sticker', 'photo', 'ticket', 'pin'];
+export const isRealStyle = (id: unknown): id is CreationId => realStyles.includes(id as CreationId);
 
 export interface CreationPhoto {
   id: string; tripId: TripId; title: string; location: string; source: string;
