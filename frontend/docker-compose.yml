@@ -1,4 +1,4 @@
-# 本機開發用的資料庫：docker compose up -d 之後 npm run dev，/health 就連得到。
+# 本機開發用的資料庫與佇列：docker compose up -d 之後 npm run dev，/health 就連得到。
 # 映像跟 care-vm 上的一樣（MEDDEMO 也用這個），VM 不必多下載一份
 services:
   db:
@@ -14,6 +14,18 @@ services:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U chictrip -d chictrip"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # 生成工作的佇列（BullMQ）。6379 是 MEDDEMO 的，這裡用 6380；跟正式環境一樣不存檔
+  redis:
+    image: redis:8.10.1-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "127.0.0.1:6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 20

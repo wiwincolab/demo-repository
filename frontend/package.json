@@ -12,6 +12,8 @@
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {
+    "@google/genai": "2.27.0",
+    "bullmq": "6.3.11",
     "gsap": "^3.15.0",
     "nuxt": "4.4.8",
     "postgres": "3.4.9",
