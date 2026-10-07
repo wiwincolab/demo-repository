@@ -43,3 +43,5 @@
 .advisor-actions{position:sticky;bottom:calc(-24px - env(safe-area-inset-bottom));z-index:2;background:#fff;padding-bottom:12px;box-shadow:0 -8px 12px #ffffffea}
 @media(max-width:360px){.advisor-answers button{font-size:12px;min-height:57px}.esim-sheet .advisor-question>p{font-size:11px}.advisor-progress{margin-bottom:18px}.advisor-text-label{margin-top:17px}}
 @media(prefers-reduced-motion:reduce){.esim-page *,.esim-sheet *{animation:none!important;transition:none!important}}
+/* 有後端時，推薦理由由 Gemini 依回答與景點寫（EsimAdvisor.vue），標示來源 */
+.esim-sheet .advisor-ai-note{display:block;margin-top:6px;color:#16819e;font-size:11px}

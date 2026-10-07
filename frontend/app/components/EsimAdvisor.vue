@@ -11,6 +11,20 @@ const question = computed(() => advisorQuestions[step.value]!);
 const answer = computed(() => answers.value[step.value]);
 const result = computed(() => answers.value.length === 3 ? recommendUsage(answers.value) : 'normal');
 const plan = computed(() => esimPlan(result.value, props.days));
+// 有後端時，推薦理由改由 Gemini 依你的回答與這趟景點寫（server/api/esim/recommend.post.ts）；方案與價格仍照規則
+const { available: live } = useApi();
+const { activeId } = useTripContext();
+const aiReason = ref(''), writing = ref(false);
+async function personalReason() {
+  aiReason.value = '';
+  if (!live.value || !activeId.value) return;
+  writing.value = true;
+  try {
+    const response = await $fetch<{ reason: string; ai: boolean }>('/api/esim/recommend', { method: 'POST', body: { tripId: activeId.value, answers: answers.value } });
+    if (response.ai) aiReason.value = response.reason;
+  } catch { /* 用方案原本的說明 */ } finally { writing.value = false; }
+}
+watch(phase, value => { if (value === 'result') void personalReason(); });
 let timer: ReturnType<typeof setTimeout> | undefined;
 onBeforeUnmount(() => clearTimeout(timer));
 async function focusQuestion() {
@@ -68,7 +82,7 @@ function next() {
       <section class="advisor-result">
         <div class="advisor-result-heading"><span>適合你的使用方式</span><h3 ref="heading" tabindex="-1">{{ plan.label }}上網<span>剛好，留一點餘裕。</span></h3></div>
         <div class="advisor-tiers"><span v-for="tier in [{id:'light',name:'輕度'},{id:'normal',name:'中度'},{id:'heavy',name:'重度'}]" :key="tier.id" :class="{active:result===tier.id}"><EsimIcon v-if="result===tier.id" name="check" :size="14"/>{{ tier.name }}</span></div>
-        <p class="advisor-reason">{{ plan.reason }}</p>
+        <p class="advisor-reason" aria-live="polite">{{ aiReason || plan.reason }}<small v-if="aiReason" class="advisor-ai-note"> ✦ AI 依你的回答與這趟景點寫的</small><small v-else-if="writing" class="advisor-ai-note"> ✦ AI 正在看你的回答…</small></p>
         <div class="advisor-recommendation"><span><small>Docomo · {{ plan.days }} 天</small><strong>{{ plan.name }}</strong></span><b><small>NT$</small>{{ plan.price }}</b></div>
         <p class="advisor-result-detail">{{ plan.desc }}。<template v-if="days!==plan.days">此行程 {{ days }} 天，搭配已查證的 {{ plan.days }} 天方案。</template></p>
         <details class="advisor-recap"><summary>根據你的 3 個回答 · 預估 {{ plan.range }}GB</summary><ol><li v-for="(a,i) in answers" :key="i">{{ a.text }}</li></ol><p>此為使用情境估算，並非即時用量預測；每日額度無法跨日累積。</p></details>
