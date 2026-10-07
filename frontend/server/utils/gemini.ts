@@ -15,6 +15,9 @@ const ai = (config: AppConfig) => {
     return client;
 };
 const imageInput = (image: SourceImage) => ({ type: 'image' as const, mime_type: image.mime, data: Buffer.from(image.bytes).toString('base64') });
+// 不重試：SDK 遇到 429 會照回應裡的等待時間再試，10/7 本機實測預設要白等 40 秒、只重試一次也要 65 秒才失敗。
+// 現場寧可馬上退回預製圖。逾時交給 SDK 才會真的中斷請求、不在背景繼續吃額度
+const requestOptions = (config: AppConfig) => ({ maxRetries: 0, timeout: config.jobTimeoutMs });
 
 export async function analyzePhoto(config: AppConfig, image: SourceImage, location: string): Promise<PhotoAnalysis> {
     const interaction = await ai(config).interactions.create({
@@ -22,7 +25,7 @@ export async function analyzePhoto(config: AppConfig, image: SourceImage, locati
         store: false,
         input: [imageInput(image), { type: 'text', text: analysisPrompt(location) }],
         response_format: { type: 'text', mime_type: 'application/json', schema: ANALYSIS_SCHEMA },
-    });
+    }, requestOptions(config));
     const analysis = parseAnalysis(interaction.output_text ?? '');
     if (!analysis) throw new Error(`照片分析的格式不對：${(interaction.output_text ?? '').slice(0, 200)}`);
     return analysis;
@@ -35,7 +38,7 @@ export async function generateStyledImage(config: AppConfig, prompt: string, ima
         store: false,
         input: [{ type: 'text', text: prompt }, imageInput(image)],
         response_format: { type: 'image', aspect_ratio: aspectRatio, image_size: '1K' },
-    });
+    }, requestOptions(config));
     const data = interaction.output_image?.data;
     if (!data) throw new Error(`模型沒有回傳圖片：${(interaction.output_text ?? '').slice(0, 200)}`);
     const bytes = Buffer.from(data, 'base64');
