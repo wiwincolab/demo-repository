@@ -3,6 +3,20 @@ import { tripSummaries, type TripId } from '~/data/trips';
 import '~/assets/css/trips.css';
 const route = useRoute();
 const { toast, reset } = useDemo();
+// 旅伴群組（有後端時）：每趟先問一次；有群組才每 4 秒更新，朋友加入、購買幾秒內就出現。
+// 沒有群組的裝置不輪詢；分頁不在前景時也不問
+const { groups, refresh } = useGroup();
+let groupTimer: ReturnType<typeof setInterval> | undefined;
+onMounted(() => {
+  const tick = () => {
+    const id = activeId.value;
+    if (!id || document.visibilityState !== 'visible') return;
+    if (groups.value[id] === undefined || groups.value[id]) void refresh(id);
+  };
+  tick();
+  groupTimer = setInterval(tick, 4000);
+});
+onBeforeUnmount(() => clearInterval(groupTimer));
 const { activeId, activeTrip, ready, selectTrip, tripHref } = useTripContext();
 const help = ref(false);
 const switcher = ref(false);

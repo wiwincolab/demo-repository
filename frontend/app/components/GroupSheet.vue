@@ -5,6 +5,8 @@ const props = defineProps<{
     initialMode?: 'invite' | 'deal';
 }>();
 const { members, group, plan, buy, addMember } = useDemo();
+// 有後端（GCP 版）：旅伴用真的邀請連結加入、各自在自己的手機上購買；Pages 版維持本機模擬
+const { available: live } = useApi();
 watch(open, value => { if (value)
     mode.value = props.initialMode || 'deal'; });
 const money = (n: number) => n.toLocaleString('zh-TW');
@@ -27,15 +29,16 @@ const money = (n: number) => n.toLocaleString('zh-TW');
       <p class="small-note">福利累加；點數不是現金。示範回饋限下次滿 NT$299 抵用、30 天有效；額外流量限本趟使用。共編人數與購買人數分開計算。</p>
     </template>
     <p v-else class="muted">朋友都能加入共編，購買 eSIM 是各自的選擇。</p>
-    <div v-for="(member, i) in members" :key="member.name" class="member-row">
+    <div v-for="(member, i) in members" :key="member.name + i" class="member-row">
       <span class="avatar">{{ member.name[0] }}</span>
       <span>{{ member.name }}<small>{{ member.paid ? '一般價 NT$' + member.price : '可自由共編 · 尚未購買' }}</small></span>
-      <button v-if="mode === 'deal'" :disabled="member.paid" @click="buy(i)">{{ member.paid ? '已購買' : '模擬購買' }}</button>
+      <button v-if="mode === 'deal' && (!live || i === 0)" :disabled="member.paid" @click="buy(i)">{{ member.paid ? '已購買' : '模擬購買' }}</button>
+      <span v-else-if="mode === 'deal'" class="mock">{{ member.paid ? '已購買' : '尚未購買' }}</span>
       <span v-else class="mock">已加入</span>
     </div>
-    <button v-if="mode === 'invite'" class="primary" :disabled="members.length >= 8" @click="addMember">{{ members.length >= 8 ? '8 位示範旅伴皆已加入' : '模擬一位朋友加入' }}</button>
+    <InvitePanel v-if="mode === 'invite' && live" />
+    <button v-else-if="mode === 'invite'" class="primary" :disabled="members.length >= 8" @click="addMember">{{ members.length >= 8 ? '8 位示範旅伴皆已加入' : '模擬一位朋友加入' }}</button>
     <button v-else class="secondary" @click="mode = 'invite'">邀請更多旅伴共編</button>
-    <p class="small-note">僅在本機模擬，不會傳送邀請或建立真實訂單。</p>
+    <p class="small-note">{{ live ? '旅伴用自己的手機加入、各自決定要不要買；購買為示範，不扣款。' : '僅在本機模擬，不會傳送邀請或建立真實訂單。' }}</p>
   </AppSheet>
 </template>
-

@@ -18,6 +18,15 @@
 .share-done small { color: var(--muted); }
 .share-done a { color: var(--blue-dark); word-break: break-all; font-size: 13px; }
 
+/* 邀請旅伴（InvitePanel.vue） */
+.invite-panel { display: grid; gap: 10px; justify-items: center; text-align: center; padding: 14px; border: 1px solid var(--line); border-radius: 18px; background: var(--paper); margin: 8px 0; }
+.invite-qr { width: 180px; height: 180px; padding: 8px; background: #fff; border-radius: 14px; }
+.invite-qr svg { width: 100%; height: 100%; display: block; }
+.invite-panel p { display: grid; gap: 4px; margin: 0; }
+.invite-panel small { color: var(--muted); font-size: 12px; }
+.invite-panel a { color: var(--blue-dark); font-size: 12px; word-break: break-all; }
+.invite-panel .primary { width: 100%; }
+
 /* 朋友打開分享、邀請、禮物連結看到的頁面 */
 .share-page { max-width: 560px; margin: 0 auto; padding: 24px 16px 180px; display: grid; gap: 18px; }
 .share-hero { border-radius: 22px; overflow: hidden; background: var(--paper); border: 1px solid var(--line); }
@@ -29,6 +38,7 @@
 .share-stop-list li { display: flex; gap: 12px; align-items: center; padding: 8px; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
 .share-stop-list img { width: 56px; height: 56px; object-fit: cover; border-radius: 10px; flex-shrink: 0; }
 .share-stop-list small { display: block; color: var(--muted); font-size: 12px; }
+.share-avatar { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--tint); color: var(--blue-dark); font-weight: 800; flex-shrink: 0; }
 /* 停在底部分頁列（base.css 的 .bottom-nav，約 66px 高）上方 */
 .share-actions { position: sticky; bottom: calc(80px + env(safe-area-inset-bottom)); display: grid; gap: 10px; padding: 12px; border-radius: 18px; background: #ffffffeb; box-shadow: 0 10px 40px #15334424; backdrop-filter: blur(8px); }
 .share-actions .creation-primary, .share-actions .creation-secondary { width: 100%; font-size: 15px; }

@@ -13,8 +13,16 @@ export function useDemo() {
     const storageReady=useState('trip-demo-ready-v2',()=>false);
     const empty=blankState();
     function field<K extends keyof TripDemoState>(key:K){return computed({get:()=>activeId.value?states.value[activeId.value][key]:empty[key],set:(value:TripDemoState[K])=>{if(activeId.value)states.value[activeId.value][key]=value;}});}
-    const days=field('days'), members=field('members'), usage=field('usage'), adjusted=field('adjusted'), previousStop=field('previousStop'), generated=field('generated');
+    const days=field('days'), localMembers=field('members'), usage=field('usage'), adjusted=field('adjusted'), previousStop=field('previousStop'), generated=field('generated');
     const esim=field('esim');
+    // 有後端、而且這趟有真的旅伴群組時，名單來自伺服器（自己排第一，頁面照舊把 members[0] 當成你）；
+    // 價格照各自買的方案、沒買的照目前選的方案估，跟原本的模擬同一套算法
+    const groupApi=useGroup();
+    const serverGroup=computed(()=>activeId.value?groupApi.groups.value[activeId.value]??null:null);
+    const members=computed<Member[]>({
+      get:()=>serverGroup.value?serverGroup.value.members.map(m=>({name:m.me?`${m.nickname}（你）`:m.nickname,paid:m.paid,me:m.me,price:esimPlan((m.paid?m.usage:m.me?esim.value.selectedUsage||usage.value:null)||'normal',activeTrip.value?.dayCount||5).price})):localMembers.value,
+      set:value=>{localMembers.value=value;},
+    });
     onMounted(()=>{
       if(storageReady.value)return;
       try{
@@ -70,7 +78,25 @@ export function useDemo() {
         members.value.push({ name: names[members.value.length]||`旅伴 ${members.value.length}`, paid: false, price: esimPlan('normal',activeTrip.value?.dayCount||5).price });
         notify('旅伴已加入共編，尚未購買 eSIM');
     }
+    // 邀請旅伴（有後端時）：拿到這趟的群組與邀請連結；先前在這支手機上已經模擬買過，就一併記到群組裡
+    async function invite(){
+        if(!activeId.value)return null;
+        const id=activeId.value, group=await groupApi.ensure(id);
+        if(esim.value.purchasedUsage&&!group.members[0]?.paid)return groupApi.buy(id,esim.value.purchasedUsage);
+        return group;
+    }
     function buy(index: number) {
+        if (serverGroup.value && activeId.value) {
+            // 真的群組只能替自己買；朋友要在自己的手機上按
+            if (index !== 0) { notify('請朋友在自己的手機上按購買'); return; }
+            if (members.value[0]?.paid || !plan.value.available) return;
+            const chosen = esim.value.selectedUsage || usage.value;
+            esim.value = {selectedUsage:esim.value.selectedUsage,purchasedUsage:chosen,installed:false,claimed:false};
+            groupApi.buy(activeId.value, chosen)
+                .then(() => notify(group.value.count >= 4 ? '4 人購買，已解鎖每人 NT$20 旅伴折扣' : '已完成示範購買'))
+                .catch(() => notify('購買沒有送出，請再試一次'));
+            return;
+        }
         const member = members.value[index];
         if (!member || member.paid || !plan.value.available)
             return;
@@ -102,7 +128,7 @@ export function useDemo() {
         esim.value = {selectedUsage:null,purchasedUsage:null,installed:false,claimed:false};
         notify('組隊模擬已重設為 1 人共編、0 人購買');
     }
-    return { days, members, usage, adjusted, generated, group, plan, eligible, esim, toast, saved, notify, addMember, buy, applyAdjustment, undoAdjustment, reset, rememberSaved };
+    return { days, members, usage, adjusted, generated, group, plan, eligible, esim, toast, saved, serverGroup, notify, addMember, buy, invite, applyAdjustment, undoAdjustment, reset, rememberSaved };
 }
 export function useAsset() {
     const base = useRuntimeConfig().app.baseURL;

@@ -6,6 +6,8 @@ import '~/assets/css/esim.css';
 import '~/assets/css/esim-advisor.css';
 import '~/assets/css/esim-carousel.css';
 const { usage, eligible, members, group, days, esim, notify, addMember, buy } = useDemo();
+// 有後端（GCP 版）：旅伴用真的邀請連結加入、在自己的手機上購買；Pages 版維持「示範加入／示範購買」
+const { available: live } = useApi();
 const { activeId, activeTrip, tripHref } = useTripContext();
 const asset = useAsset();
 type Panel = 'habits' | 'analysis' | 'plans' | 'group' | 'benefits' | 'points' | 'checkout' | 'success' | 'install' | 'help';
@@ -98,8 +100,8 @@ useHead({title:'旅行上網 · eSIM · 去趣'});
       <template v-else-if="panel==='group'">
         <p class="esim-proposal-note">競賽提案 · 非去趣官方現行優惠</p><div class="esim-group-hero"><span>{{ members.length }} 人同行 · {{ group.count }} 人已購買</span><strong>{{ group.count>=4 ? '每人省 NT$20' : '還差 '+(4-group.count)+' 人，解鎖旅伴價' }}</strong><p>朋友自由加入行程，購買 eSIM 才計入優惠。</p></div>
         <div class="esim-milestones"><div v-for="tier in [{n:2,label:'多 500MB'},{n:3,label:'多 30 點'},{n:4,label:'省 NT$20'}]" :key="tier.n" :class="{unlocked:group.count>=tier.n}"><i>{{ group.count>=tier.n?'✓':tier.n }}</i><strong>{{ tier.label }}</strong><small>{{ tier.n }} 人購買</small></div></div>
-        <div v-for="(member,i) in members" :key="member.name" class="esim-friend"><span class="esim-friend-avatar">{{ member.name[0] }}</span><span><strong>{{ member.name }}</strong><small>{{ member.paid ? '方案 NT$'+member.price+(group.count>=4?' · 回饋 $20':'') : '已加入行程' }}</small></span><button :disabled="member.paid" @click="friendPurchase(i)">{{ member.paid?'已購買':i===0?'選購方案':'示範購買' }}</button></div>
-        <button class="esim-cta esim-full" :disabled="members.length>=8" @click="addMember">{{ members.length>=8?'旅伴已全數加入':'邀請旅伴 · 示範加入' }}</button><p class="esim-fine-print">優惠累加，達 4 人後已購買者同享 $20 回饋。500MB 限本趟；30 點為下一次滿 $299 可用的示範回饋，有效 30 天。此處不發送真實邀請。</p>
+        <div v-for="(member,i) in members" :key="member.name" class="esim-friend"><span class="esim-friend-avatar">{{ member.name[0] }}</span><span><strong>{{ member.name }}</strong><small>{{ member.paid ? '方案 NT$'+member.price+(group.count>=4?' · 回饋 $20':'') : '已加入行程' }}</small></span><button v-if="!live || i === 0" :disabled="member.paid" @click="friendPurchase(i)">{{ member.paid?'已購買':i===0?'選購方案':'示範購買' }}</button><small v-else>{{ member.paid ? '已購買' : '尚未購買' }}</small></div>
+        <InvitePanel v-if="live" /><button v-else class="esim-cta esim-full" :disabled="members.length>=8" @click="addMember">{{ members.length>=8?'旅伴已全數加入':'邀請旅伴 · 示範加入' }}</button><p class="esim-fine-print">優惠累加，達 4 人後已購買者同享 $20 回饋。500MB 限本趟；30 點為下一次滿 $299 可用的示範回饋，有效 30 天。此處不發送真實邀請。</p>
       </template>
       <template v-else-if="panel==='benefits'">
         <p class="esim-proposal-note">創作權益為本 Demo 的加值提案</p><div class="esim-memory-preview"><img :src="asset('assets/atlas-plaza/v3/collection.png')" alt="旅行照片做成貼紙與票根的收藏示意"/><div><span>帶回一份自己的紀念</span><h3>把旅遊照片，<br>變成能收藏的回憶。</h3></div></div>

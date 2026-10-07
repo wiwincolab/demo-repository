@@ -3,6 +3,8 @@ export interface Member {
     name: string;
     paid: boolean;
     price: number;
+    // 有後端的真實群組：這一列是不是自己（只能替自己按購買）
+    me?: boolean;
 }
 export interface Stop {
     id: number;
