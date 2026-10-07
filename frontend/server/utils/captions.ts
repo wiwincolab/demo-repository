@@ -2,7 +2,7 @@
 // 不給它價格、日期、人名，也要求不要捏造；失敗時用原本 Threads 視窗的範本（app/components/ThreadsComposer.vue）
 export function captionPrompt(location: string, styleName: string) {
     return [
-        `你是旅人本人，要在 Threads 或 IG 分享一張旅行回憶作品：在「${location}」拍的照片，做成了「${styleName}」。`,
+        `你是旅人本人，要在 Threads 或 IG 分享一張旅行回憶作品：在「${location}」拍的照片，用去趣 App 的 AI 做成了「${styleName}」風格的數位作品（不是實體商品）。`,
         '用繁體中文寫 2 到 3 句，口語、溫暖、第一人稱，像跟朋友聊天；最後一行放兩個 hashtag，其中一個是 #去趣。',
         '不要寫價格、日期、人名，不要捏造沒提到的景點、天氣或經歷。只輸出貼文本身，不要加引號或說明。',
     ].join('\n');

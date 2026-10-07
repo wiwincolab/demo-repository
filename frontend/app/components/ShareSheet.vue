@@ -78,7 +78,7 @@ onBeforeUnmount(() => { if (done.value) URL.revokeObjectURL(done.value.card); })
       <details class="share-stops">
         <summary>公開的景點 <span>{{ picked.length }} / {{ stops.length }}</span></summary>
         <p class="creation-muted">住宿與旅伴名單不會公開。</p>
-        <label v-for="stop in stops" :key="stop.id"><input v-model="picked" type="checkbox" :value="stop.id" /> Day {{ stop.day }} · {{ stop.name }}</label>
+        <label v-for="stop in stops" :key="stop.id"><input v-model="picked" type="checkbox" :value="stop.id" /> Day {{ stop.day + 1 }} · {{ stop.name }}</label>
       </details>
       <p v-if="error" class="creation-error" role="alert">{{ error }}</p>
     </template>

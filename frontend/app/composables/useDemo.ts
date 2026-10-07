@@ -2,6 +2,8 @@ import { tripItineraries, tripAlternatives, tripSummaries, type TripId } from '~
 import { groupPrice, isMemberList } from '~/utils/commerce';
 import { esimPlan } from '~/utils/esim';
 import type { TripDay, Member, Usage } from '~/types/trip';
+import { getSavedTrip, type SavedTrip } from '~/utils/share-api';
+import { savedDays } from '~/utils/saved-trip';
 interface TripDemoState { days: TripDay[]; members: Member[]; usage: Usage; adjusted: boolean; previousStop: TripDay['stops'][0] | null; generated: boolean; esim: { selectedUsage: Usage | null; purchasedUsage: Usage | null; installed: boolean; claimed: boolean } }
 const blankState = (): TripDemoState => ({days:[],members:[],usage:'normal',adjusted:false,previousStop:null,generated:false,esim:{selectedUsage:null,purchasedUsage:null,installed:false,claimed:false}});
 function initialState(id:TripId):TripDemoState { return {...blankState(),days:structuredClone(tripItineraries[id]),members:[{name:'Scott（你）',paid:false,price:esimPlan('normal',tripSummaries.find(t=>t.id===id)?.dayCount||5).price}]}; }
@@ -34,6 +36,19 @@ export function useDemo() {
       storageReady.value=true;
     });
     watch(states,value=>{if(storageReady.value)try{sessionStorage.setItem('chictrip-demo-by-trip-v2',JSON.stringify(value));}catch{}},{deep:true});
+    // 從朋友的分享「存成我的行程」（pages/s/[id].vue）：有後端時，這趟只留朋友公開的景點，行程頁標示來源。
+    // 每趟只問一次；好幾個元件同時呼叫 useDemo 時先記下再發請求，不會重複載入
+    const savedTrips=useState<Partial<Record<TripId,SavedTrip|null>>>('saved-trips-v1',()=>({}));
+    const api=useApi();
+    function rememberSaved(id:TripId,value:SavedTrip){savedTrips.value[id]=value;states.value[id].days=savedDays(id,value.stopIds);states.value[id].adjusted=false;states.value[id].previousStop=null;}
+    async function loadSaved(id:TripId){
+      if(id in savedTrips.value)return;
+      savedTrips.value[id]=null;
+      if(!(await api.check()))return;
+      try{const value=await getSavedTrip(id);if(value)rememberSaved(id,value);}catch{delete savedTrips.value[id];}
+    }
+    if(import.meta.client)watch(activeId,id=>{if(id)void loadSaved(id);},{immediate:true});
+    const saved=computed(()=>activeId.value?savedTrips.value[activeId.value]??null:null);
     const toast = useState('toast-message', () => '');
     const toastVersion = useState('toast-version', () => 0);
     watch(activeId,()=>{toast.value='';});
@@ -87,7 +102,7 @@ export function useDemo() {
         esim.value = {selectedUsage:null,purchasedUsage:null,installed:false,claimed:false};
         notify('組隊模擬已重設為 1 人共編、0 人購買');
     }
-    return { days, members, usage, adjusted, generated, group, plan, eligible, esim, toast, notify, addMember, buy, applyAdjustment, undoAdjustment, reset };
+    return { days, members, usage, adjusted, generated, group, plan, eligible, esim, toast, saved, notify, addMember, buy, applyAdjustment, undoAdjustment, reset, rememberSaved };
 }
 export function useAsset() {
     const base = useRuntimeConfig().app.baseURL;

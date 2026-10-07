@@ -6,12 +6,14 @@ export const STORY = { width: 1080, height: 1920 } as const;
 const colors = { blue: '#009fe8', blueDark: '#007eb8', tint: '#eaf7ff', ink: '#242c32', muted: '#6c7880', paper: '#f5f7f9' };
 const font = '-apple-system, BlinkMacSystemFont, "PingFang TC", "Microsoft JhengHei", sans-serif';
 
-// 作品放在上方 920×1080 的框裡、維持比例置中
+// 作品最大 920×1080、維持比例；作品加上下方兩行字（地點、誰的回憶，約 190px）整組在標誌與 QR 之間（200–1520）垂直置中，
+// 橫式的貼紙卡不會上下各空一大塊。textY 是地點那行字的基線
 export function storyLayout(imageWidth: number, imageHeight: number) {
-    const box = { x: 80, y: 220, width: 920, height: 1080 };
-    const scale = Math.min(box.width / imageWidth, box.height / imageHeight);
+    const maxWidth = 920, maxHeight = 1080, area = { top: 200, bottom: 1520 }, textBlock = 190;
+    const scale = Math.min(maxWidth / imageWidth, maxHeight / imageHeight);
     const width = Math.round(imageWidth * scale), height = Math.round(imageHeight * scale);
-    return { x: box.x + Math.round((box.width - width) / 2), y: box.y + Math.round((box.height - height) / 2), width, height };
+    const y = area.top + Math.round((area.bottom - area.top - height - textBlock) / 2);
+    return { x: 80 + Math.round((maxWidth - width) / 2), y, width, height, textY: y + height + 120 };
 }
 
 const loadImage = (src: string) => new Promise<HTMLImageElement>((resolve, reject) => {
@@ -59,10 +61,10 @@ export async function renderStoryCard(input: { artwork: string; location: string
 
     ctx.fillStyle = colors.ink;
     ctx.font = `800 68px ${font}`;
-    ctx.fillText(input.location.split(' · ').pop()!.slice(0, 14), 80, 1430);
+    ctx.fillText(input.location.split(' · ').pop()!.slice(0, 14), 80, place.textY);
     ctx.fillStyle = colors.muted;
     ctx.font = `500 40px ${font}`;
-    ctx.fillText(`${input.nickname} 的旅行回憶`, 80, 1500);
+    ctx.fillText(`${input.nickname}的旅行回憶`, 80, place.textY + 70);
 
     drawQr(ctx, input.url, 96, 1580, 240);
     ctx.fillStyle = colors.ink;

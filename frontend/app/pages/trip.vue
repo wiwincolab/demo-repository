@@ -3,7 +3,7 @@ import { kansaiReference } from '~/data/kansai';
 import { dayColors } from '~/utils/map';
 import type { Stop } from '~/types/trip';
 import { tripItineraries, tripAlternatives, plannerStorageKey } from '~/data/trips';
-const { days, members, group, adjusted, applyAdjustment, undoAdjustment, notify } = useDemo();
+const { days, members, group, adjusted, applyAdjustment, undoAdjustment, notify, saved: sharedTrip } = useDemo();
 const { activeId,activeTrip,tripHref }=useTripContext();
 const asset = useAsset();
 const day = ref(0), view = ref<'list' | 'map'>('list'), selected = ref(0);
@@ -53,8 +53,8 @@ function savedPlan() {
       <img :src="asset(activeTrip.cover)" :alt="activeTrip.location+'・旅行封面'" :style="activeId==='fuji'?{objectPosition:'50% 10%'}:{}">
       <div class="cover-copy">
         <span>{{ activeTrip.statusLabel }} · {{ activeTrip.location }}</span>
-        <h1 id="trip-title">{{ activeTrip.title }}</h1>
-        <p>{{ activeTrip.english }} {{ activeTrip.dayCount }} Days</p>
+        <h1 id="trip-title">{{ sharedTrip?.title || activeTrip.title }}</h1>
+        <p>{{ sharedTrip ? '來自' + sharedTrip.from + '的分享 · 只放了朋友公開的景點' : activeTrip.english + ' ' + activeTrip.dayCount + ' Days' }}</p>
       </div>
       <button class="cover-button" aria-label="查看旅程資訊" @click="sheet = 'info'">•••</button>
     </div>
