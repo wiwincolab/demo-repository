@@ -16,6 +16,10 @@ const tripName = computed(() => invite.value?.tripTitle.replace(/。$/, '') || '
 const title = computed(() => invite.value ? `${invite.value.ownerNickname}邀你一起去「${tripName.value}」· 去趣 chicTrip` : '去趣 chicTrip');
 useSeoMeta({ title, ogTitle: title, description: '加入後可以一起看行程、組隊買 eSIM，4 人成團每人現省 NT$20。', ogDescription: '加入後可以一起看行程、組隊買 eSIM，4 人成團每人現省 NT$20。' });
 
+// 伺服器先產生的畫面在 JavaScript 載入完成（hydration）前按不動、輸入的字也會被蓋掉；
+// 現場網路慢時差得出來，所以載入完成前先把按鈕與輸入框鎖住，評審看得出還在載入
+const ready = ref(false);
+onMounted(() => { ready.value = true; });
 const nickname = ref(''), saved = ref(''), busy = ref(false), error = ref('');
 const already = computed(() => !!invite.value?.members.some(member => member.me));
 onMounted(async () => { try { saved.value = nickname.value = (await getMe()).nickname || ''; } catch { /* 讓旅伴自己填 */ } });
@@ -53,10 +57,10 @@ async function accept() {
       <div class="share-actions">
         <template v-if="!already">
           <label class="creation-label" for="invite-nickname">旅伴看到的名字</label>
-          <input id="invite-nickname" v-model="nickname" class="share-input" maxlength="12" placeholder="例如：阿哲" autocomplete="nickname" />
+          <input id="invite-nickname" v-model="nickname" :disabled="!ready" class="share-input" maxlength="12" placeholder="例如：阿哲" autocomplete="nickname" />
         </template>
         <p v-if="error" class="creation-error" role="alert">{{ error }}</p>
-        <button class="creation-primary" :disabled="busy" @click="accept">{{ busy ? '正在加入…' : already ? '打開這趟行程' : '加入這趟旅行' }}</button>
+        <button class="creation-primary" :disabled="!ready || busy" @click="accept">{{ busy ? '正在加入…' : already ? '打開這趟行程' : '加入這趟旅行' }}</button>
         <p class="share-note">加入後可以看行程；要不要買 eSIM 是你自己的選擇（示範，不扣款）。</p>
       </div>
     </template>

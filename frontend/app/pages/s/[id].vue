@@ -20,6 +20,10 @@ useSeoMeta({
     twitterCard: 'summary_large_image',
 });
 
+// 伺服器先產生的畫面在 JavaScript 載入完成（hydration）前按不動、輸入的字也會被蓋掉；
+// 現場網路慢時差得出來，所以載入完成前先把按鈕與輸入框鎖住，評審看得出還在載入
+const ready = ref(false);
+onMounted(() => { ready.value = true; });
 const busy = ref<'' | 'save' | 'create'>('');
 onMounted(() => { if (share.value) shareEvent(id, 'view').catch(() => {}); });
 
@@ -64,8 +68,8 @@ async function create() {
         <li v-for="stop in share.stops" :key="stop.id"><img :src="asset(stop.photo)" alt="" loading="lazy" /><span><b>{{ stop.name }}</b><small>Day {{ stop.day + 1 }}</small></span></li>
       </ol>
       <div class="share-actions">
-        <button class="creation-primary" :disabled="!!busy" @click="save">{{ busy === 'save' ? '正在存…' : '存成我的行程' }}</button>
-        <button class="creation-secondary" :disabled="!!busy" @click="create">我也做一張旅行作品 ✦</button>
+        <button class="creation-primary" :disabled="!ready || !!busy" @click="save">{{ busy === 'save' ? '正在存…' : '存成我的行程' }}</button>
+        <button class="creation-secondary" :disabled="!ready || !!busy" @click="create">我也做一張旅行作品 ✦</button>
         <p class="share-note">只會複製公開的景點，{{ share.nickname }}的行程不受影響。</p>
       </div>
     </template>

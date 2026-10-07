@@ -18,6 +18,10 @@ const plan = computed(() => gift.value && trip.value ? esimPlan(gift.value.usage
 const title = computed(() => gift.value ? `${gift.value.sender}送你一張日本 eSIM · 去趣 chicTrip` : '去趣 chicTrip');
 useSeoMeta({ title, ogTitle: title, description: '打開就能領取，順便看看這趟旅行的行程。', ogDescription: '打開就能領取，順便看看這趟旅行的行程。' });
 
+// 伺服器先產生的畫面在 JavaScript 載入完成（hydration）前按不動、輸入的字也會被蓋掉；
+// 現場網路慢時差得出來，所以載入完成前先把按鈕與輸入框鎖住，評審看得出還在載入
+const ready = ref(false);
+onMounted(() => { ready.value = true; });
 const busy = ref(false), error = ref('');
 const qr = computed(() => gift.value?.claimedByMe ? renderSVG(demoActivationCode(gift.value.id), { border: 1 }) : '');
 
@@ -61,9 +65,9 @@ async function openTrip(path: '/trip' | '/memory') {
       <div v-else class="share-hero"><p>{{ gift.mine ? '這是你送出的禮物，把連結傳給朋友領取吧。' : gift.claimed ? `這份禮物已經被${gift.claimedBy}領走了。` : `${gift.sender}也在用去趣排「${trip?.title.replace(/。$/, '')}」。領取後可以看看這趟的行程，也做一張自己的旅行作品。` }}</p></div>
       <div class="share-actions">
         <p v-if="error" class="creation-error" role="alert">{{ error }}</p>
-        <button v-if="gift.canClaim" class="creation-primary" :disabled="busy" @click="claim">{{ busy ? '正在領取…' : '領取這張 eSIM' }}</button>
-        <button class="creation-secondary" @click="openTrip('/trip')">看看這趟行程</button>
-        <button v-if="gift.claimedByMe" class="creation-secondary" @click="openTrip('/memory')">我也做一張旅行作品 ✦</button>
+        <button v-if="gift.canClaim" class="creation-primary" :disabled="!ready || busy" @click="claim">{{ busy ? '正在領取…' : '領取這張 eSIM' }}</button>
+        <button class="creation-secondary" :disabled="!ready" @click="openTrip('/trip')">看看這趟行程</button>
+        <button v-if="gift.claimedByMe" class="creation-secondary" :disabled="!ready" @click="openTrip('/memory')">我也做一張旅行作品 ✦</button>
         <p class="share-note">競賽提案示範：不會真的開通 eSIM 或扣款。</p>
       </div>
     </template>
