@@ -122,4 +122,37 @@ create table gifts (
 alter table photos add column stop_id text;
 `,
     },
+    {
+        // 旅行 Bingo：有旅伴群組就整組共用一張（group_id），沒有就個人一張（device_id＋trip_id）。
+        // 每人每格留最後一次的照片；AI 判斷前是 checking，Gemini 沒判成算 noted（照樣算完成）
+        name: '004_bingo',
+        sql: `
+create table bingo_boards (
+    id text primary key,
+    trip_id text not null,
+    group_id text references trip_groups(id),
+    device_id uuid references devices(id),
+    cells jsonb not null,
+    source text not null,
+    created_at timestamptz not null default now(),
+    check (group_id is not null or device_id is not null)
+);
+create unique index bingo_boards_group on bingo_boards (group_id) where group_id is not null;
+create unique index bingo_boards_personal on bingo_boards (device_id, trip_id) where group_id is null;
+
+create table bingo_marks (
+    id uuid primary key,
+    board_id text not null references bingo_boards(id),
+    cell int not null check (cell between 0 and 8),
+    device_id uuid not null references devices(id),
+    media_path text not null,
+    mime text not null,
+    status text not null default 'checking' check (status in ('checking', 'pass', 'fail', 'noted')),
+    comment text not null default '',
+    created_at timestamptz not null default now(),
+    checked_at timestamptz,
+    unique (board_id, cell, device_id)
+);
+`,
+    },
 ];

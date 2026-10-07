@@ -43,6 +43,17 @@ export async function writeText(config: AppConfig, prompt: string, timeoutMs = 1
     return text;
 }
 
+// 照 JSON schema 回答（Bingo 出題、看照片判斷任務）；有照片就一起送。回傳原始文字，呼叫端自己驗證格式
+export async function writeJson(config: AppConfig, prompt: string, schema: Record<string, unknown>, timeoutMs: number, image?: SourceImage) {
+    const interaction = await ai(config).interactions.create({
+        model: config.textModel,
+        store: false,
+        input: image ? [imageInput(image), { type: 'text', text: prompt }] : [{ type: 'text', text: prompt }],
+        response_format: { type: 'text', mime_type: 'application/json', schema },
+    }, { maxRetries: 0, timeout: timeoutMs });
+    return interaction.output_text ?? '';
+}
+
 export async function generateStyledImage(config: AppConfig, prompt: string, image: SourceImage, aspectRatio: string) {
     // 1K：一張 US$0.0336，手機畫面與分享卡都夠用；2K 價格多五成
     const interaction = await ai(config).interactions.create({

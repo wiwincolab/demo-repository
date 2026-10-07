@@ -17,7 +17,7 @@ export default defineNuxtConfig({
         }
     },
     nitro: {
-        prerender: { routes: ['/trips', '/trip', '/esim', '/memory', '/memory/usj', '/planner', '/atlas', '/town', '/wardrobe', '/collection'] },
+        prerender: { routes: ['/trips', '/trip', '/esim', '/memory', '/memory/usj', '/planner', '/atlas', '/town', '/wardrobe', '/collection', '/bingo'] },
         // 跟 app 一樣允許 import 寫 .ts：測試用 node --test 直接載入 server/utils，Node 需要完整副檔名
         typescript: { tsConfig: { compilerOptions: { allowImportingTsExtensions: true } } }
     }

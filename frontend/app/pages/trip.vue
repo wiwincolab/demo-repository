@@ -6,6 +6,7 @@ import { tripItineraries, tripAlternatives, plannerStorageKey } from '~/data/tri
 const { days, members, group, adjusted, applyAdjustment, undoAdjustment, notify, saved: sharedTrip } = useDemo();
 const { activeId,activeTrip,tripHref }=useTripContext();
 const asset = useAsset();
+const { available: live } = useApi();
 const day = ref(0), view = ref<'list' | 'map'>('list'), selected = ref(0);
 const groupOpen = ref(false), groupMode = ref<'invite' | 'deal'>('deal');
 const sheet = ref<'info' | 'adjust' | 'compare' | 'done' | 'saved' | null>(null);
@@ -78,6 +79,15 @@ function savedPlan() {
       </span>
       <span aria-hidden="true">›</span>
     </button>
+    <!-- 有後端時才有：旅途中拍照完成任務、旅伴一起比（pages/bingo.vue） -->
+    <NuxtLink v-if="live" class="deal-banner" :to="tripHref('/bingo')">
+      <span class="sim-mark" aria-hidden="true">✓</span>
+      <span>
+        <strong>旅行 Bingo</strong>
+        <small>拍照完成 9 個任務，連成一條線就分享出去</small>
+      </span>
+      <span aria-hidden="true">›</span>
+    </NuxtLink>
     <div class="trip-tools">
       <NuxtLink class="ai-link" :to="tripHref('/planner')">✦ 圈選 AI 排程</NuxtLink>
       <button @click="sheet = 'adjust'">AI 微調</button>

@@ -3,7 +3,8 @@ import { photoById, type CreationId } from '../../app/data/creation.ts';
 import type { TripId } from '../../app/data/trips.ts';
 import type { AppConfig } from './config.ts';
 import { db } from './db.ts';
-import { analyzePhoto, generateStyledImage, type SourceImage } from './gemini.ts';
+import { analyzePhoto, generateStyledImage, writeJson, type SourceImage } from './gemini.ts';
+import { parseVerdict, verdictPrompt, VERDICT_SCHEMA, type BingoCell } from './bingo.ts';
 import { buildPrompt, nearestAspect, needsAnalysis, STYLE_ASPECT } from './creation-prompts.ts';
 import { mediaRelativePath, readMedia, sniffImageType, writeMedia } from './media.ts';
 import { creationQueue, QUEUE_NAME, redisConnection, type CreationJob } from './queue.ts';
@@ -74,7 +75,35 @@ async function requeueWaiting(config: AppConfig) {
     const rows = await sql<{ id: string }[]>`
         select id from creations where status = 'queued' and created_at > now() - ${config.queueStaleMs} * interval '1 millisecond'`;
     for (const { id } of rows) await creationQueue().add('create', { creationId: id }, { jobId: id });
-    return rows.length;
+    // Bingo 照片同理：太久沒判的記成 noted（照樣算完成），還在時間內的補回佇列
+    await sql`
+        update bingo_marks set status = 'noted', comment = '已記下，AI 晚點再看', checked_at = now()
+        where status = 'checking' and created_at <= now() - ${config.queueStaleMs} * interval '1 millisecond'`;
+    const marks = await sql<{ id: string }[]>`
+        select id from bingo_marks where status = 'checking' and created_at > now() - ${config.queueStaleMs} * interval '1 millisecond'`;
+    for (const { id } of marks) await creationQueue().add('bingo', { markId: id }, { jobId: `bingo-${id}` });
+    return rows.length + marks.length;
+}
+
+// 看 Bingo 照片判斷有沒有完成任務（寬鬆）。Gemini 失敗或逾時記成 noted：照樣算完成，標「已記下」，評審不會卡住
+export async function processBingoMark(config: AppConfig, id: string) {
+    const sql = await db();
+    const [mark] = await sql<{ media_path: string; mime: SourceImage['mime']; cell: number; cells: BingoCell[] }[]>`
+        select m.media_path, m.mime, m.cell, b.cells from bingo_marks m join bingo_boards b on b.id = m.board_id
+        where m.id = ${id} and m.status = 'checking'`;
+    if (!mark) return;
+    const task = mark.cells[mark.cell]!;
+    const started = Date.now();
+    try {
+        const image = { bytes: await readMedia(config.mediaDir, mark.media_path), mime: mark.mime, width: null, height: null };
+        const verdict = parseVerdict(await writeJson(config, verdictPrompt(task), VERDICT_SCHEMA, config.jobTimeoutMs, image));
+        if (!verdict) throw new Error('判斷結果的格式不對');
+        await sql`update bingo_marks set status = ${verdict.pass ? 'pass' : 'fail'}, comment = ${verdict.comment}, checked_at = now() where id = ${id} and status = 'checking'`;
+        console.info(`[worker] stage=bingo result=${verdict.pass ? 'pass' : 'fail'} ms=${Date.now() - started} task=${task.title}`);
+    } catch (error) {
+        await sql`update bingo_marks set status = 'noted', comment = '已記下，AI 晚點再看', checked_at = now() where id = ${id} and status = 'checking'`;
+        console.warn(`[worker] stage=bingo result=noted ms=${Date.now() - started} error=${error instanceof Error ? error.message.slice(0, 160) : error}`);
+    }
 }
 
 // worker 啟動時：只有一個 worker（replicas: 1、Recreate），running 的一定是上一個 worker 做到一半就停掉的，放回佇列重做
@@ -88,7 +117,7 @@ async function recoverOnStart(config: AppConfig) {
 const warn = (label: string) => (error: unknown) => console.warn(`[worker] ${label}：${error instanceof Error ? error.message : error}`);
 
 export function startCreationWorker(config: AppConfig) {
-    const worker = new Worker<CreationJob>(QUEUE_NAME, job => processCreation(config, job.data.creationId), {
+    const worker = new Worker<CreationJob>(QUEUE_NAME, job => job.name === 'bingo' ? processBingoMark(config, job.data.markId!) : processCreation(config, job.data.creationId!), {
         connection: redisConnection(config.redisUrl),
         concurrency: config.workerConcurrency,
     });
