@@ -1,0 +1,15 @@
+# 照片與生成的圖：K3s 內建的 local-path 放在 VM 的磁碟上，api 與 worker 都掛在 /data/media。
+# 兩個 pod 都在同一台 VM，ReadWriteOnce 可以同時掛。resource-policy: keep：helm uninstall 也不會把評審的照片刪掉
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: media
+  labels:
+    {{- include "chictrip.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/resource-policy: keep
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: {{ .Values.media.storage }}

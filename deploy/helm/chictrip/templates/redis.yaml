@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  labels:
+    {{- include "chictrip.labels" . | nindent 4 }}
+spec:
+  selector:
+    app: redis
+  ports:
+    - port: 6379
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  labels:
+    {{- include "chictrip.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: {{ .Values.redis.image }}
+          # 只放生成佇列，跟 MEDDEMO 一樣不存檔：工作狀態記在 Postgres，Redis 重啟後 worker 會從資料表接回來
+          args: ["--save", "", "--appendonly", "no"]
+          ports:
+            - containerPort: 6379
+          readinessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            periodSeconds: 5
