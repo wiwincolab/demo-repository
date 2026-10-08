@@ -16,6 +16,7 @@ const activeStop = computed(() => shown.value.find(s => s.id === selected.value)
 const saved = ref<{
     time: string;
     name: string;
+    reason?: string;
 }[]>([]);
 const title = computed(() => ({ info: activeTrip.value?.title || '旅程資訊', adjust: 'AI 局部微調', compare: '只換一站，其他照舊', done: '已套用局部替換', saved: '圈選排程 · 已儲存' }[sheet.value || 'info']));
 const originalStop=computed(()=>activeId.value?tripItineraries[activeId.value][0]?.stops[1]:undefined);
@@ -162,7 +163,7 @@ function savedPlan() {
         <p>{{ saved.length ? '來自你在圈選排程頁儲存的草案。' : '還沒有儲存圈選行程。先圈選想去的區域，輸入偏好後預覽並保存。' }}</p>
         <div v-for="s in saved" :key="s.name" class="member-row">
           <time>{{ s.time }}</time>
-          <strong>{{ s.name }}</strong>
+          <span><strong>{{ s.name }}</strong><small v-if="s.reason">{{ s.reason }}</small></span>
         </div>
         <NuxtLink class="primary" :to="tripHref('/planner')" @click="sheet = null">{{ saved.length ? '繼續編輯' : '開始圈選排程' }}</NuxtLink>
       </template>
