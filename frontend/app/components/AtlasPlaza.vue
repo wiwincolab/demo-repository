@@ -160,8 +160,6 @@ onBeforeUnmount(() => { resizeObserver?.disconnect(); context?.revert(); media?.
       <div class="park-heading-actions"><button class="park-view-toggle" :aria-pressed="closeView" @click="closeView = !closeView; pan = 0"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6M7 10h6"/><path v-if="!closeView" d="M10 7v6"/></svg>{{ closeView ? '全園總覽' : '近看園區' }}</button><button class="park-motion" :aria-pressed="paused || reduced" :disabled="reduced" :aria-label="reduced ? '已依系統設定減少動態' : paused ? '開啟環境動態' : '暫停環境動態'" @click="paused = !paused"><span aria-hidden="true">{{ moving ? 'Ⅱ' : '▷' }}</span></button></div>
     </header>
 
-    <MemoryGraphEntry />
-
     <div ref="viewport" class="lobby-viewport" :class="{'is-dragging':dragging}" tabindex="0" role="region" aria-label="可左右滑動的回憶廣場" @scroll.passive="updatePan" @pointerdown="beginPan" @pointermove="movePan" @pointerup="endPan" @pointercancel="endPan" @lostpointercapture="endPan" @click.capture="preventDragClick" @keydown.left.prevent="panTo(Math.max(0,pan-.35))" @keydown.right.prevent="panTo(Math.min(1,pan+.35))">
     <div ref="world" class="park-stage">
       <img class="painted-park-image" :src="asset('assets/atlas-plaza/painted-v1/park.png')" alt="湖畔回憶園區，四個主題區由石階、橋梁與步道相連" draggable="false" />

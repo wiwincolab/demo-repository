@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {tripItineraries,plannerStorageKey} from '~/data/trips';
 import type { Stop } from '~/types/trip';
+import { plannerKeywords, plannerPreferenceStorageKey, validPlannerKeywords, type PlannerKeywordId } from '~/data/planner-preferences';
 import { recommendPlaces, type Recommendation } from '~/utils/planner';
 const asset = useAsset();
 const { notify } = useDemo();
@@ -12,6 +13,16 @@ const places = computed<Stop[]>(()=>{
   if(activeId.value==='kansai')return trip.flatMap(d=>d.stops).filter(s=>[1,2,7,8,9,10,11].includes(s.id));
   return trip.flatMap(d=>d.stops).filter((s,i,all)=>all.findIndex(p=>p.name===s.name)===i).slice(0,5);
 });
+const keywordIds = ref<PlannerKeywordId[]>(plannerKeywords.filter(k => k.defaultOn).map(k => k.id));
+const useKeywords = ref(true);
+const appliedKeywords = computed(() => useKeywords.value ? keywordIds.value : []);
+const appliedTitles = computed(() => plannerKeywords.filter(k => appliedKeywords.value.includes(k.id)).map(k => k.title));
+let keywordsReady = false;
+onMounted(() => {
+  try { const stored = JSON.parse(localStorage.getItem(plannerPreferenceStorageKey) || 'null'); if (stored) { keywordIds.value = validPlannerKeywords(stored.ids); useKeywords.value = stored.enabled !== false; } } catch {}
+  keywordsReady = true;
+});
+watch([keywordIds, useKeywords], () => { if (keywordsReady) try { localStorage.setItem(plannerPreferenceStorageKey, JSON.stringify({ ids: keywordIds.value, enabled: useKeywords.value })); } catch { notify('偏好暫存於此頁，瀏覽器目前無法儲存。'); } }, { deep: true });
 const ids = ref<number[]>([]), drawing = ref(true), preferences = ref(''), pace = ref(3);
 const extension = ref(30), planNotes = ref<string[]>([]), previousNotes = ref<string[]>([]);
 const panel = ref<'preferences' | 'preview' | 'saved' | null>(null);
@@ -22,7 +33,7 @@ const busy = ref(false), draft = ref<Recommendation[]>([]), previous = ref<Recom
 const regions=computed(()=>activeId.value==='tokyo'?[{name:'淺草河岸範圍',ids:[0,1,2]},{name:'上野文化範圍',ids:[12,14]}]:activeId.value==='kansai'?[{name:'神戶範圍',ids:[1,2]},{name:'京都東山範圍',ids:[7,8]},{name:'奈良範圍',ids:[9]}]:[{name:'河口湖範圍',ids:places.value.map(p=>p.id)}]);
 let generationTimer: ReturnType<typeof setTimeout> | undefined;
 watch(activeId,()=>{clearTimeout(generationTimer);ids.value=[];draft.value=[];previous.value=[];preferences.value='';previousNotes.value=[];extension.value=30;dirty.value=false;error.value='';planNotes.value=[];panel.value=null;busy.value=false;});
-watch([ids, preferences, pace, extension], () => {
+watch([ids, preferences, pace, extension, () => appliedKeywords.value.join(',')], () => {
   clearTimeout(generationTimer);
   busy.value = false;
   dirty.value = !!draft.value.length;
@@ -39,7 +50,7 @@ watch(activeId, id => {
       pace.value = stored.pace ?? 3;
       draft.value = stored.saved.stops.filter((s: Recommendation) => places.value.some(p => p.id === s.id));
       planNotes.value = stored.saved.notes || [];
-      dirty.value = false;
+      dirty.value = JSON.stringify(stored.saved.keywordIds || []) !== JSON.stringify(appliedKeywords.value);
     }
   } catch { /* A fresh draft remains available when saved data cannot be read. */ }
 }, { immediate: true });
@@ -50,14 +61,14 @@ function openPreferences() { if (!ids.value.length) {
 } ; panel.value = 'preferences'; }
 function generate() {
     if (!ids.value.length) { error.value = '先圈選主要遊玩區域，或點選景點。'; return; }
-    if (!preferences.value.trim()) {
+    if (!preferences.value.trim() && !appliedKeywords.value.length) {
         error.value = '請說說想怎麼玩，或點選下方偏好。';
         return;
     }
     if (busy.value) return;
     busy.value = true;
     generationTimer = setTimeout(() => {
-        const result = recommendPlaces(places.value, ids.value, preferences.value, pace.value, extension.value);
+        const result = recommendPlaces(places.value, ids.value, preferences.value, pace.value, extension.value, appliedKeywords.value);
         if (!result.stops.length) {
             busy.value = false;
             error.value = '目前沒有符合條件的景點，試試增加時間、擴大範圍或調整喜好。';
@@ -77,7 +88,7 @@ function generate() {
 function save() {
     if(!activeId.value || dirty.value || !draft.value.length)return;
     try {
-        localStorage.setItem(plannerStorageKey(activeId.value), JSON.stringify({ trip:activeId.value, ids: ids.value, extension: extension.value, pace: pace.value, saved: { stops: draft.value, preference: preferences.value, notes: planNotes.value } }));
+        localStorage.setItem(plannerStorageKey(activeId.value), JSON.stringify({ trip:activeId.value, ids: ids.value, extension: extension.value, pace: pace.value, saved: { stops: draft.value, preference: preferences.value, keywordIds: [...appliedKeywords.value], notes: planNotes.value } }));
     }
     catch {
         notify('瀏覽器無法儲存，請保留這份預覽。');
@@ -94,8 +105,9 @@ onBeforeUnmount(() => clearTimeout(generationTimer));
     <div class="page-heading">
       <span class="eyebrow">{{ activeTrip.english }} / DAY PLANNER</span>
       <h1>圈出想去的地方，<br>剩下的，聊聊就好。</h1>
-      <p>大致圈出想逛的區域，再補充時間、喜好和可接受的圈外距離。</p>
+      <p>參考你的偏好關鍵字，圈出範圍，再補充這次的時間和限制。</p>
     </div>
+    <PlannerPreferenceGraph v-model="keywordIds" v-model:enabled="useKeywords" />
     <ol class="planner-steps" aria-label="規劃流程"><li :class="{ current: !ids.length }">① 大致圈選</li><li :class="{ current: ids.length && (!draft.length || dirty) }">② 補充需求</li><li :class="{ current: draft.length && !dirty }">③ 看推薦、儲存</li></ol>
     <div class="view-bar">
       <h2>{{ activeTrip.location }}</h2>
@@ -146,7 +158,7 @@ onBeforeUnmount(() => clearTimeout(generationTimer));
     <AppSheet :model-value="!!panel" :title="panel === 'preferences' ? '這一天，想怎麼玩？' : panel === 'preview' ? '先看看你的安排' : '行程已儲存'" @update:model-value="panel = null">
       <template v-if="panel === 'preferences'">
         <p class="planner-area">主要範圍：{{ places.filter(p => ids.includes(p.id)).map(p => p.name).join('、') }}</p>
-        <p class="muted">圈選是主要遊玩範圍，說說你想怎麼玩</p>
+        <div class="panel"><b>本次參考的偏好關鍵字</b><p class="small-note">{{ appliedTitles.length ? appliedTitles.join('、') : '未選用偏好，只依本次條件推薦' }}</p><small>本次明確排除的項目會優先處理；可關閉此視窗，回到偏好圖調整。</small></div><p class="muted">再補充這次的額外條件（選填）</p>
         <textarea v-model="preferences" aria-label="旅行偏好" maxlength="300" placeholder="我有四小時，喜歡自然景點，圈外多搭 20 分鐘也可以。預算 3000 日圓，已買周遊券。" />
         <div class="choice-row">
           <button v-for="hint in ['喜歡自然景點', '老街與甜點', '有四小時', '雨天室內']" :key="hint" @click="addPreference(hint)">{{ hint }}</button>
@@ -169,7 +181,7 @@ onBeforeUnmount(() => clearTimeout(generationTimer));
         </div>
         <p v-if="error" class="planner-error" role="alert">{{ error }}</p>
         <p class="small-note">依關鍵字規則產生示範推薦，尚未串接 AI。交通為估算；預算與周遊券先記下需求，費用及適用路線待查核。</p>
-        <button class="primary" :disabled="busy" @click="generate">{{ busy ? '正在安排…' : '依圈選與說明產生推薦 →' }}</button>
+        <button class="primary" :disabled="busy" @click="generate">{{ busy ? '正在安排…' : '依圈選、偏好與條件產生推薦 →' }}</button>
       </template>
       <template v-else>
         <p>下次回到「行程 → 已儲存」即可查看草案。</p>
