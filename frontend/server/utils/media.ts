@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
-// 照片與生成的圖放在 PVC（K8s 掛在 /data/media，api 與 worker 共用），資料表只記相對路徑
+// 照片與分享圖卡放在 PVC（K8s 掛在 /data/media，api 與 worker 共用），資料表只記相對路徑
 export type ImageMime = 'image/jpeg' | 'image/png' | 'image/webp';
 
 const extension: Record<ImageMime, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };

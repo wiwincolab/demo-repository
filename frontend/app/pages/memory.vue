@@ -10,7 +10,7 @@ const asset = useCreationAsset();
 const route = useRoute();
 const { notify } = useDemo();
 const { activeId, activeTrip, tripHref } = useTripContext();
-const { works, collected, exchanges, pending, save, friends, photos, findPhoto, addPhoto, generateOnServer } = useCreation();
+const { works, collected, exchanges, pending, save, friends, photos, findPhoto, addPhoto } = useCreation();
 // 有後端（GCP 版）：分享走真的連結與限動圖卡（ShareSheet）；Pages 版維持 Threads 預覽
 const { available: apiAvailable } = useApi();
 const selectedPhoto = ref<CreationPhoto | null>(null);
@@ -27,8 +27,7 @@ const uploading = ref(false), exchanging = ref(false), library = ref(false), sha
 const guideSelected = ref<CreationId>('sticker');
 const libraryTab = ref<'collection' | 'history'>('collection');
 const generating = ref(false), complete = ref(false), original = ref(false), exploring = ref(false);
-// progress：排隊與製作進度（有後端時）；run：每次開始或離開都換號，舊的輪詢看到號碼變了就停
-const progress = ref('');
+// run：每次開始或離開都換號，還在跑的製作看到號碼變了就停
 let run = 0;
 const saved = computed(() => !!work.value && works.value.some(item => item.id === work.value!.id));
 const hasResult = computed(() => saved.value || complete.value);
@@ -51,7 +50,7 @@ const guideStyle = computed(() => creationStyles.find(item => item.id === guideS
 const guideWork = computed(() => makeExample(guideStyle.value, 'AI 示範'));
 const aliases: Record<string, CreationId> = { editorial: 'photo', enamel: 'pin', postcard: 'photo', diorama: 'scene' };
 function reset() {
-  run++; progress.value = '';
+  run++;
   generating.value = false; selectedPhoto.value = null; activeWork.value = null; complete.value = false; original.value = false;
   exchanging.value = sharing.value = details.value = zoom.value = sourceZoom.value = playing.value = exploring.value = false;
 }
@@ -93,27 +92,21 @@ async function generate() {
   if (generating.value || !selectedPhoto.value || !style.value) return;
   // 環球影城的場景積木只有一條路：專屬頁做好、加入回憶地圖，各頁才看到同一件
   if (isUsjScene.value) { navigateTo(tripHref('/memory/usj')); return; }
-  generating.value = true; complete.value = false; original.value = false; progress.value = '';
+  generating.value = true; complete.value = false; original.value = false;
   const token = ++run, photo = selectedPhoto.value, id = selected.value;
   const stale = () => token !== run || selectedPhoto.value?.id !== photo.id || selected.value !== id || !generating.value;
   const generated = workForPhoto(photo, id, '你', '-' + Date.now());
   generated.createdAt = new Date().toISOString();
-  // 有後端時四種平面風格真的交給 Gemini；沒有後端、場景積木與旅伴照舊用預製圖或本機合成
-  const server = await generateOnServer(photo, id, text => { if (!stale()) progress.value = text; }, stale);
-  if (server) {
-    generated.serverId = server.serverId;
-    if (server.imageUrl) { generated.renderedImage = server.imageUrl; generated.preset = false; }
-    else generated.fallback = true;
-    if (server.message) notify(server.message);
-  } else await new Promise(resolve => setTimeout(resolve, 900));
+  // 示範流程：不呼叫生圖模型，有預製成品的用預製圖，其餘用這張照片在手機上合成
+  await new Promise(resolve => setTimeout(resolve, 900));
   if (stale()) return;
   if (!generated.preset && !generated.renderedImage) {
     try { generated.renderedImage = await renderDemoArtwork(generated, asset('assets/memory/' + photo.source)); }
     catch { generating.value = false; notify('圖片暫時無法處理，請換一張照片再試'); return; }
   }
   if (stale()) return;
-  activeWork.value = generated; save(generated); generating.value = false; complete.value = true; progress.value = '';
-  notify(generated.fallback ? 'AI 這次沒做成，先放上示範圖' : returnStop.value ? `已收進${returnStop.value.name}，回到 3D 重遊就看得到` : '已加入這趟旅行的作品');
+  activeWork.value = generated; save(generated); generating.value = false; complete.value = true;
+  notify(returnStop.value ? `已收進${returnStop.value.name}，回到 3D 重遊就看得到` : '已加入這趟旅行的作品');
 }
 useHead({ title: '回憶製造所 · 去趣 chicTrip' });
 function play() {
@@ -145,10 +138,10 @@ onBeforeUnmount(() => { run++; generating.value = false; });
       <div class="creation-workspace">
         <div class="creation-canvas-column">
           <div class="creation-stage" :class="['creation-stage-' + selected, { 'is-generating': generating }]" :aria-busy="generating">
-            <div class="creation-stage-tags"><span>{{ original ? (hasResult ? '作品原照' : '範例原照') : giver ? '朋友的收藏' : hasResult ? (work.fallback ? '示範圖 · AI 這次沒做成' : '這趟旅行的作品') : '風格範例' }}</span><button class="studio-original-toggle" :aria-pressed="original" :disabled="generating" @click="original = !original">{{ original ? (hasResult ? '看作品' : '看範例成品') : hasResult ? '對照原照' : '看範例原照' }}</button></div>
+            <div class="creation-stage-tags"><span>{{ original ? (hasResult ? '作品原照' : '範例原照') : giver ? '朋友的收藏' : hasResult ? '這趟旅行的作品' : '風格範例' }}</span><button class="studio-original-toggle" :aria-pressed="original" :disabled="generating" @click="original = !original">{{ original ? (hasResult ? '看作品' : '看範例成品') : hasResult ? '對照原照' : '看範例原照' }}</button></div>
             <div v-if="original" class="studio-original-art" :class="{ 'creation-cropped-source': displayWork.sourceCrop }"><img :src="displaySource" :alt="displayWork.location + '原照'" /></div>
             <button v-else class="creation-art-button" :aria-label="hasResult ? '放大作品' : '放大風格範例'" :disabled="generating" @click="zoom = true"><CreationArtwork :key="displayWork.id" :work="displayWork" :alt="displayWork.location + '・' + style.name + (hasResult ? '' : '範例')" /></button>
-            <div v-if="generating" class="creation-generating" role="status"><span class="creation-spinner" /><b>正在製作你的{{ style.name }}…</b><small>{{ progress || '把這張照片，變成一件旅行收藏。' }}</small></div>
+            <div v-if="generating" class="creation-generating" role="status"><span class="creation-spinner" /><b>正在製作你的{{ style.name }}…</b><small>把這張照片，變成一件旅行收藏。</small></div>
             <button v-if="canPlay && !generating && !original" class="creation-play" @click="play">{{ hasResult ? style.interactive : '看看原照與成品範例' }} <span>↗</span></button>
           </div>
           <div class="creation-caption"><div><small>{{ style.english }}</small><h2>{{ style.name }}<span v-if="selected === 'scene'">3D</span></h2></div><span v-if="saved" class="studio-saved">✓ 已收藏</span></div>
@@ -168,7 +161,7 @@ onBeforeUnmount(() => { run++; generating.value = false; });
             <section class="studio-photo-library" aria-labelledby="photo-library-title">
               <div><span><small>FROM THIS PHOTO</small><h3 id="photo-library-title">這張照片的作品</h3></span><button @click="openLibrary('collection')">查看本次全部 {{ count }} 件 ›</button></div>
               <div v-if="photoWorks.length" class="studio-photo-library-track">
-                <button v-for="item in photoWorks" :key="item.id" :aria-pressed="activeWork?.id === item.id" @click="selectPhotoWork(item)"><CreationArtwork :work="item" :alt="item.title" compact /><span><b>{{ item.title }}</b><small>{{ item.creator === 'AI 示範' ? '範例收藏' : item.fallback ? '示範圖' : '已加入作品庫' }}</small></span></button>
+                <button v-for="item in photoWorks" :key="item.id" :aria-pressed="activeWork?.id === item.id" @click="selectPhotoWork(item)"><CreationArtwork :work="item" :alt="item.title" compact /><span><b>{{ item.title }}</b><small>{{ item.creator === 'AI 示範' ? '範例收藏' : '已加入作品庫' }}</small></span></button>
               </div>
               <p v-else>還沒有作品。選一種風格，做出這張照片的第一件收藏。</p>
             </section>

@@ -3,7 +3,7 @@ import '~/assets/css/share.css';
 
 // 即時漏斗：決賽時可以投影，看評審怎麼一路從分享走到存行程、加入、購買。每 5 秒更新。
 // 數字都是不重複的裝置數（server/api/stats.get.ts）；沒有後端（GitHub Pages）時顯示說明
-type Stats = Record<'sharers' | 'shares' | 'viewers' | 'savers' | 'creators' | 'groups' | 'joined' | 'buyers' | 'unlocked' | 'gifts' | 'claimed' | 'generated' | 'fallback' | 'devices', number> & { at: string };
+type Stats = Record<'sharers' | 'shares' | 'viewers' | 'savers' | 'creators' | 'groups' | 'joined' | 'buyers' | 'unlocked' | 'gifts' | 'claimed' | 'devices', number> & { at: string };
 const { available, check } = useApi();
 const stats = ref<Stats | null>(null);
 let timer: ReturnType<typeof setInterval> | undefined;
@@ -29,10 +29,6 @@ const funnels = computed(() => stats.value ? [
     { title: '送 eSIM', steps: [
         { label: '送出禮物', value: stats.value.gifts, note: '張' },
         { label: '朋友領取', value: stats.value.claimed, note: rate(stats.value.claimed, stats.value.gifts) },
-    ] },
-    { title: 'AI 創作', steps: [
-        { label: 'Gemini 生成完成', value: stats.value.generated, note: '件' },
-        { label: '退回示範圖', value: stats.value.fallback, note: '件' },
     ] },
 ] : []);
 </script>

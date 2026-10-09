@@ -1,7 +1,7 @@
 import { dHashFromGray } from './image-hash.ts';
 
 // 上傳前先在手機上縮圖：長邊 1600px 的 JPEG 約 0.3–0.6 MB，現場網路慢也傳得上去，
-// 對生圖來說也夠清楚（輸出只有 1K）。順便算照片指紋，共同遊記用它收起重複的照片
+// 給 Gemini 看照片也夠清楚。順便算照片指紋，共同遊記用它收起重複的照片
 export function fitWithin(width: number, height: number, max: number) {
     const scale = Math.min(1, max / Math.max(width, height));
     return { width: Math.round(width * scale), height: Math.round(height * scale) };

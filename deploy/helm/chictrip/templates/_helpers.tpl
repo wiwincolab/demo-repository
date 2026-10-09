@@ -17,15 +17,13 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
   value: postgres://chictrip:$(POSTGRES_PASSWORD)@db:5432/chictrip
 {{- end }}
 
-{{/* api 與 worker 共用：資料庫、佇列、照片目錄，以及 worker 抓示範照片的位置（web 這個 Service） */}}
+{{/* api 與 worker 共用：資料庫、佇列、照片目錄 */}}
 {{- define "chictrip.appEnv" -}}
 {{ include "chictrip.databaseEnv" . }}
 - name: REDIS_URL
   value: redis://redis:6379
 - name: MEDIA_DIR
   value: /data/media
-- name: ASSET_ORIGIN
-  value: http://web
 {{- end }}
 
 {{/* 金鑰（GEMINI_API_KEY）從 Secret，參數從 ConfigMap（values.yaml 的 config）。

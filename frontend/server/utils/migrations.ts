@@ -1,7 +1,15 @@
+import { rm } from 'node:fs/promises';
+import { join } from 'node:path';
+import type { TransactionSql } from 'postgres';
+import { readConfig } from './config.ts';
+
 // 資料表的每一次改版，依名稱順序套用、套過的不再跑（server/utils/migrate.ts）。
 // 只能往後加新的一筆，不能改已經上線的：評審留下的照片與作品不能因為改版被清掉，所以不學 MEDDEMO 指紋不同就重灌。
-// SQL 寫成字串跟著伺服器一起打包，部署時不必另外複製 .sql 檔
-export const migrations: { name: string; sql: string }[] = [
+// SQL 寫成字串跟著伺服器一起打包，部署時不必另外複製 .sql 檔。
+// before：同一個交易裡、跑 SQL 之前要做的事（例如刪掉只有資料表記得路徑的檔案）
+export interface Migration { name: string; sql: string; before?: (tx: TransactionSql) => Promise<void> }
+
+export const migrations: Migration[] = [
     {
         name: '001_init',
         sql: `
@@ -176,5 +184,17 @@ create table daily_cards (
     unique (scope, trip_id, day)
 );
 `,
+    },
+    {
+        // AI 創作改回示範流程（9a3fc4a）後沒有程式讀 creations。生成的圖跟照片放在同一個目錄，
+        // 只能靠資料表的 media_path 找，所以先刪檔再刪表
+        name: '006_drop_creations',
+        before: async tx => {
+            const root = readConfig().mediaDir;
+            const rows = await tx<{ media_path: string }[]>`select media_path from creations where media_path is not null`;
+            for (const row of rows) await rm(join(root, row.media_path), { force: true });
+            if (rows.length) console.info(`[migrate] 刪掉 ${rows.length} 張生成的圖`);
+        },
+        sql: `drop table creations;`,
     },
 ];

@@ -1,11 +1,11 @@
 import { Queue } from 'bullmq';
 import { readConfig } from './config.ts';
 
-// 生成工作排在 Redis（BullMQ，Node 版的 RQ），由 worker（server/plugins/worker.ts）一張張做。
-// 幾種工作共用一個佇列、用 job name 分：create（AI 創作生圖，帶 creationId）、tag（照片標類別，帶 photoId）、
-// daily（每日卡片，帶 cardId）。工作本身只帶 id，內容與狀態都在 Postgres
+// 要等 Gemini 看照片的工作排在 Redis（BullMQ，Node 版的 RQ），由 worker（server/plugins/worker.ts）一件件做。
+// 兩種工作共用一個佇列、用 job name 分：tag（照片標類別，帶 photoId）、daily（每日卡片，帶 cardId）。
+// 工作本身只帶 id，內容與狀態都在 Postgres。佇列名稱沿用生圖時代的 creations，改名會丟掉 Redis 裡排隊中的工作
 export const QUEUE_NAME = 'creations';
-export interface CreationJob { creationId?: string; photoId?: string; cardId?: string }
+export interface CreationJob { photoId?: string; cardId?: string }
 
 // BullMQ 要求 maxRetriesPerRequest 為 null：Redis 斷線時由 BullMQ 自己重連，不讓單一指令失敗就丟錯
 export function redisConnection(url: string) {
@@ -17,7 +17,7 @@ let queue: Queue<CreationJob> | undefined;
 
 export function creationQueue() {
     if (!queue) {
-        // 失敗不自動重試：重試等於讓評審多等一輪，直接退回預製圖。完成與失敗紀錄各留 1,000 筆方便查問題
+        // 失敗不自動重試：重試等於讓評審多等一輪，直接退回不需要 AI 的版本。完成與失敗紀錄各留 1,000 筆方便查問題
         queue = new Queue<CreationJob>(QUEUE_NAME, {
             connection: redisConnection(readConfig().redisUrl),
             defaultJobOptions: { attempts: 1, removeOnComplete: 1000, removeOnFail: 1000 },

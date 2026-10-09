@@ -1,5 +1,5 @@
 // /stats 漏斗（決賽投影、提案書「預期效益」引用）：每一步都是不重複的裝置數。
-// 分享 → 打開 → 存成行程／我也做一張；邀請 → 加入 → 購買；送 eSIM → 領取；AI 生成成功／退回
+// 分享 → 打開 → 存成行程／我也做一張；邀請 → 加入 → 購買；送 eSIM → 領取
 export default defineEventHandler(async () => {
     const sql = await db();
     const [row] = await sql<Record<string, number>[]>`
@@ -15,8 +15,6 @@ export default defineEventHandler(async () => {
             (select count(*) from (select group_id from group_members where paid group by group_id having count(*) >= 4) t)::int as unlocked,
             (select count(*) from gifts)::int as gifts,
             (select count(*) from gifts where claimed_device_id is not null)::int as claimed,
-            (select count(*) from creations where status = 'done')::int as generated,
-            (select count(*) from creations where status = 'fallback')::int as fallback,
             (select count(*) from devices)::int as devices`;
     return { ...row, at: new Date().toISOString() };
 });

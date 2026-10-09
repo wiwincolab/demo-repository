@@ -1,5 +1,5 @@
-# 生成佇列：跟 api 用同一個映像，CHICTRIP_ROLE=worker 時另外啟動 BullMQ worker（frontend/server/plugins/worker.ts）。
-# 只能一個：worker 啟動時會把 running 的工作當成上一個 worker 留下的、放回佇列重做
+# 照片標類別與每日卡片的佇列：跟 api 用同一個映像，CHICTRIP_ROLE=worker 時另外啟動 BullMQ worker（frontend/server/plugins/worker.ts）。
+# 一個就夠：只做照片標類別與每日卡片，不生圖
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -8,7 +8,7 @@ metadata:
     {{- include "chictrip.labels" . | nindent 4 }}
 spec:
   replicas: 1
-  # 新舊 worker 不能同時跑（上面的原因），先停舊的再開新的
+  # 先停舊的再開新的；排隊中的每日卡片，新 worker 啟動時會從資料表接回來
   strategy:
     type: Recreate
   selector:

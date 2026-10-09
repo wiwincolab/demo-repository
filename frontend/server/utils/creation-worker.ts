@@ -1,89 +1,28 @@
 import { Worker } from 'bullmq';
-import { photoById, type CreationId } from '../../app/data/creation.ts';
 import type { TripId } from '../../app/data/trips.ts';
 import type { AppConfig } from './config.ts';
 import { db } from './db.ts';
-import { analyzePhoto, generateStyledImage, writeJson, type SourceImage } from './gemini.ts';
+import { writeJson, type SourceImage } from './gemini.ts';
 import { DAILY_SCHEMA, dailyPrompt, parsePicks, parseTag, TAG_SCHEMA, tagPrompt, type DailyPicks } from './journal.ts';
 import { tripTitle } from './share.ts';
-import { buildPrompt, nearestAspect, needsAnalysis, STYLE_ASPECT } from './creation-prompts.ts';
-import { mediaRelativePath, readMedia, sniffImageType, writeMedia } from './media.ts';
+import { readMedia } from './media.ts';
 import { creationQueue, QUEUE_NAME, redisConnection, type CreationJob } from './queue.ts';
-import { withTimeout } from './timeout.ts';
-import { tripStartDate } from './trips.ts';
 
-// 生成佇列的 worker：只在 CHICTRIP_ROLE=worker 的 pod 裡跑（server/plugins/worker.ts）。
-// 任何一步失敗都把作品標成 fallback，手機改顯示預製圖，不讓評審看到錯誤畫面
-interface CreationRow { id: string; style_id: CreationId; trip_id: TripId; photo_id: string | null; demo_photo_id: string | null; location: string }
-
-async function loadSource(config: AppConfig, row: CreationRow): Promise<SourceImage> {
-    const sql = await db();
-    if (row.photo_id) {
-        const [photo] = await sql<{ media_path: string; mime: SourceImage['mime']; width: number | null; height: number | null }[]>`
-            select media_path, mime, width, height from photos where id = ${row.photo_id}`;
-        if (!photo) throw new Error('找不到上傳的照片');
-        return { bytes: await readMedia(config.mediaDir, photo.media_path), mime: photo.mime, width: photo.width, height: photo.height };
-    }
-    // 示範照片在 web（Nginx）的映像裡，api／worker 的映像沒有，從叢集內的 web 抓
-    const demo = photoById(row.demo_photo_id ?? undefined);
-    if (!demo) throw new Error(`找不到示範照片 ${row.demo_photo_id}`);
-    const response = await fetch(new URL(`/assets/memory/${demo.source}`, config.assetOrigin), { signal: AbortSignal.timeout(10_000) });
-    if (!response.ok) throw new Error(`示範照片下載失敗（${response.status}）`);
-    const bytes = new Uint8Array(await response.arrayBuffer());
-    const mime = sniffImageType(bytes);
-    if (!mime) throw new Error('示範照片格式不認得');
-    return { bytes, mime, width: null, height: null };
-}
-
-export async function processCreation(config: AppConfig, id: string) {
-    const sql = await db();
-    // 只接還在排隊上限內的：超過的手機已經顯示示範圖（limits.ts 的 effectiveStatus），再生成既花錢、重新整理後又說法不一
-    const [row] = await sql<CreationRow[]>`
-        update creations set status = 'running', started_at = now()
-        where id = ${id} and status = 'queued' and created_at > now() - ${config.queueStaleMs} * interval '1 millisecond'
-        returning id, style_id, trip_id, photo_id, demo_photo_id, location`;
-    if (!row) {
-        await sql`update creations set status = 'fallback', error = '排隊太久，沒有生成', finished_at = now() where id = ${id} and status = 'queued'`;
-        return;
-    }
-    const started = Date.now();
-    try {
-        const source = await loadSource(config, row);
-        const style = row.style_id as 'sticker' | 'photo' | 'ticket' | 'pin';
-        const analysis = needsAnalysis(style) ? await withTimeout(analyzePhoto(config, source, row.location), config.jobTimeoutMs, '看照片') : null;
-        const prompt = buildPrompt(style, analysis, { startDate: tripStartDate(row.trip_id) });
-        const aspect = style === 'photo' ? nearestAspect(source.width, source.height) : STYLE_ASPECT[style];
-        const image = await withTimeout(generateStyledImage(config, prompt, source, aspect), config.jobTimeoutMs, '生圖');
-        const mediaPath = mediaRelativePath(id, image.mime, new Date());
-        await writeMedia(config.mediaDir, mediaPath, image.bytes);
-        await sql`update creations set status = 'done', media_path = ${mediaPath}, mime = ${image.mime}, finished_at = now() where id = ${id}`;
-        console.info(`[worker] stage=creation result=done style=${style} ms=${Date.now() - started} id=${id}`);
-    } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        await sql`update creations set status = 'fallback', error = ${message.slice(0, 500)}, finished_at = now() where id = ${id}`;
-        console.warn(`[worker] stage=creation result=fallback style=${row.style_id} ms=${Date.now() - started} id=${id} error=${message.slice(0, 200)}`);
-    }
-}
+// 佇列的 worker：只在 CHICTRIP_ROLE=worker 的 pod 裡跑（server/plugins/worker.ts）。
+// 只做照片標類別與每日卡片；AI 創作的成品是預製圖或手機上合成的示範圖，不經過這裡。
+// 任何一步失敗都退回不需要 AI 的版本，不讓評審看到錯誤畫面
 
 // Redis 不存檔，Redis 重啟後排隊中的工作會不見，資料表裡卻還是 queued：從資料表補回佇列。
-// jobId 就是作品 id，還在佇列裡的不會變成兩份；超過排隊上限的 processCreation 不會接
+// jobId 用卡片 id，還在佇列裡的不會變成兩份。太久沒做的退回（第一張當代表、不配文字），還在時間內的補回佇列
 async function requeueWaiting(config: AppConfig) {
     const sql = await db();
-    // 已經超過排隊上限的（手機早就顯示示範圖）順便在資料表標成 fallback，資料表與畫面說法一致
-    await sql`
-        update creations set status = 'fallback', error = '排隊太久，沒有生成', finished_at = now()
-        where status = 'queued' and created_at <= now() - ${config.queueStaleMs} * interval '1 millisecond'`;
-    const rows = await sql<{ id: string }[]>`
-        select id from creations where status = 'queued' and created_at > now() - ${config.queueStaleMs} * interval '1 millisecond'`;
-    for (const { id } of rows) await creationQueue().add('create', { creationId: id }, { jobId: id });
-    // 每日卡片同理：太久沒做的退回（第一張當代表、不配文字），還在時間內的補回佇列
     await sql`
         update daily_cards set status = 'fallback', picks = ${sql.json(fallbackPicks as never)}, finished_at = now()
         where status = 'queued' and created_at <= now() - ${config.queueStaleMs} * interval '1 millisecond'`;
     const cards = await sql<{ id: string }[]>`
         select id from daily_cards where status = 'queued' and created_at > now() - ${config.queueStaleMs} * interval '1 millisecond'`;
     for (const { id } of cards) await creationQueue().add('daily', { cardId: id }, { jobId: `daily-${id}` });
-    return rows.length + cards.length;
+    return cards.length;
 }
 
 // 照片標類別（食物／風景／人物／其他），共同遊記的趣味統計用。失敗就留空，不影響任何畫面
@@ -127,10 +66,8 @@ export async function processDailyCard(config: AppConfig, id: string) {
     }
 }
 
-// worker 啟動時：只有一個 worker（replicas: 1、Recreate），running 的一定是上一個 worker 做到一半就停掉的，放回佇列重做
+// worker 啟動時把 Redis 裡不見的每日卡片補回來
 async function recoverOnStart(config: AppConfig) {
-    const sql = await db();
-    await sql`update creations set status = 'queued', started_at = null where status = 'running'`;
     const count = await requeueWaiting(config);
     if (count) console.info(`[worker] 重新排入 ${count} 件`);
 }
@@ -139,11 +76,11 @@ const warn = (label: string) => (error: unknown) => console.warn(`[worker] ${lab
 
 export function startCreationWorker(config: AppConfig) {
     const handlers: Record<string, (job: { data: CreationJob }) => Promise<void>> = {
-        create: job => processCreation(config, job.data.creationId!),
         tag: job => processPhotoTag(config, job.data.photoId!),
         daily: job => processDailyCard(config, job.data.cardId!),
     };
-    const worker = new Worker<CreationJob>(QUEUE_NAME, async job => { await (handlers[job.name] ?? handlers.create!)(job); }, {
+    // 拿掉生圖之前排進來的 create 工作沒有對應的處理，直接略過
+    const worker = new Worker<CreationJob>(QUEUE_NAME, async job => { await handlers[job.name]?.(job); }, {
         connection: redisConnection(config.redisUrl),
         concurrency: config.workerConcurrency,
     });
@@ -151,6 +88,6 @@ export function startCreationWorker(config: AppConfig) {
     recoverOnStart(config).catch(warn('接回排隊中的工作失敗'));
     // 只有 Redis 重啟（worker 沒重啟）時也要補回：每分鐘對一次資料表
     const timer = setInterval(() => requeueWaiting(config).catch(warn('補回佇列失敗')), 60_000);
-    console.info(`[worker] 開始處理佇列 ${QUEUE_NAME}（同時 ${config.workerConcurrency} 件，生圖 ${config.imageModel}、看照片 ${config.textModel}）`);
+    console.info(`[worker] 開始處理佇列 ${QUEUE_NAME}（同時 ${config.workerConcurrency} 件，看照片 ${config.textModel}）`);
     return { close: async () => { clearInterval(timer); await worker.close(); } };
 }
