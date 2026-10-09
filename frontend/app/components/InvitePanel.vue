@@ -3,6 +3,7 @@ import { renderSVG } from 'uqr';
 import type { GroupSummary } from '~/utils/group-api';
 import { getMe, setNickname } from '~/utils/share-api';
 import '~/assets/css/share.css';
+withDefaults(defineProps<{ linkOnly?: boolean }>(), { linkOnly: false });
 
 // 真的邀請旅伴（有後端時取代「模擬一位朋友加入」）：拿到這趟的群組與邀請連結，
 // 旁邊的人直接掃 QR，遠的人用系統分享選單傳 LINE。朋友加入後名單幾秒內自動更新（layouts/default.vue 輪詢）。
@@ -38,6 +39,11 @@ async function send() {
     }
     try { await navigator.clipboard.writeText(`${text}\n${url.value}`); notify('已複製邀請連結'); } catch { notify('請長按連結自行複製'); }
 }
+async function copyLink() {
+    if (!url.value) return;
+    try { await navigator.clipboard.writeText(url.value); notify('已複製邀請連結'); }
+    catch { notify('請長按下方連結自行複製'); }
+}
 </script>
 
 <template>
@@ -45,13 +51,14 @@ async function send() {
     <template v-if="needName">
       <label for="invite-owner-name"><b>先取一個旅伴看得到的名字</b></label>
       <input id="invite-owner-name" v-model="nickname" class="share-input" maxlength="12" placeholder="例如：小安" autocomplete="nickname" @keyup.enter="saveName" />
-      <button class="primary" :disabled="busy || !nickname.trim()" @click="saveName">產生邀請 QR</button>
+      <button class="primary" :disabled="busy || !nickname.trim()" @click="saveName">{{ linkOnly ? '建立邀請連結' : '產生邀請 QR' }}</button>
     </template>
     <template v-else-if="group">
-      <div class="invite-qr" role="img" :aria-label="'邀請連結 QR code：' + url" v-html="qr" />
-      <p><b>請旅伴用手機掃描加入</b><small>{{ group.members.length }} 人已在這趟 · 最多 8 人 · 購買各自決定</small></p>
+      <div v-if="!linkOnly" class="invite-qr" role="img" :aria-label="'邀請連結 QR code：' + url" v-html="qr" />
+      <p><b>{{ linkOnly ? '分享連結，邀旅伴一起省' : '請旅伴用手機掃描加入' }}</b><small>{{ group.members.length }} 人已在這趟 · 最多 8 人 · 購買各自決定</small></p>
       <a :href="url" target="_blank" rel="noopener">{{ url }}</a>
       <button class="primary" @click="send">傳送邀請連結</button>
+      <button v-if="linkOnly" class="primary" @click="copyLink">複製邀請連結</button>
     </template>
     <p v-else-if="failed" class="muted">邀請連結沒有建立成功，請稍後再試。</p>
     <p v-else class="muted">正在建立邀請連結…</p>

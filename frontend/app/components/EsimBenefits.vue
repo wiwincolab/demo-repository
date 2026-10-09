@@ -1,18 +1,32 @@
 <script setup lang="ts">
-const emit=defineEmits<{open:[panel:'benefits'|'points']}>();
-const asset=useAsset();
+const emit = defineEmits<{ open: [panel: 'benefits' | 'rewards' | 'group'] }>();
 </script>
+
 <template>
-  <section class="esim-benefits" aria-labelledby="esim-benefits-title">
-    <header><div><h2 id="esim-benefits-title">旅行加值</h2></div><small>加值提案</small></header>
-    <button class="esim-benefit-art esim-benefit-creation" @click="emit('open','benefits')">
-      <span class="esim-benefit-copy"><span class="esim-benefit-tag">AI 創作 1 次</span><strong>照片變收藏</strong><span class="esim-benefit-action">選風格<EsimIcon name="arrow" :size="13"/></span></span>
-      <span class="esim-benefit-visual creation-visual" aria-hidden="true"><span class="benefit-photo"><img :src="asset('assets/memory/fuji-editorial.png')" alt=""/><i>THAT DAY, KEPT.</i></span><span class="benefit-ticket"><img :src="asset('assets/memory/fuji-ticket.png')" alt=""/></span><span class="benefit-sticker"><svg viewBox="0 0 90 70"><path d="M5 58 38 12q7-9 14 1l33 44q5 9-6 9H13Q1 66 5 58Z" fill="#82bad0" stroke="white" stroke-width="7"/><path d="m26 29 16-18 11 7 12 23-15-6-10 4-3-10Z" fill="#fff9e8"/><path d="m16 59 25-29 2 29" fill="#477e98"/><path d="M60 47q11-9 24 0" fill="none" stroke="#fff" stroke-width="4"/></svg></span><span class="benefit-spark">✦</span></span>
-    </button>
-    <button class="esim-benefit-art esim-benefit-reward" @click="emit('open','points')">
-      <span class="esim-benefit-copy"><span class="esim-benefit-tag">和泰 Points</span><strong>點數換交通與旅行</strong><span class="esim-benefit-action">挑選商品<EsimIcon name="arrow" :size="13"/></span></span>
-      <span class="esim-benefit-visual reward-visual" aria-hidden="true"><svg viewBox="0 0 170 155"><ellipse cx="89" cy="135" rx="59" ry="8" fill="#496652" opacity=".09"/><g transform="rotate(-10 50 65)"><rect x="16" y="20" width="70" height="105" rx="13" fill="#fffefa" stroke="#acbcb2"/><rect x="26" y="32" width="22" height="18" rx="4" fill="#e1e9df"/><path d="M32 32v18m8-18v18m-14-9h22" stroke="#9aaf9c"/><text x="28" y="76" fill="#426a61" font-size="18" font-weight="700">GB</text><rect x="28" y="88" width="45" height="5" rx="2" fill="#e4eadd"/><rect x="28" y="88" width="18" height="5" rx="2" fill="#648875"/><path d="M28 105h32" stroke="#bbc9bd" stroke-width="3" stroke-linecap="round"/></g><path d="M74 50q43-21 63 10m-12-2 13 4 1-14" fill="none" stroke="#7b997f" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 5"/><g class="benefit-coin"><ellipse cx="123" cy="103" rx="34" ry="35" fill="#c29b48"/><circle cx="120" cy="99" r="34" fill="#efcf79" stroke="#be9845"/><circle cx="120" cy="99" r="27" fill="#f7df9c" stroke="#d6b35e"/><path d="M113 114V84h12a9 9 0 0 1 0 18h-12" fill="none" stroke="#9b7831" stroke-width="4" stroke-linecap="round"/></g><path d="m145 23 2 6 6 2-6 2-2 6-2-6-6-2 6-2Z" fill="#c9a253"/></svg></span>
-    </button>
-    <p class="esim-benefit-disclosure">創作與回饋為競賽提案；點數以獨立情境示範。</p>
+  <section class="travel-extras" aria-labelledby="travel-extras-title">
+    <EsimIcon class="travel-extras-symbol" name="gift" :size="32" aria-hidden="true"/>
+    <h2 id="travel-extras-title">旅行加值</h2>
+    <p class="travel-extras-value">4 人購買，省 NT$20</p>
+    <button class="travel-extras-invite" @click="emit('open', 'group')">邀請旅伴一起省<EsimIcon name="arrow" :size="17" aria-hidden="true"/></button>
+    <div class="travel-extras-list">
+      <button @click="emit('open', 'group')"><EsimIcon name="check" :size="18" aria-hidden="true"/><span>跟旅伴一起省</span></button>
+      <button @click="emit('open', 'benefits')"><EsimIcon name="check" :size="18" aria-hidden="true"/><span>照片變收藏</span></button>
+      <button @click="emit('open', 'rewards')"><EsimIcon name="check" :size="18" aria-hidden="true"/><span>流量換點數</span></button>
+    </div>
   </section>
 </template>
+
+<style scoped>
+.travel-extras{padding:26px;margin:0 0 24px;border:1px solid #deded5;border-radius:16px;background:#fdfcf9;color:#282923}
+.travel-extras-symbol{color:#b86243;margin-bottom:19px;stroke-width:1.3}
+.travel-extras h2{font-family:Georgia,'Songti TC',serif;font-size:29px;line-height:1.3;font-weight:500;margin:0}
+.travel-extras .travel-extras-value{color:#282923;font-size:25px!important;font-weight:500;line-height:1.5;letter-spacing:-.5px;margin:25px 0 0}
+.travel-extras-invite{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:48px;border:0;border-radius:9px;padding:12px 10px;background:#30312b;color:#fffef9;font:inherit;font-size:15px;font-weight:500;line-height:1.5;margin:23px 0 0;cursor:pointer}
+.travel-extras-list{border-top:1px solid #deded5;margin-top:25px;padding-top:5px}
+.travel-extras-list button{display:flex;align-items:center;gap:14px;width:100%;min-height:66px;padding:19px 0;border:0;border-bottom:1px solid #deded5;background:transparent;color:inherit;text-align:left;font:inherit;font-size:16px;cursor:pointer}
+.travel-extras-list button:last-child{border-bottom:0}
+.travel-extras-list svg{color:#717168;flex-shrink:0}
+.travel-extras-list button:hover{color:#a05237}
+.travel-extras button:focus-visible{outline:3px solid #b86243;outline-offset:4px}
+@media(max-width:360px){.travel-extras{padding:21px}.travel-extras .travel-extras-value{font-size:23px!important}}
+</style>
