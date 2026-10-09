@@ -28,10 +28,10 @@ function openStop(id:string){open.value=false;navigateTo('/atlas?journey=kansai&
 <template>
   <CreationDialog v-model="open" :title="selected ? '交換紀錄' : selectedWork ? 'AI 作品' : (activeTrip?.title || '這趟旅行') + ' · 本次作品'">
     <template v-if="!selected && !selectedWork">
-      <div class="creation-segment"><button :aria-pressed="tab === 'collection'" @click="tab = 'collection'">本次作品 · {{ displayedWorks.length }}</button><button :aria-pressed="tab === 'history'" @click="tab = 'history'">交換紀錄 · {{ exchanges.length + Number(hasFriend) }}</button></div>
+      <div class="creation-segment"><button :aria-pressed="tab === 'collection'" @click="tab = 'collection'">本次作品</button><button :aria-pressed="tab === 'history'" @click="tab = 'history'">交換紀錄</button></div>
       <div v-if="tab === 'collection'" class="creation-library-sections">
         <section class="creation-source-library" aria-labelledby="source-library-title">
-          <div class="creation-library-title"><span><small>ORIGINAL PHOTOS</small><h3 id="source-library-title">原風景照片</h3></span><em>{{ sourcePhotos.length }} 張</em></div>
+          <div class="creation-library-title"><span><small>ORIGINAL PHOTOS</small><h3 id="source-library-title">原風景照片</h3></span></div>
           <div class="creation-source-track">
             <article v-for="photo in sourcePhotos" :key="photo.id"><span :class="{ 'creation-cropped-source': photo.sourceCrop }"><img :src="asset('assets/memory/' + photo.source)" :alt="photo.title" /></span><div><b>{{ photo.title }}</b><small>{{ photo.location }}</small><button @click="generate(photo.id)">去生成 <i>✦</i></button></div></article>
           </div>

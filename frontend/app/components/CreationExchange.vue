@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { photosForTrip, workForPhoto, type CreationWork, type CreationExchange } from '~/data/creation';
+import { exchangeOffers, type CreationWork, type CreationExchange } from '~/data/creation';
 const open = defineModel<boolean>({ default: false });
 const props = defineProps<{ work: CreationWork }>();
 const asset = useAsset();
@@ -9,11 +9,7 @@ const friendId = ref('yu'), offerId = ref('pin'), note = ref('');
 const stage = ref<'choose' | 'review' | 'sent'>('choose');
 const receipt = ref<CreationExchange | null>(null);
 const friend = computed(() => friends.value.find(f => f.id === friendId.value) || friends.value[0]!);
-const offers = computed(()=>{
-  const tripPhotos = photosForTrip(activeId.value);
-  const available = tripPhotos.length ? tripPhotos : photosForTrip('kansai');
-  return available.filter(p=>!p.featured).flatMap(photo=>photo.styles.map(id=>workForPhoto(photo,id,friend.value.name)));
-});
+const offers = computed(() => exchangeOffers(activeId.value, friend.value.name));
 const offer = computed(() => offers.value.find(work=>work.id===offerId.value) || offers.value[0]!);
 watch(open, value => { if (value) { stage.value = 'choose'; note.value = ''; receipt.value = null; friendId.value=friends.value[0]!.id;offerId.value=''; } });
 function send() { if(!offer.value)return;receipt.value = request(friend.value.id, props.work, offer.value, note.value); if(receipt.value)stage.value = 'sent'; }
@@ -22,6 +18,7 @@ function send() { if(!offer.value)return;receipt.value = request(friend.value.id
   <CreationDialog v-model="open" :title="stage === 'choose' ? '與朋友交換' : stage === 'review' ? '確認這次交換' : '交換邀請'">
     <template v-if="stage === 'choose'">
       <p class="creation-lead">你的風景，換一個朋友的視角。</p>
+      <p class="creation-muted">使用示範收藏體驗交換，不會傳送給真人。</p>
       <label class="creation-label">想跟誰交換？</label>
       <div class="creation-friends">
         <button v-for="person in friends" :key="person.id" :aria-pressed="friendId === person.id" @click="friendId = person.id">

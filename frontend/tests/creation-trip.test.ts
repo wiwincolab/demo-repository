@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { creationStyles, photosForTrip, photoById, styleForPhoto, workForPhoto, restoreCreationWork, type CreationPhoto } from '../app/data/creation.ts';
+import { demoExchangeWork, exchangeOffers, isExampleWork, creationStyles, photosForTrip, photoById, styleForPhoto, workForPhoto, restoreCreationWork, type CreationPhoto } from '../app/data/creation.ts';
 
 test('legacy Fuji works retain their source trip; received works retain both trip and origin', () => {
   const legacy = { id: 'old-sticker', creator: '你', createdAt: '2026-04-08', styleId: 'sticker', image: 'fuji-sticker.png', title: '貼紙卡', location: '富士山' };
@@ -29,7 +29,7 @@ test('uploaded photos support all six demo outputs, while sample uploads retain 
 });
 
 test('every photo offers six styles without silently substituting a different destination', () => {
-  assert.equal(photosForTrip('tokyo').length, 0);
+  assert.equal(photosForTrip('tokyo').length, 3);
   const fuji = photoById('fuji-blue')!;
   for (const styleId of creationStyles.map(style => style.id)) {
     const work = workForPhoto(fuji, styleId);
@@ -41,4 +41,21 @@ test('every photo offers six styles without silently substituting a different de
   const nara = workForPhoto(photoById('nara-deer')!, 'sticker');
   assert.notEqual(nara.image, creationStyles[0]!.image);
   assert.equal(restoreCreationWork({ ...nara, image: 'fuji-sticker.png' }), undefined);
+});
+
+
+test('demo galleries use curated photos and exchange can start before a work is created', () => {
+  assert.deepEqual(photosForTrip('tokyo').map(photo => photo.id), ['tokyo-asakusa', 'tokyo-shibuya', 'tokyo-skytree']);
+  for (const tripId of ['tokyo', 'kansai', 'fuji'] as const) {
+    const starter = demoExchangeWork(tripId);
+    assert.equal(starter.tripId, tripId);
+    assert.equal(starter.sourceTripId, 'fuji');
+    assert.equal(starter.photoId, 'fuji-blue');
+    assert.equal(isExampleWork(starter), false, 'the demo copy can be offered in the exchange flow');
+    const offers = exchangeOffers(tripId, '示範旅伴');
+    assert(offers.length > 0, `${tripId} needs an exchange offer`);
+    assert(offers.every(work => work.preset && work.creator === '示範旅伴'));
+    assert(photosForTrip(tripId).every(photo => !/^(blob:|data:|https?:|\/api\/media)/.test(photo.source)));
+  }
+  assert(exchangeOffers('tokyo', '小宇').every(work => work.tripId === 'kansai'), 'fallback offers retain their actual source trip');
 });
