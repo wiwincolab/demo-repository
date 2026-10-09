@@ -8,7 +8,10 @@ const router = useRouter();
 const nuxt = useNuxtApp();
 let cleanup = () => {};
 
-onMounted(() => {
+onMounted(async () => {
+  // Nuxt renders .client components after the hydration mount hook.
+  // Wait for the teleported canvas ref before wiring up route transitions.
+  await nextTick();
   const element = canvas.value;
   if (!element) return;
   const renderer = createInkRenderer(element);
