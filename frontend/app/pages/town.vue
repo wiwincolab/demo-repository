@@ -1,9 +1,32 @@
 <script setup lang="ts">
+import { isTownLayout, TOWN_LAYOUT_CHANNEL, TOWN_LAYOUT_KEY } from '~/utils/town-layout';
 definePageMeta({ layout: false });
 useHead({ title: '九景小鎮 · 去趣 chicTrip' });
 const base = useRuntimeConfig().app.baseURL;
 const { tripHref } = useTripContext();
 const help = ref(false);
+const townFrame = ref<HTMLIFrameElement | null>(null);
+// Keep the opaque-origin iframe isolated. Only this exact frame can read/write
+// the single validated layout key, through this narrow message bridge.
+function onTownMessage(event: MessageEvent) {
+  const frame = townFrame.value?.contentWindow;
+  if (!frame || event.source !== frame || event.data?.channel !== TOWN_LAYOUT_CHANNEL) return;
+  if (event.data.type === 'load') {
+    try {
+      const order: unknown = JSON.parse(localStorage.getItem(TOWN_LAYOUT_KEY) || 'null');
+      if (isTownLayout(order)) frame.postMessage({ channel: TOWN_LAYOUT_CHANNEL, type: 'load', order }, '*');
+    } catch { /* Storage may be unavailable or contain an obsolete save. */ }
+  } else if (event.data.type === 'save' && isTownLayout(event.data.order)) {
+    let ok = false;
+    try {
+      localStorage.setItem(TOWN_LAYOUT_KEY, JSON.stringify(event.data.order));
+      ok = true;
+    } catch { /* Report a session-only save to the editor. */ }
+    frame.postMessage({ channel: TOWN_LAYOUT_CHANNEL, type: 'saved', ok }, '*');
+  }
+}
+onMounted(() => window.addEventListener('message', onTownMessage));
+onBeforeUnmount(() => window.removeEventListener('message', onTownMessage));
 </script>
 
 <template>
@@ -16,12 +39,12 @@ const help = ref(false);
       <MascotBadge compact />
       <button class="town-help" aria-label="操作說明" @click="help = true">?</button>
     </header>
-    <iframe class="town-frame" :src="`${base}demos/travel-town/index.html`" title="東北亞九景：可旋轉、縮放與切換日夜的 3D 小鎮" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox" />
+    <iframe ref="townFrame" class="town-frame" :src="`${base}demos/travel-town/index.html`" title="東北亞九景：可拖移重組、旋轉、縮放與切換日夜的 3D 小鎮" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox" />
     <AppSheet v-model="help" title="逛逛你的小鎮">
       <div class="town-instructions">
         <p>九段風景，透過街道連成一座小鎮。</p>
-        <dl><dt>換個角度</dt><dd>單指或滑鼠拖曳旋轉；雙指或滾輪縮放。</dd><dt>走近景點</dt><dd>打開「九景地圖」，選一個街區。按「全景」回到整座小鎮。</dd><dt>等路燈亮起</dt><dd>拖曳光線滑桿，或點選白天、黃昏、夜晚。</dd></dl>
-        <p class="town-demo-note">這是預先製作的 3D 小鎮展示，目前可探索與調整光影，尚未開放自由擺放積木。<NuxtLink :to="tripHref('/memory', { style: 'scene' })">想把自己的照片做成場景積木？到 AI 創作 ↗</NuxtLink></p>
+        <dl><dt>換個角度</dt><dd>單指或滑鼠拖曳旋轉；雙指或滾輪縮放。</dd><dt>走近景點</dt><dd>打開「九景地圖」，選一個街區。按「全景」回到整座小鎮。</dd><dt>重組小鎮</dt><dd>按「編輯小鎮」，拖動景點方塊交換位置，也可依序點選九宮格中的兩格。支援上一步、原始排列，完成後恢復旋轉。</dd><dt>等路燈亮起</dt><dd>拖曳光線滑桿，或點選白天、黃昏、夜晚。</dd></dl>
+        <p class="town-demo-note">九個預製景點可在固定九宮格內交換位置，排列會保存在這個瀏覽器。建築尚不能拆開或旋轉，個人照片收藏尚未匯入小鎮。<NuxtLink :to="tripHref('/memory', { style: 'scene' })">想把自己的照片做成場景積木？到 AI 創作 ↗</NuxtLink></p>
       </div>
     </AppSheet>
   </main>
