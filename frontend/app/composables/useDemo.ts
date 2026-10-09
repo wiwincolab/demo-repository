@@ -9,7 +9,8 @@ const blankState = (): TripDemoState => ({days:[],members:[],usage:'normal',adju
 function initialState(id:TripId):TripDemoState { return {...blankState(),days:structuredClone(tripItineraries[id]),members:[{name:'Scott（你）',paid:false,price:esimPlan('normal',tripSummaries.find(t=>t.id===id)?.dayCount||5).price}]}; }
 export function useDemo() {
     const {activeId,activeTrip}=useTripContext();
-    const states=useState<Record<TripId,TripDemoState>>('trip-demo-v2',()=>({tokyo:initialState('tokyo'),kansai:initialState('kansai'),fuji:initialState('fuji')}));
+    const states=useState<Record<TripId,TripDemoState>>('trip-demo-v2',()=>Object.fromEntries(tripSummaries.map(trip=>[trip.id,initialState(trip.id)])) as Record<TripId,TripDemoState>);
+    for (const trip of tripSummaries) if (!states.value[trip.id]) states.value[trip.id] = initialState(trip.id);
     const storageReady=useState('trip-demo-ready-v2',()=>false);
     const empty=blankState();
     function field<K extends keyof TripDemoState>(key:K){return computed({get:()=>activeId.value?states.value[activeId.value][key]:empty[key],set:(value:TripDemoState[K])=>{if(activeId.value)states.value[activeId.value][key]=value;}});}
@@ -37,7 +38,7 @@ export function useDemo() {
           }
           target.members = target.members.map((m,i) => ({...m,price:esimPlan(i===0 ? target.esim.purchasedUsage || target.esim.selectedUsage || target.usage : 'normal',trip.dayCount).price}));
           target.generated=value?.generated===true;
-          if(value?.adjusted===true){target.previousStop=structuredClone(tripItineraries[trip.id][0]!.stops[1]!);target.days[0]!.stops[1]=structuredClone(tripAlternatives[trip.id]);target.adjusted=true;}
+          if(value?.adjusted===true && tripAlternatives[trip.id]){target.previousStop=structuredClone(tripItineraries[trip.id][0]!.stops[1]!);target.days[0]!.stops[1]=structuredClone(tripAlternatives[trip.id]!);target.adjusted=true;}
         }
         if(!cached){const legacy=JSON.parse(sessionStorage.getItem('chictrip-mobile-members')||'null');if(isMemberList(legacy))states.value.tokyo.members=legacy.map(m=>({...m,price:esimPlan('normal',5).price}));}
       }catch{}
@@ -106,10 +107,10 @@ export function useDemo() {
         notify(group.value.count === 4 ? '4 人購買，已解鎖每人 NT$20 旅伴折扣' : '已完成示範購買');
     }
     function applyAdjustment() {
-        if(!activeId.value||!days.value[0]?.stops[1])return;
+        if(!activeId.value||!days.value[0]?.stops[1]||!tripAlternatives[activeId.value])return;
         if (!adjusted.value)
             previousStop.value = structuredClone(toRaw(days.value[0]!.stops[1]!));
-        days.value[0]!.stops[1] = structuredClone(tripAlternatives[activeId.value]);
+        days.value[0]!.stops[1] = structuredClone(tripAlternatives[activeId.value]!);
         adjusted.value = true;
     }
     function undoAdjustment() {

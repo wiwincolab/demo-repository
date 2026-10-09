@@ -1,0 +1,173 @@
+{
+  "hokkaido": {
+    "src": "assets/routes/covers/hokkaido.png",
+    "source": "https://tour.settour.com.tw/product/GFG0000036556",
+    "imageUrl": "https://photo.settour.com.tw/900x600/https%3A%2F%2Fwww.settour.com.tw%2Fss_img%2FGFG%2F0000%2F0365%2F56%2Fori_98741988.jpg",
+    "credit": "東南旅遊",
+    "alt": "北海道，繞道南一圈。行程封面",
+    "retrievedAt": "2026-10-09",
+    "sourceTitle": "【典藏經典北海道】百選溫泉、嚴選酒店、札幌燈節、和牛三大蟹五日 - 國外團體旅遊 | 東南旅遊網"
+  },
+  "tohoku": {
+    "src": "assets/routes/covers/tohoku.png",
+    "source": "https://tour.settour.com.tw/product/GFG0000030733",
+    "imageUrl": "https://photo.settour.com.tw/900x600/https%3A%2F%2Fwww.settour.com.tw%2Fss_img%2FGFG%2F0000%2F0307%2F33%2Fori_98239504.jpg",
+    "credit": "東南旅遊",
+    "alt": "東北，溪流與溫泉。行程封面",
+    "retrievedAt": "2026-10-09",
+    "sourceTitle": "限量仙台、冬遊東北｜奧入瀨溪流、角館鐵道遊、風采猊鼻溪、松島採果趣5日 - 國外團體旅遊 | 東南旅遊網"
+  },
+  "kanto": {
+    "src": "assets/routes/covers/kanto.jpg",
+    "source": "https://tour.settour.com.tw/product/GFG0000025707",
+    "imageUrl": "https://photo.settour.com.tw/900x600/https%3A%2F%2Fwww.settour.com.tw%2Fss_img%2FGFG%2F0000%2F0257%2F07%2Fori_69212822.jpg",
+    "credit": "東南旅遊",
+    "alt": "東京，富士與箱根。行程封面",
+    "retrievedAt": "2026-10-09",
+    "sourceTitle": "限時限量｜8人成行～富士螃蟹溫泉、東京迪士尼、箱根海賊船、澀谷購物5日 - 國外團體旅遊 | 東南旅遊網"
+  },
+  "shoryudo": {
+    "src": "assets/routes/covers/shoryudo.jpg",
+    "source": "https://tour.settour.com.tw/product/GFG0000025074",
+    "imageUrl": "https://photo.settour.com.tw/900x600/https%3A%2F%2Fwww.settour.com.tw%2Fss_img%2FGFG%2F0000%2F0250%2F74%2Fori_98094640.jpg",
+    "credit": "東南旅遊",
+    "alt": "昇龍道，合掌村到名古屋。行程封面",
+    "retrievedAt": "2026-10-09",
+    "sourceTitle": "限量冬遊、星宇名古屋｜保住市區連鎖、鰻魚飯三味、新穗高纜車、合掌村5日 - 國外團體旅遊 | 東南旅遊網"
+  },
+  "kansai-classic": {
+    "src": "assets/routes/covers/kansai-classic.jpg",
+    "source": "https://tour.settour.com.tw/product/GFG0000023079",
+    "imageUrl": "https://photo.settour.com.tw/900x600/https%3A%2F%2Fwww.settour.com.tw%2Fss_img%2FGFG%2F0000%2F0230%2F79%2Fori_63182177.jpg",
+    "credit": "東南旅遊",
+    "alt": "京阪神奈，經典五日。行程封面",
+    "retrievedAt": "2026-10-09",
+    "sourceTitle": "【精選關西】環球周邊溫泉飯店.京都希爾頓花園.環球特快.美食關西5日 - 國外團體旅遊 | 東南旅遊網"
+  },
+  "shikoku": {
+    "src": "assets/routes/covers/shikoku.jpg",
+    "source": "https://tour.settour.com.tw/product/GFG0000030887",
+    "imageUrl": "https://photo.settour.com.tw/900x600/https%3A%2F%2Fwww.settour.com.tw%2Fss_img%2FGFG%2F0000%2F0308%2F87%2Fori_78907254.jpg",
+    "credit": "東南旅遊",
+    "alt": "四國，跟著渡輪繞一圈。行程封面",
+    "retrievedAt": "2026-10-09",
+    "sourceTitle": "福氣洋羊｜典藏高松四國‧保住三晚溫泉‧小豆島‧金刀比羅宮‧道後溫泉5日 - 國外團體旅遊 | 東南旅遊網"
+  },
+  "kyushu": {
+    "src": "assets/routes/covers/kyushu.jpg",
+    "source": "https://tour.settour.com.tw/product/GFG0000027149",
+    "imageUrl": "https://photo.settour.com.tw/900x600/https%3A%2F%2Fwww.settour.com.tw%2Fss_img%2FGFG%2F0000%2F0271%2F49%2Fori_98049768.jpg",
+    "credit": "東南旅遊",
+    "alt": "九州，火山與溫泉。行程封面",
+    "retrievedAt": "2026-10-09",
+    "sourceTitle": "【精選九州】悠遊阿蘇、熊城風情、嬉遊雙電車、美饌燒肉放題、兩晚溫泉5日 - 國外團體旅遊 | 東南旅遊網"
+  },
+  "okinawa": {
+    "src": "assets/routes/covers/okinawa.jpg",
+    "source": "https://tour.settour.com.tw/product/GFG0000024411",
+    "imageUrl": "https://photo.settour.com.tw/900x600/https%3A%2F%2Fwww.settour.com.tw%2Fss_img%2FGFG%2F0000%2F0239%2F60%2Fori_64509749.jpeg",
+    "credit": "東南旅遊",
+    "alt": "沖繩，海與水族館。行程封面",
+    "retrievedAt": "2026-10-09",
+    "sourceTitle": "【沖繩｜輕旅時光】海洋博水族館、玉泉洞、古宇利塔、贈單軌電車券四日 - 國外團體旅遊 | 東南旅遊網"
+  },
+  "seoul": {
+    "src": "assets/routes/covers/seoul.jpg",
+    "source": "https://tour.settour.com.tw/product/GFG0000000783",
+    "imageUrl": "https://photo.settour.com.tw/900x600/https%3A%2F%2Fwww.settour.com.tw%2Fss_img%2FGFG%2F0000%2F0007%2F83%2Fori_98567221.jpg",
+    "credit": "東南旅遊",
+    "alt": "首爾，古宮與南怡島。行程封面",
+    "retrievedAt": "2026-10-09",
+    "sourceTitle": "【韓楓再現】南怡島兩水里銀杏、愛寶樂園、韓服遊古宮、塗鴉秀明洞5日 - 國外團體旅遊 | 東南旅遊網"
+  },
+  "busan": {
+    "src": "assets/routes/covers/busan.jpg",
+    "source": "https://tour.settour.com.tw/product/GFG0000035769",
+    "imageUrl": "https://photo.settour.com.tw/900x600/https%3A%2F%2Fwww.settour.com.tw%2Fss_img%2FGFG%2F0000%2F0357%2F69%2Fori_98387070.jpg",
+    "credit": "東南旅遊",
+    "alt": "釜山，海岸與慶州古都。行程封面",
+    "retrievedAt": "2026-10-09",
+    "sourceTitle": "【保住市區華美達兩晚】釜山超殺~海濱列車.慶州漫遊.蔚藍白淺灘5日 - 國外團體旅遊 | 東南旅遊網"
+  },
+  "jeju": {
+    "src": "assets/routes/covers/jeju.jpg",
+    "source": "https://tour.settour.com.tw/product/GFG0000026327",
+    "imageUrl": "https://photo.settour.com.tw/900x600/https%3A%2F%2Fwww.settour.com.tw%2Fss_img%2FGFG%2F0000%2F0263%2F27%2Fori_77252557.jpg",
+    "credit": "東南旅遊",
+    "alt": "濟州，繞島一圈。行程封面",
+    "retrievedAt": "2026-10-09",
+    "sourceTitle": "【蔚藍濟州】牛島珊瑚海岸.透明皮艇.史努比庭園.萌可愛羊駝樂園5日 - 國外團體旅遊 | 東南旅遊網"
+  },
+  "round-taiwan": {
+    "src": "assets/routes/covers/round-taiwan.jpg",
+    "source": "https://trip.settour.com.tw/taiwan/product/GRT0000006122",
+    "imageUrl": "https://photo.settour.com.tw/900x600/https%3A%2F%2Fwww.settour.com.tw%2Fss_img%2FGRT%2F0000%2F0061%2F22%2Fori_65877219.jpg",
+    "credit": "東南旅遊",
+    "alt": "台灣，繞一圈。行程封面",
+    "retrievedAt": "2026-10-09",
+    "sourceTitle": "經典環島巴士～玉山新中橫、漫遊阿里山日月潭、山海墾丁太魯閣、台灣六日旅遊行程搜尋推薦 | 東南旅遊"
+  },
+  "sun-moon-lake": {
+    "src": "assets/routes/covers/sun-moon-lake.jpg",
+    "source": "https://trip.settour.com.tw/taiwan/product/GRT0000007872",
+    "imageUrl": "https://photo.settour.com.tw/900x600/https%3A%2F%2Fwww.settour.com.tw%2Fss_img%2FGRT%2F0000%2F0078%2F72%2Fori_78972232.jpg",
+    "credit": "東南旅遊",
+    "alt": "日月潭，住一晚。行程封面",
+    "retrievedAt": "2026-10-09",
+    "sourceTitle": "五星奢享雲品酒店、日月潭遊船、一味無二綠食坊、王英信美術館一泊二食二日旅遊行程搜尋推薦 | 東南旅遊"
+  },
+  "alishan": {
+    "src": "assets/routes/covers/alishan.jpg",
+    "source": "https://trip.settour.com.tw/taiwan/product/GRT0000002023",
+    "imageUrl": "https://photo.settour.com.tw/900x600/https%3A%2F%2Fwww.settour.com.tw%2Fss_img%2FGRT%2F0000%2F0020%2F23%2Fori_70743347.jpg",
+    "credit": "東南旅遊",
+    "alt": "阿里山，森林與雲海。行程封面",
+    "retrievedAt": "2026-10-09",
+    "sourceTitle": "阿里山雲海入眠、最美森鐵特富野古道、奮起湖、布袋嘗鮮、走讀嘉義記憶三日旅遊行程搜尋推薦 | 東南旅遊"
+  },
+  "taroko": {
+    "src": "assets/routes/covers/taroko.jpg",
+    "source": "https://trip.settour.com.tw/taiwan/product/GRT0000005094",
+    "imageUrl": "https://photo.settour.com.tw/900x600/https%3A%2F%2Fwww.settour.com.tw%2Fss_img%2FGRT%2F0000%2F0050%2F94%2Fori_79070975.jpg",
+    "credit": "東南旅遊",
+    "alt": "太魯閣，花蓮住一晚。行程封面",
+    "retrievedAt": "2026-10-09",
+    "sourceTitle": "五星太魯閣晶英一泊二食、原民風味饗宴、綠水步道、走讀天祥、花蓮慢旅二日旅遊行程搜尋推薦 | 東南旅遊"
+  },
+  "kenting": {
+    "src": "assets/routes/covers/kenting.jpg",
+    "source": "https://trip.settour.com.tw/taiwan/product/GRT0000008624",
+    "imageUrl": "https://photo.settour.com.tw/900x600/https%3A%2F%2Fwww.settour.com.tw%2Fss_img%2FGRT%2F0000%2F0086%2F24%2Fori_98233040.jpg",
+    "credit": "東南旅遊",
+    "alt": "墾丁，海邊三天。行程封面",
+    "retrievedAt": "2026-10-09",
+    "sourceTitle": "全新開幕墾丁風華飯店、鹽鹵豆腐體驗、佳樂水、大灣夕照、鐘乳石仙洞 三日旅遊行程搜尋推薦 | 東南旅遊"
+  },
+  "penghu": {
+    "src": "assets/routes/covers/penghu.jpg",
+    "source": "https://trip.settour.com.tw/kinmen/product/GDG0000002065",
+    "imageUrl": "https://photo.settour.com.tw/900x600/https%3A%2F%2Fwww.settour.com.tw%2Fss_img%2FGDG%2F0000%2F0020%2F65%2Fori_64623265.jpg",
+    "credit": "東南旅遊",
+    "alt": "澎湖，跳島三天。行程封面",
+    "retrievedAt": "2026-10-09",
+    "sourceTitle": "澎湖藍海秘境之旅｜七美・南方四島・海洋牧場三日遊-松山出發-國內團體旅遊|東南旅遊網"
+  },
+  "kinmen": {
+    "src": "assets/routes/covers/kinmen.jpg",
+    "source": "https://trip.settour.com.tw/kinmen/product/GDG0000002345",
+    "imageUrl": "https://photo.settour.com.tw/900x600/https%3A%2F%2Fwww.settour.com.tw%2Fss_img%2FGDG%2F0000%2F0023%2F45%2Fori_77480258.jpg",
+    "credit": "東南旅遊",
+    "alt": "金門，閩南聚落與坑道。行程封面",
+    "retrievedAt": "2026-10-09",
+    "sourceTitle": "【唯美金門】珠山聚落、南石滬喊泉、古崗湖下午茶、大小金門3日-國內團體旅遊|東南旅遊網"
+  },
+  "matsu": {
+    "src": "assets/routes/covers/matsu.jpg",
+    "source": "https://trip.settour.com.tw/kinmen/product/GDG0000002199",
+    "imageUrl": "https://photo.settour.com.tw/900x600/https%3A%2F%2Fwww.settour.com.tw%2Fss_img%2FGDG%2F0000%2F0021%2F99%2Fori_77437392.jpg",
+    "credit": "東南旅遊",
+    "alt": "馬祖，藍眼淚與芹壁。行程封面",
+    "retrievedAt": "2026-10-09",
+    "sourceTitle": "【藍色馬祖】芹壁聚落、北海坑道夜搖擼、豪華海鮮鍋三日-松山出-國內團體旅遊|東南旅遊網"
+  }
+}

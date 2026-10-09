@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ChictripMotion from '~/components/ChictripMotion.vue';
 import { kansaiReference } from '~/data/kansai';
 import { dayColors } from '~/utils/map';
 import type { Stop } from '~/types/trip';
@@ -6,7 +7,9 @@ import { tripItineraries, tripAlternatives, plannerStorageKey } from '~/data/tri
 const { days, members, adjusted, applyAdjustment, undoAdjustment, notify, saved: sharedTrip } = useDemo();
 const { activeId,activeTrip,tripHref }=useTripContext();
 const asset = useAsset();
-const day = ref(0), view = ref<'list' | 'map'>('list'), selected = ref(0);
+const route = useRoute();
+function requestedDay() { const value = Number(route.query.day); return Number.isInteger(value) && value >= 0 && value < days.value.length ? value : 0; }
+const day = ref(requestedDay()), view = ref<'list' | 'map'>('list'), selected = ref(0);
 const groupOpen = ref(false);
 const sheet = ref<'info' | 'adjust' | 'compare' | 'done' | 'saved' | null>(null);
 const stop = ref<Stop | null>(null);
@@ -16,14 +19,16 @@ const activeStop = computed(() => shown.value.find(s => s.id === selected.value)
 const saved = ref<{
     time: string;
     name: string;
+    reason?: string;
 }[]>([]);
 const title = computed(() => ({ info: activeTrip.value?.title || '旅程資訊', adjust: 'AI 局部微調', compare: '只換一站，其他照舊', done: '已套用局部替換', saved: '圈選排程 · 已儲存' }[sheet.value || 'info']));
 const originalStop=computed(()=>activeId.value?tripItineraries[activeId.value][0]?.stops[1]:undefined);
 const alternative=computed(()=>activeId.value?tripAlternatives[activeId.value]:undefined);
 const keptStops=computed(()=>days.value[0]?.stops.filter(s=>s.id!==originalStop.value?.id).map(s=>s.name).join('與')||'其他景點');
-function dayLabel(i:number){const date=new Date((activeTrip.value?.startDate||'2026-01-01')+'T12:00:00');date.setDate(date.getDate()+i);return `${date.getMonth()+1}/${date.getDate()}`;}
+function dayLabel(i:number){if(!activeTrip.value?.startDate)return '日期未定';const date=new Date((activeTrip.value?.startDate||'2026-01-01')+'T12:00:00');date.setDate(date.getDate()+i);return `${date.getMonth()+1}/${date.getDate()}`;}
 function chooseDay(n: number) { day.value = n; selected.value = days.value[Math.max(0,n)]?.stops[0]?.id||0; }
-watch(activeId,()=>{chooseDay(0);sheet.value=null;stop.value=null;groupOpen.value=false;adjustText.value='';saved.value=[];});
+watch(activeId,()=>{chooseDay(requestedDay());sheet.value=null;stop.value=null;groupOpen.value=false;adjustText.value='';saved.value=[];});
+watch(()=>route.query.day,()=>chooseDay(requestedDay()));
 function preview() {
     if (!lockPlan.value)
         return notify('此示範請保留鎖定安排，再比較局部變更');
@@ -59,7 +64,7 @@ function savedPlan() {
     </div>
     <div class="trip-summary">
       <div>
-        <strong>{{ activeTrip.dateLabel }}</strong>
+        <div class="trip-date-companion"><ChictripMotion :key="activeId || 'trip'" motion="go" :size="58"/><strong>{{ activeTrip.dateLabel }}</strong></div>
         <p>{{ activeTrip.dayCount }} 天 {{ activeTrip.dayCount - 1 }} 夜 · {{ days.flatMap(d=>d.stops).length }} 個停留點</p>
       </div>
       <button class="invite-button" :aria-label="members.length + ' 人共編，邀請旅伴'" @click="groupOpen = true">
@@ -71,7 +76,7 @@ function savedPlan() {
     </div>
     <div class="trip-tools">
       <NuxtLink class="ai-link" :to="tripHref('/planner')">✦ 圈選 AI 排程</NuxtLink>
-      <button @click="sheet = 'adjust'">AI 微調</button>
+      <button v-if="alternative" @click="sheet = 'adjust'">AI 微調</button>
       <button @click="savedPlan">已儲存</button>
     </div>
     <div class="day-bar" aria-label="選擇旅遊日期">
@@ -126,8 +131,9 @@ function savedPlan() {
     </AppSheet>
     <AppSheet :model-value="!!sheet" :title="title" @update:model-value="sheet = null">
       <template v-if="sheet === 'info'">
-        <p>{{ activeTrip.dateLabel }} · 示範旅行日期</p>
+        <p>{{ activeTrip.dateLabel }}<template v-if="activeTrip.startDate"> · 示範旅行日期</template></p><p v-if="activeTrip.coverSource" class="small-note">封面來源：<a :href="activeTrip.coverSource" target="_blank" rel="noopener noreferrer">{{ activeTrip.coverCredit }}行程頁 ↗</a></p>
         <p>{{ days.map(d=>d.area).join(' → ') }}</p>
+        <template v-if="activeTrip.reference"><p class="small-note">{{ activeTrip.reference.note }}</p><a :href="activeTrip.reference.url" target="_blank" rel="noopener">路線參考：{{ activeTrip.reference.name }} ↗</a></template>
         <template v-if="activeId === 'kansai'"><p class="small-note">{{ kansaiReference.note }}</p><a :href="kansaiReference.url" target="_blank" rel="noopener">路線參考：{{ kansaiReference.name }} ↗</a></template>
         <p v-else class="small-note">景點資訊與停留時間是展示資料，出發前需另行確認。</p>
       </template>
@@ -155,6 +161,7 @@ function savedPlan() {
         <button class="secondary" @click="sheet = null">保留原行程</button>
       </template>
       <template v-if="sheet === 'done'">
+        <ChictripMotion motion="happy" :size="100"/>
         <p>只替換第 1 天的{{ originalStop?.name }}，其餘安排保留。</p>
         <button class="secondary" @click="undoAdjustment(); sheet = null">復原這次調整</button>
       </template>
@@ -162,7 +169,7 @@ function savedPlan() {
         <p>{{ saved.length ? '來自你在圈選排程頁儲存的草案。' : '還沒有儲存圈選行程。先圈選想去的區域，輸入偏好後預覽並保存。' }}</p>
         <div v-for="s in saved" :key="s.name" class="member-row">
           <time>{{ s.time }}</time>
-          <strong>{{ s.name }}</strong>
+          <span><strong>{{ s.name }}</strong><small v-if="s.reason">{{ s.reason }}</small></span>
         </div>
         <NuxtLink class="primary" :to="tripHref('/planner')" @click="sheet = null">{{ saved.length ? '繼續編輯' : '開始圈選排程' }}</NuxtLink>
       </template>
@@ -170,3 +177,7 @@ function savedPlan() {
   </section>
 </template>
 
+
+<style scoped>
+.trip-date-companion{display:flex;align-items:center;gap:8px}
+</style>

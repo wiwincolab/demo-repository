@@ -6,6 +6,8 @@ const props = defineProps<{
     places: Stop[];
     selected: number[];
     drawing: boolean;
+    recommended?: number[];
+    route?: number[];
 }>();
 const emit = defineEmits<{
     select: [
@@ -17,6 +19,7 @@ const points = ref<{
     stop: Stop;
     point: Point;
 }[]>([]), polygon = ref<Point[]>([]);
+const routePoints = computed(() => (props.route || []).map(id => points.value.find(p => p.stop.id === id)?.point).filter((p): p is Point => !!p));
 const size = ref({ width: 1, height: 300 });
 const asset = useAsset();
 const isTokyo=computed(()=>props.places.length>0&&props.places.every(s=>s.at[0]!>139.5&&s.at[0]!<140&&s.at[1]!>35.5&&s.at[1]!<35.9));
@@ -24,6 +27,7 @@ let observer: ResizeObserver | null = null, data: BaseMap | null = null, active 
 function draw() {
     if (!box.value || !canvas.value || !props.places.length)
         return;
+    const oldSize = size.value;
     size.value = { width: box.value.clientWidth, height: box.value.clientHeight };
     const dpr = Math.min(devicePixelRatio, 2);
     canvas.value.width = size.value.width * dpr;
@@ -41,7 +45,7 @@ function draw() {
       for(let y=0;y<size.value.height;y+=36){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(size.value.width,y);ctx.stroke();}
     }
     points.value = props.places.map(stop => ({ stop, point: project(stop.at) }));
-    polygon.value = [];
+    polygon.value = polygon.value.map(p => [p[0]! / oldSize.width * size.value.width, p[1]! / oldSize.height * size.value.height]);
 }
 function coordinate(event: PointerEvent): Point { const r = box.value!.getBoundingClientRect(); return [event.clientX - r.left, event.clientY - r.top]; }
 function start(event: PointerEvent) {
@@ -76,13 +80,14 @@ onBeforeUnmount(() => observer?.disconnect());
 <template>
   <div ref="box" class="route-map planner-map">
     <canvas ref="canvas" aria-hidden="true" />
+    <svg class="planner-route" :viewBox="'0 0 ' + size.width + ' ' + size.height" aria-hidden="true"><polyline v-if="routePoints.length > 1" :points="routePoints.map(p => p.join(',')).join(' ')" fill="none" stroke="#148dba" stroke-width="3" stroke-dasharray="6 5" /></svg>
     <svg class="planner-draw" :viewBox="'0 0 ' + size.width + ' ' + size.height" aria-label="在地圖上圈選景點" @pointerdown="start" @pointermove="move" @pointerup="finish" @pointercancel="active = false">
       <polygon v-if="polygon.length > 2" :points="polygon.map(p => p.join(',')).join(' ')" fill="#009fe822" stroke="#009fe8" stroke-width="2" stroke-dasharray="5 5" />
     </svg>
-    <button v-for="(p, i) in points" :key="p.stop.id" class="map-pin" :style="{ left: p.point[0] + 'px', top: p.point[1] + 'px', '--day': '#009fe8' }" :aria-label="p.stop.name" :aria-pressed="selected.includes(p.stop.id)" @click="toggle(p.stop.id)">
-      <span>{{ i + 1 }}</span>
+    <button v-for="(p, i) in points" :key="p.stop.id" class="map-pin" :style="{ left: p.point[0] + 'px', top: p.point[1] + 'px', '--day': recommended?.includes(p.stop.id) ? '#db7c22' : '#009fe8' }" :aria-label="p.stop.name + (recommended?.includes(p.stop.id) ? '・圈外推薦' : '')" :aria-pressed="selected.includes(p.stop.id)" @click="toggle(p.stop.id)">
+      <span>{{ route?.includes(p.stop.id) ? route.indexOf(p.stop.id) + 1 : route?.length ? '·' : i + 1 }}</span>
     </button>
-    <span class="map-note">{{ drawing ? '圈出想探索的範圍，也可直接點景點' : '點選景點加入行程' }}</span>
+    <span class="map-note">{{ recommended?.length ? '橘色標記為圈外推薦，可對照推薦清單' : drawing ? '大致圈出想探索的範圍，也可直接點景點' : '點選景點加入行程' }}</span>
     <a v-if="isTokyo" class="map-credit" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>
     <span v-else class="map-credit">景點位置示意・非道路地圖</span>
   </div>

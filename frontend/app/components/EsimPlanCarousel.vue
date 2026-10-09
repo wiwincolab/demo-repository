@@ -35,25 +35,29 @@ watch(()=>props.modelValue,()=>{offset.value=0;});
 <template>
   <section class="esim-carousel" aria-label="選擇上網方案" aria-roledescription="輪播">
     <div class="esim-levels" aria-label="流量使用程度" @keydown.right.prevent="select(index+1)" @keydown.left.prevent="select(index-1)">
-      <button v-for="(offer,i) in offers" :key="offer.mode" :aria-pressed="modelValue===offer.mode" :disabled="purchased" @click="select(i)"><span class="esim-level-bars" aria-hidden="true"><i v-for="n in 3" :key="n" :class="{on:n<=i+1}"/></span>{{ offer.label }}<small>{{ ['日常聯絡','照片社群','影音熱點'][i] }}</small></button>
+      <button v-for="(offer,i) in offers" :key="offer.mode" :aria-pressed="modelValue===offer.mode" :disabled="purchased" @click="select(i)">{{ ['輕量','日常','影音'][i] }}</button>
     </div>
     <div ref="viewport" class="esim-carousel-window" :class="{'is-dragging':dragging,'is-locked':purchased}" @pointerdown="begin" @pointermove="move" @pointerup="end" @pointercancel="end()" @lostpointercapture="end()">
       <div class="esim-carousel-strip" :style="{transform:`translateX(calc(${-index*100}% + ${offset}px))`}">
         <article v-for="(offer,i) in offers" :key="offer.mode" class="esim-plan-card" :inert="i!==index" :aria-hidden="i!==index" :aria-label="`${offer.label}方案 ${i+1} / 3`">
-          <div class="esim-destination"><img :src="asset(cover)" :alt="location+'旅行風景'" draggable="false"/><div><span class="esim-destination-code">JPN</span><strong>{{ location }}<small>{{ days }} 天的旅行</small></strong><span class="esim-destination-label">{{ purchased?'我的 eSIM':advised?'依需求選擇':'日本旅行上網' }}</span></div></div>
+          <div class="esim-destination"><img :src="asset(cover)" :alt="location+'旅行風景'" draggable="false"/><div><strong>{{ location }}<small>{{ days }} 天</small></strong><span class="esim-destination-label">{{ purchased?'我的 eSIM':advised?'為你推薦':'日本上網' }}</span></div></div>
           <div class="esim-plan-body">
-            <div class="esim-carrier"><span><EsimIcon name="signal" :size="14"/> Docomo (IIJ) <b>4G</b></span><span>{{ offer.days }} 天方案</span></div>
             <div class="esim-plan-title"><h2>{{ offer.name }}</h2><button v-if="!purchased" @click="emit('compare')">方案詳情<EsimIcon name="arrow" :size="13"/></button><span v-else class="esim-paid-tag">已購買</span></div>
-            <p class="esim-plan-description">{{ offer.reason }}</p>
+            
             <p class="esim-plan-rule">{{ offer.unlimited?'每日 10GB 高速，超額降至 256kbps':'每日額度重置，不跨日累積' }}</p>
             <p v-if="offer.days!==days" class="esim-duration-note">{{ days }} 天行程，搭配 {{ offer.days }} 天方案。</p>
-            <div class="esim-plan-price"><div><small>去趣官網參考價</small><strong><small>NT$</small>{{ offer.price }}<del>{{ offer.originalPrice }}</del></strong></div><a :href="offer.source" target="_blank" rel="noopener noreferrer" @pointerdown.stop>官網價格 ↗</a></div>
-            <p class="esim-price-date">{{ esimPriceSource.checkedAt }} 查核 · 售價以官網為準</p>
+            <div class="esim-plan-price"><div><small>{{ offer.days }} 天參考價</small><strong><small>NT$</small>{{ offer.price }}</strong></div></div>
+            <details class="esim-source-details" @pointerdown.stop>
+              <summary>規格與來源</summary>
+              <p>Docomo (IIJ) · 4G · {{ offer.days }} 天</p>
+              <p>{{ esimPriceSource.checkedAt }} 查核，售價以官網為準。</p>
+              <a :href="offer.source" target="_blank" rel="noopener noreferrer">查看官網價格 ↗</a>
+            </details>
           </div>
         </article>
       </div>
     </div>
-    <div v-if="!purchased" class="esim-carousel-nav"><button aria-label="上一個方案" :disabled="index===0" @click="select(index-1)"><EsimIcon name="arrow" :size="16"/></button><span><i v-for="n in 3" :key="n" :class="{active:index===n-1}"/><small>左右滑動選方案</small></span><button aria-label="下一個方案" :disabled="index===2" @click="select(index+1)"><EsimIcon name="arrow" :size="16"/></button></div>
+    <div v-if="!purchased" class="esim-carousel-nav"><button aria-label="上一個方案" :disabled="index===0" @click="select(index-1)"><EsimIcon name="arrow" :size="16"/></button><span><i v-for="n in 3" :key="n" :class="{active:index===n-1}"/></span><button aria-label="下一個方案" :disabled="index===2" @click="select(index+1)"><EsimIcon name="arrow" :size="16"/></button></div>
     <span class="esim-sr-only" aria-live="polite">{{ offers[index]?.label }}，{{ offers[index]?.name }}，NT${{ offers[index]?.price }}</span>
   </section>
 </template>

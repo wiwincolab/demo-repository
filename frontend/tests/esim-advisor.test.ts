@@ -39,3 +39,15 @@ test('verified mixed-price purchases restore and get only the proposal group dis
   assert.deepEqual(groupPrice(members),{count:4,base:934,saving:80,total:854});
   assert.equal(isMemberList([{name:'Test',price:999,paid:true}]),false);
 });
+
+test('memory changes question context without choosing or inflating a recommendation', async () => {
+  const { journeyQuestions, readAdvisorMemory } = await import('../app/utils/esim-advisor.ts');
+  const memory = readAdvisorMemory({savedAt:'2026-10-09T00:00:00Z',answers:[0,1,2].map(level=>({level,text:'上次的選擇',source:'preset'}))});
+  assert.ok(memory);
+  assert.match(journeyQuestions(['food'],memory)[0]!.title,/咖啡店/);
+  assert.match(journeyQuestions(['nature'])[0]!.title,/風景/);
+  assert.match(journeyQuestions([],memory)[1]!.source,/上次的選擇/);
+  assert.doesNotMatch(journeyQuestions()[1]!.source,/上次/);
+  for (const invalid of [null,{}, {savedAt:'invalid',answers:memory.answers}, {savedAt:memory.savedAt,answers:[]}, {savedAt:memory.savedAt,answers:memory.answers.map(a=>({...a,level:9}))}]) assert.equal(readAdvisorMemory(invalid),null);
+  assert.equal(recommendUsage(journeyQuestions(['food'],memory).map(q=>({level:0,text:q.options[0]!,source:'preset'}))),'light');
+});

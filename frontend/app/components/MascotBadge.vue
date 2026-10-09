@@ -4,7 +4,7 @@ const { selected } = useMascot();
 const asset = useAsset();
 </script>
 <template>
-  <NuxtLink to="/wardrobe" class="mascot-badge" :class="{ compact }" :aria-label="`吉祥物：${selected.name}，點選換裝`">
+  <NuxtLink to="/wardrobe" class="mascot-badge" :class="{ compact }" :aria-label="`吉祥物：${selected.name}，管理造型與記憶偏好`">
     <span class="mascot-avatar"><img :src="asset(selected.image)" alt="" /></span>
     <span v-if="!compact" class="mascot-label">吉祥物<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m6 4 4 4-4 4"/></svg></span>
   </NuxtLink>

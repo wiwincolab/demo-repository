@@ -1,5 +1,5 @@
 import type { Stop } from '../types/trip.ts';
-export const dayColors = ['#148dba', '#d78043', '#7461b4', '#438e75', '#bc596c'];
+export const dayColors = ['#148dba', '#d78043', '#7461b4', '#438e75', '#bc596c', '#3f8290'];
 export type Point = number[];
 export interface MapFeature {
     points: Point[];
