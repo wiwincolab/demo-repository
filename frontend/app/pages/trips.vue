@@ -5,7 +5,7 @@ import { tripSummaries, type TripId } from '~/data/trips';
 const route = useRoute();
 const asset = useAsset();
 const country = ref('all');
-const view = ref<'calendar'|'list'>(route.query.next ? 'list' : 'calendar');
+const view = ref<'calendar'|'list'>('list');
 const filters = [{id:'all',label:'全部'},{id:'japan',label:'日本'},{id:'korea',label:'韓國'},{id:'taiwan',label:'台灣'}];
 const countTrips = (id:string) => tripSummaries.filter(t=>id==='all'||(t.country||'japan')===id).length;
 const visibleTrips = computed(()=>tripSummaries.filter(t=>country.value==='all'||(t.country||'japan')===country.value));

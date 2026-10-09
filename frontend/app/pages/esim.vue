@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PointsMarket from '~/components/PointsMarket.vue';
 import { esimPlan, esimQuote, rewardPreview, stopEstimates, usageOptions } from '~/utils/esim';
 import { esimPriceSource } from '~/data/esim-catalog';
 import type { Usage } from '~/types/trip';
@@ -21,7 +22,7 @@ watch(panel, async (value, previous) => {
   if (dialog) { dialog.scrollTop = 0; dialog.querySelector('button')?.focus(); }
 });
 const sheetOpen = computed({ get: () => panel.value !== null, set: (open: boolean) => { if (!open) panel.value = null; } });
-const titles: Record<Panel,string> = { habits:'流量推薦', analysis:'預估用量', plans:'選擇流量', group:'旅伴一起省', benefits:'加值權益', points:'旅後回饋提案', checkout:'確認方案', success:'方案已備妥', install:'安裝 eSIM', help:'方案與展示說明', gift:'送朋友 eSIM' };
+const titles: Record<Panel,string> = { habits:'流量推薦', analysis:'預估用量', plans:'選擇流量', group:'旅伴一起省', benefits:'加值權益', points:'和泰點數・交通與旅行', checkout:'確認方案', success:'方案已備妥', install:'安裝 eSIM', help:'方案與展示說明', gift:'送朋友 eSIM' };
 const title = computed(() => titles[panel.value || 'help']);
 const selectedUsage = computed(() => eligible.value ? esim.value.purchasedUsage || (members.value[0]?.price === 199 ? 'light' : members.value[0]?.price === 499 ? 'heavy' : 'normal') : esim.value.selectedUsage || usage.value);
 const card = computed(() => esimPlan(selectedUsage.value, activeTrip.value?.dayCount || 5));
@@ -89,7 +90,7 @@ useHead({title:'旅行上網 · eSIM · 去趣'});
 
     <div class="esim-checkout-dock"><div><small>{{ eligible?'我的方案':quote.discount?'含組隊優惠提案':'方案參考價' }}</small><strong>{{ eligible?esim.installed?'已安裝':'待安裝':'NT$'+quote.total }}</strong></div><button class="esim-cta" :disabled="!card.available" @click="open(eligible?'install':'checkout')">{{ eligible?'查看 eSIM':'選這個' }}<EsimIcon name="arrow" :size="17"/></button></div>
 
-    <AppSheet v-model="sheetOpen" :title="title" class="esim-sheet" :class="{'esim-quiz-sheet':panel==='habits'}">
+    <AppSheet v-model="sheetOpen" :title="title" class="esim-sheet" :class="{'esim-quiz-sheet':panel==='habits','points-sheet':panel==='points'}">
       <template v-if="panel==='analysis'">
         <div class="esim-analysis-total"><span>{{ activeTrip.dayCount }} 天旅行・預估總需求</span><strong>{{ need.range }} <small>GB</small></strong></div>
         <button class="esim-sheet-row" :disabled="eligible" @click="open('habits')"><span><small>目前上網習慣</small><strong>{{ usageOptions.find(o=>o.value===usage)?.title }}</strong></span><span>調整 <EsimIcon name="edit" :size="17"/></span></button>
@@ -116,13 +117,7 @@ useHead({title:'旅行上網 · eSIM · 去趣'});
         <div class="esim-perk-list"><p><EsimIcon name="photo"/><span><b>AI 回憶創作 1 次</b><small>貼紙卡、專業攝影、票根、琺瑯徽章、場景積木、景點旅伴，任選一種。</small></span></p><p><EsimIcon name="people"/><span><b>和朋友交換作品</b><small>交換作品、留下留言。</small></span></p><p><EsimIcon name="route"/><span><b>收藏到回憶地圖</b><small>收藏照片、作品與地點。</small></span></p></div>
         <NuxtLink :to="tripHref('/memory')" class="esim-cta esim-full" @click="panel=null">{{ eligible?'開始創作':'看看風格' }}<EsimIcon name="arrow" :size="17"/></NuxtLink>
       </template>
-      <template v-else-if="panel==='points'">
-        <div class="esim-reward-hero"><EsimIcon name="point" :size="36"/><span>{{ completed && eligible ? '旅後結算示範' : '旅後回饋預覽' }}</span><strong>{{ reward.points }} <small>點</small></strong><p>和泰 Points 回饋提案</p></div>
-        <p class="esim-proposal-note">獨立回饋情境 · 不代表本張 eSIM 的剩餘流量</p><div class="esim-reward-flow"><span><small>假設總量型方案</small><b>10GB</b></span><span>→</span><span><small>示例剩餘</small><b>{{ reward.remainingGB }}GB</b></span><span>→</span><span><small>可轉回饋</small><b>{{ reward.points }} 點</b></span></div>
-        <p class="esim-fine-print">目前參考的官方方案每日重置，無法直接換算剩餘總量。此處以假設總量型方案示範轉點數流程；實際能否提供，需另與電信商合作。</p>
-        <div class="esim-reward-rules"><h3>留給下一次旅行</h3><p>每剩 1GB 換 10 點，單趟上限 30 點；小數點以下捨去。</p><p>領取後 30 天內，下次 eSIM 滿 NT$299 可抵用。此 Demo 不會寫入真實和泰帳戶。</p></div>
-        <button class="esim-cta esim-full" :disabled="!canClaim" @click="claim">{{ esim.claimed ? '已加入回饋紀錄' : completed && eligible ? '領取 '+reward.points+' 點 · 示範' : '旅後結算可領取' }}</button>
-      </template>
+      <template v-else-if="panel==='points'"><PointsMarket/></template>
       <template v-else-if="panel==='checkout'">
         <div class="esim-order-title"><EsimIcon name="sim" :size="34"/><span><strong>日本 {{ card.name }} · {{ card.days }} 天</strong><small>{{ activeTrip.dateLabel }}</small></span></div>
         <dl class="esim-receipt"><div><dt>官網參考價</dt><dd>NT${{ card.price }}</dd></div><div v-if="quote.discount"><dt>旅伴優惠提案</dt><dd>− NT$20</dd></div><div v-if="quote.countAfterPurchase>=2"><dt>旅伴加贈流量</dt><dd>500MB</dd></div><div v-if="quote.countAfterPurchase>=3"><dt>旅伴點數回饋</dt><dd>30 點</dd></div><div><dt>AI 創作加值提案</dt><dd>1 次</dd></div><div class="esim-receipt-total"><dt>本次合計</dt><dd>NT${{ quote.total }}</dd></div></dl>

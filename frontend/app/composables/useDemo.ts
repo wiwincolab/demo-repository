@@ -1,3 +1,4 @@
+import { applyPointsOrders } from '~/utils/points';
 import { tripItineraries, tripAlternatives, tripSummaries, type TripId } from '~/data/trips';
 import { groupPrice, isMemberList } from '~/utils/commerce';
 import { esimPlan } from '~/utils/esim';
@@ -14,7 +15,9 @@ export function useDemo() {
     const storageReady=useState('trip-demo-ready-v2',()=>false);
     const empty=blankState();
     function field<K extends keyof TripDemoState>(key:K){return computed({get:()=>activeId.value?states.value[activeId.value][key]:empty[key],set:(value:TripDemoState[K])=>{if(activeId.value)states.value[activeId.value][key]=value;}});}
-    const days=field('days'), localMembers=field('members'), usage=field('usage'), adjusted=field('adjusted'), previousStop=field('previousStop'), generated=field('generated');
+    const baseDays=field('days'), localMembers=field('members'), usage=field('usage'), adjusted=field('adjusted'), previousStop=field('previousStop'), generated=field('generated');
+    const {wallet:pointsWallet}=usePointsWallet();
+    const days=computed({get:()=>applyPointsOrders(baseDays.value,pointsWallet.value.orders,activeId.value||''),set:value=>{baseDays.value=value;}});
     const esim=field('esim');
     // 有後端、而且這趟有真的旅伴群組時，名單來自伺服器（自己排第一，頁面照舊把 members[0] 當成你）；
     // 價格照各自買的方案、沒買的照目前選的方案估，跟原本的模擬同一套算法
@@ -107,17 +110,17 @@ export function useDemo() {
         notify(group.value.count === 4 ? '4 人購買，已解鎖每人 NT$20 旅伴折扣' : '已完成示範購買');
     }
     function applyAdjustment() {
-        if(!activeId.value||!days.value[0]?.stops[1]||!tripAlternatives[activeId.value])return;
+        if(!activeId.value||!baseDays.value[0]?.stops[1]||!tripAlternatives[activeId.value])return;
         if (!adjusted.value)
-            previousStop.value = structuredClone(toRaw(days.value[0]!.stops[1]!));
-        days.value[0]!.stops[1] = structuredClone(tripAlternatives[activeId.value]!);
+            previousStop.value = structuredClone(toRaw(baseDays.value[0]!.stops[1]!));
+        baseDays.value[0]!.stops[1] = structuredClone(tripAlternatives[activeId.value]!);
         adjusted.value = true;
     }
     function undoAdjustment() {
         if (!previousStop.value)
             return;
         const name=previousStop.value.name;
-        days.value[0]!.stops[1] = previousStop.value;
+        baseDays.value[0]!.stops[1] = previousStop.value;
         previousStop.value = null;
         adjusted.value = false;
         notify('已回到原本的'+name);
@@ -133,5 +136,5 @@ export function useDemo() {
 }
 export function useAsset() {
     const base = useRuntimeConfig().app.baseURL;
-    return (path: string) => base + path.replace(/^\//, '');
+    return (path: string) => /^https?:\/\//.test(path) ? path : base + path.replace(/^\//, '');
 }

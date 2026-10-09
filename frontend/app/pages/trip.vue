@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import PointsMarket from '~/components/PointsMarket.vue';
+import { pointsProducts } from '~/utils/points';
 import ChictripMotion from '~/components/ChictripMotion.vue';
 import { kansaiReference } from '~/data/kansai';
 import { dayColors } from '~/utils/map';
@@ -8,6 +10,9 @@ const { days, members, adjusted, applyAdjustment, undoAdjustment, notify, saved:
 const { activeId,activeTrip,tripHref }=useTripContext();
 const asset = useAsset();
 const route = useRoute();
+const pointsOpen=ref(false);
+const {wallet:pointsWallet}=usePointsWallet();
+const tripPointOrders=computed(()=>pointsWallet.value.orders.filter(o=>o.tripId===activeId.value));
 function requestedDay() { const value = Number(route.query.day); return Number.isInteger(value) && value >= 0 && value < days.value.length ? value : 0; }
 const day = ref(requestedDay()), view = ref<'list' | 'map'>('list'), selected = ref(0);
 const groupOpen = ref(false);
@@ -77,7 +82,7 @@ function savedPlan() {
     <div class="trip-tools">
       <NuxtLink class="ai-link" :to="tripHref('/planner')">✦ 圈選 AI 排程</NuxtLink>
       <button v-if="alternative" @click="sheet = 'adjust'">AI 微調</button>
-      <button @click="savedPlan">已儲存</button>
+      <button @click="savedPlan">已儲存</button><button @click="pointsOpen=true">用和泰點數改行程</button>
     </div>
     <div class="day-bar" aria-label="選擇旅遊日期">
       <button :aria-pressed="day === -1" @click="chooseDay(-1)"><strong>全程</strong>{{ activeTrip.dayCount }} 天</button>
@@ -125,6 +130,8 @@ function savedPlan() {
       <p v-else class="page-note">各色實線為單日行程，虛線為日間移動。選一天，看每站照片與流量。</p>
     </template>
     <p class="page-note">{{ activeId === 'kansai' ? '路線參考喜鴻五日行程；日期、時刻與車程為示範估算。' : '示範行程。' }} 流量依使用行為估算。</p>
+    <section v-if="tripPointOrders.length" class="panel"><h3>點數安排 · 示範</h3><p v-for="o in tripPointOrders" :key="o.id">{{pointsProducts.find(p=>p.id===o.productId)?.name}} · {{o.targetId===null?'旅後使用，不占用當日行程':'已替換第 '+((o.day||0)+1)+' 天景點'}}<small>（未實際預訂）</small></p></section>
+    <AppSheet v-model="pointsOpen" title="用和泰點數安排旅行" class="points-sheet"><PointsMarket v-if="pointsOpen" planning/></AppSheet>
     <GroupSheet v-model="groupOpen" />
     <AppSheet :model-value="!!stop" :title="stop?.name || ''" @update:model-value="stop = null">
       <StopDetails v-if="stop" :stop="stop" />
@@ -142,7 +149,7 @@ function savedPlan() {
         <label><input v-model="lockPlan" type="checkbox"> 保留{{ keptStops }}，不動已確定的安排</label>
         <textarea v-model="adjustText" aria-label="改程需求" maxlength="200" :placeholder="'例如：下雨了，將'+originalStop?.name+'改成室內景點。'" />
         <p class="small-note">這裡示範一組預設替換；尚未串接即時 AI。</p>
-        <button class="primary" @click="preview">看調整前後</button>
+        <button class="primary" @click="preview">看調整前後</button><button class="secondary" @click="sheet=null;pointsOpen=true">看看可用和泰點數的替代方案</button>
         <button v-if="adjusted" class="secondary" @click="undoAdjustment(); sheet = null">復原這次調整</button>
       </template>
       <template v-if="sheet === 'compare'">
