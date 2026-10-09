@@ -114,54 +114,10 @@ onBeforeUnmount(() => { if (timer) clearTimeout(timer); generating.value = false
 </script>
 <template>
   <section v-if="activeTrip" class="creation-page trip-studio" aria-labelledby="creation-title">
-    <header class="creation-heading trip-studio-heading">
-      <div class="studio-heading-row">
-        <div class="studio-title-group">
-          <div class="studio-heading-pin-trail" aria-hidden="true">
-            <svg viewBox="0 0 24 54" class="pin-trail-svg">
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#678a9c" />
-              <path class="pin-trail-path" d="M 12 21 C 12 27, 4 32, 4 39 C 4 47, 10 50, 22 50" fill="none" stroke="#9bb1bf" stroke-width="1.5" stroke-dasharray="4 3" stroke-linecap="round" />
-            </svg>
-          </div>
-          <div class="studio-title-text">
-            <span class="creation-eyebrow">把喜歡的那一天，留成收藏</span>
-            <h1 id="creation-title">回憶製造所<span>{{ activeTrip?.title }} · 回憶創作</span></h1>
-          </div>
-        </div>
-        <div class="studio-flight-line" aria-hidden="true">
-          <svg class="flight-svg" viewBox="0 0 500 24" preserveAspectRatio="none">
-            <path d="M 0 14 C 110 18, 240 10, 360 14 C 420 16, 460 17, 480 14" fill="none" stroke="#9bb1bf" stroke-width="1.5" stroke-dasharray="5 4" stroke-linecap="round" vector-effect="non-scaling-stroke" />
-            <circle cx="482" cy="14" r="2.5" fill="#7494a5" />
-          </svg>
-          <svg class="flight-airplane" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" />
-          </svg>
-        </div>
-      </div>
-      <div class="creation-top-actions">
-        <button @click="openLibrary('collection')">本次作品 <span>{{ count }}</span></button>
-        <button class="creation-exchange-action" aria-label="交換 AI 作品" @click="startExchange()">
-          <img class="creation-exchange-illustration" :src="asset('assets/memory/exchange-collectibles.png')" alt="" />
-          <span class="creation-exchange-copy"><b>交換作品</b><small>用收藏，換個風景</small></span>
-          <i v-if="pending" class="creation-unread">{{ pending }}</i>
-        </button>
-      </div>
+    <header class="creation-heading">
+      <div><span class="creation-eyebrow">把喜歡的那一天，留成收藏</span><h1 id="creation-title">回憶製造所<span>{{ activeTrip?.title }} · 回憶創作</span></h1></div>
+      <div class="creation-top-actions"><button @click="openLibrary('collection')">本次作品 <span>{{ count }}</span></button><button class="creation-exchange-action" aria-label="交換 AI 作品" @click="startExchange()"><img class="creation-exchange-illustration" :src="asset('assets/memory/exchange-collectibles.png')" alt="" /><span class="creation-exchange-copy"><b>交換作品</b><small>用收藏，換個風景</small></span><i v-if="pending" class="creation-unread">{{ pending }}</i></button></div>
     </header>
-    <div class="travel-route-divider travel-route-bottom" aria-hidden="true">
-      <svg class="route-mountains" viewBox="0 0 36 22" fill="none">
-        <polygon points="18,22 28,8 36,22" fill="#9ec0cb" />
-        <polygon points="25.5,11.5 28,8 30.5,11.5 29,12.5 27,12.5" fill="#ffffff" />
-        <polygon points="2,22 14,3 26,22" fill="#7fa4b2" />
-        <polygon points="10.5,8.5 14,3 17.5,8.5 15.5,10 14,8.5 12.5,10" fill="#ffffff" />
-      </svg>
-      <svg class="route-line" viewBox="0 0 1000 24" preserveAspectRatio="none">
-        <path d="M 0 16 C 160 20, 340 18, 560 14 C 740 11, 880 15, 990 16" vector-effect="non-scaling-stroke" />
-        <circle cx="992" cy="16" r="2.5" fill="#9bb1bf" />
-      </svg>
-      <svg class="route-pin-dest" viewBox="0 0 24 24" fill="#f6c443">
-        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-      </svg>
-    </div>
     <template v-if="!selectedPhoto">
       <div class="studio-gallery-heading"><div><h2>從這趟旅行，選一張照片</h2><p>每個地方，留成不同的收藏。</p></div><button class="creation-secondary" @click="uploading = true"><span aria-hidden="true">＋</span> 加入照片</button></div>
       <div v-if="photos.length" class="studio-photo-grid">

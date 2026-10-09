@@ -23,7 +23,7 @@ const phase = ref<'overview' | 'chapter' | 'moving' | 'arrived' | 'exploring' | 
 const command = ref({ token: 0, id: null as string | null, from: null as string | null, transitioning:false });
 const chapter = shallowRef<{previous:RevisitStop;next:RevisitStop;token:number} | null>(null);
 const leg = computed(() => current.value ? revisitLeg(current.value,stops.value.find(stop=>stop.id===command.value.from)) : null);
-const mapView = ref<{ cancel: () => void; skip: () => void; retry: () => void; focus?: (id: string) => void }>();
+const mapView = ref<{ cancel: () => void; skip: () => void; retry: () => void }>();
 const preparation = ref<RevisitPreparation>({ done:0, total:0, failed:0, active:true });
 const waiting = ref('');
 const root = ref<HTMLElement>(), panel = ref<HTMLElement>(), panelHeight = ref(280);
@@ -66,18 +66,6 @@ async function writeQuery() {
 }
 function go(id: string, updateUrl = true) {
   if (!stops.value.some(stop => stop.id === id)) return;
-  if (id === selected.value) {
-    if (detail.value === 'photo') return;
-    if (phase.value === 'moving') {
-      directPhoto();
-      return;
-    }
-    phase.value = 'arrived';
-    compact.value = false;
-    detail.value = 'photo';
-    mapView.value?.focus?.(id);
-    return;
-  }
   // Close the native modal before a new camera starts (its focus restoration may scroll).
   mapView.value?.cancel(); dialog.value?.close();
   const previous=phase.value==='moving'||phase.value==='chapter'?command.value.from:selected.value;
