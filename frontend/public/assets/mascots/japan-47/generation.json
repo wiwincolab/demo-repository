@@ -1,0 +1,371 @@
+{
+  "date": "2026-10-09",
+  "tool": "built-in image_gen",
+  "totalPrefectures": 47,
+  "existing": [
+    [
+      "tokyo",
+      "東京",
+      "asakusa"
+    ],
+    [
+      "osaka",
+      "大阪",
+      "usj"
+    ],
+    [
+      "kyoto",
+      "京都",
+      "ine"
+    ],
+    [
+      "hyogo",
+      "兵庫",
+      "kobe"
+    ],
+    [
+      "nara",
+      "奈良",
+      "nara"
+    ],
+    [
+      "yamanashi",
+      "山梨",
+      "fuji"
+    ]
+  ],
+  "references": [
+    "/Users/jamessu/Desktop/computersciencehomework/demo-repository/frontend/public/assets/mascots/nara.png",
+    "/Users/jamessu/Desktop/computersciencehomework/demo-repository/frontend/public/assets/memory/references/chictrip-mascot.png"
+  ],
+  "images": [
+    {
+      "id": "hokkaido",
+      "prefecture": "北海道",
+      "file": "hokkaido.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 北海道 (hokkaido). lavender-purple quilted farmer vest, straw sunhat with tiny lavender sprig, hiking boots; holding a miniature felt milk bottle and lavender bouquet. Backdrop: Furano lavender fields and distant rolling hills.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-ba539648-a30b-4ad3-9794-87722276179b.png"
+    },
+    {
+      "id": "aomori",
+      "prefecture": "青森",
+      "file": "aomori.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 青森 (aomori). apple-red festival jacket, dark shorts, apple leaf knit cap; holding a tiny felt red apple and a miniature colorful lantern inspired by Aomori Nebuta festival, no lettering. Backdrop: apple orchard and soft glowing paper lantern festival evening.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-de6ab20f-7750-4a1d-9e31-d2aa120a9f2a.png"
+    },
+    {
+      "id": "iwate",
+      "prefecture": "岩手",
+      "file": "iwate.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 岩手 (iwate). indigo artisan apron, simple headband, tiny boots; holding a miniature black Nanbu iron teapot. Backdrop: Hiraizumi temple garden and mossy trees.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-5f6dace9-260d-4252-87ba-56a6b9099a64.png"
+    },
+    {
+      "id": "miyagi",
+      "prefecture": "宮城",
+      "file": "miyagi.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 宮城 (miyagi). teal travel jacket and woven straw hat, crescent-shaped decorative fabric brooch; holding a miniature branch of colorful Sendai Tanabata paper streamers. Backdrop: pine-covered Matsushima bay islands.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-a3c2ef79-cd8c-4e15-88d9-a49132ed5c77.png"
+    },
+    {
+      "id": "akita",
+      "prefecture": "秋田",
+      "file": "akita.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 秋田 (akita). cream snow jacket and red knitted scarf, tiny woven snow boots; holding a small Akita dog felt plush and a kiritanpo rice skewer. Backdrop: warm glowing Yokote kamakura snow hut.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-0cf6ea4a-b618-4490-893b-6bc2a9a6abfe.png"
+    },
+    {
+      "id": "yamagata",
+      "prefecture": "山形",
+      "file": "yamagata.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 山形 (yamagata). cherry-red knitted beret, cream wool cardigan and brown boots; holding a tiny pair of cherries. Backdrop: Ginzan Onsen wooden riverside ryokan under gentle snow.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-68622135-5f68-464c-9034-8ff40e79243d.png"
+    },
+    {
+      "id": "fukushima",
+      "prefecture": "福島",
+      "file": "fukushima.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 福島 (fukushima). burgundy patchwork travel coat and cream cap; holding a tiny red Akabeko cow folk toy, not replacing mascot identity. Backdrop: Ouchi-juku thatched village.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-3819c57b-fb04-4162-a875-f7998e408a3e.png"
+    },
+    {
+      "id": "ibaraki",
+      "prefecture": "茨城",
+      "file": "ibaraki.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 茨城 (ibaraki). sky-blue explorer coat with tiny nemophila flower embroidery and straw hat; holding a small flower bouquet. Backdrop: blue nemophila-covered Hitachi Seaside Park hill.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-efdf023f-5398-4902-b217-2e95ba1fc511.png"
+    },
+    {
+      "id": "tochigi",
+      "prefecture": "栃木",
+      "file": "tochigi.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 栃木 (tochigi). forest-green walking jacket, strawberry-red scarf and small hiking hat; holding a miniature strawberry basket. Backdrop: Nikko vermilion Shinkyo bridge and wooded hills.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-10b951ee-1dae-4644-8e3a-a0f30d1e4719.png"
+    },
+    {
+      "id": "gunma",
+      "prefecture": "群馬",
+      "file": "gunma.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 群馬 (gunma). navy onsen yukata robe with white sash and towel folded on head; holding a miniature wooden bath bucket. Backdrop: steaming Kusatsu Yubatake wooden channels.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-b7bd82b7-a793-443e-949c-d9d50ef97a46.png"
+    },
+    {
+      "id": "saitama",
+      "prefecture": "埼玉",
+      "file": "saitama.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 埼玉 (saitama). indigo merchant coat with caramel scarf, small cream cap; holding a miniature sweet potato snack in paper sleeve. Backdrop: Kawagoe warehouse street and Toki no Kane bell tower.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-213c28fe-5e45-4222-b1a9-0fa9bd38cb1f.png"
+    },
+    {
+      "id": "chiba",
+      "prefecture": "千葉",
+      "file": "chiba.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 千葉 (chiba). mustard fisherman rain jacket, navy knit cap and blue boots; holding tiny peanuts in a basket. Backdrop: Choshi lighthouse and coastal ocean.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-0d734974-3fc3-4eaf-86e0-421c514a51cd.png"
+    },
+    {
+      "id": "kanagawa",
+      "prefecture": "神奈川",
+      "file": "kanagawa.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 神奈川 (kanagawa). cream seaside sailor sweater, navy beret and striped scarf; holding a tiny hydrangea bouquet. Backdrop: Kamakura coastal railway and ocean, tiny distant seated bronze Buddha landmark.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-66180232-c3e4-4a5e-b6b1-dafe80877d3e.png"
+    },
+    {
+      "id": "niigata",
+      "prefecture": "新潟",
+      "file": "niigata.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 新潟 (niigata). cream rice-farmer apron over indigo jacket and woven straw hat; holding a miniature bundle of rice ears. Backdrop: terraced rice fields and a small Sado taraibune round tub boat by shore.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-6c4e5b03-ebd0-4817-aa8f-367b82e86be3.png"
+    },
+    {
+      "id": "toyama",
+      "prefecture": "富山",
+      "file": "toyama.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 富山 (toyama). ice-blue mountaineering parka, white knit beanie and sturdy boots; holding tiny alpine route guide without text. Backdrop: Tateyama Kurobe Alpine Route tall snow walls and mountains.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-77bbffa4-3ad4-49c8-86e4-ba4f6de640af.png"
+    },
+    {
+      "id": "ishikawa",
+      "prefecture": "石川",
+      "file": "ishikawa.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 石川 (ishikawa). deep teal craftworker vest and ivory scarf, golden leaf-shaped embroidery; holding a miniature gold-leaf decorative fan. Backdrop: Kenrokuen garden stone lantern and pond.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-cecd7346-e836-452b-9a54-564ec88fc3be.png"
+    },
+    {
+      "id": "fukui",
+      "prefecture": "福井",
+      "file": "fukui.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 福井 (fukui). sage-green explorer vest and dinosaur-shaped hood with soft small ridges, mascot face exposed; holding a small felt dinosaur fossil cast. Backdrop: Tojinbo sea cliffs and a tiny distant dinosaur museum dome.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-7c7f0f98-bc21-43b8-b86d-ee13659c1044.png"
+    },
+    {
+      "id": "nagano",
+      "prefecture": "長野",
+      "file": "nagano.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 長野 (nagano). burgundy hiking fleece, cream beanie and tiny hiking boots; holding a miniature apple and walking stick. Backdrop: Matsumoto black castle and snowy Japanese Alps.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-82811d56-b8e4-4aef-b7d9-ecaec0830f1f.png"
+    },
+    {
+      "id": "gifu",
+      "prefecture": "岐阜",
+      "file": "gifu.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 岐阜 (gifu). warm caramel winter coat, cream wool scarf and boots; holding miniature woven travel basket. Backdrop: Shirakawa-go steep thatched gassho-zukuri houses under snow.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-506c1bfb-4fe8-43f0-ab7b-fa396abf740a.png"
+    },
+    {
+      "id": "shizuoka",
+      "prefecture": "靜岡",
+      "file": "shizuoka.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 靜岡 (shizuoka). sage tea-picker smock, woven straw hat and tiny brown boots; holding a miniature basket of tea leaves. Backdrop: green tea terraces with Mount Fuji beyond, distinguish from lake-side Yamanashi outfit.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-d370bd0a-2db9-47c9-b710-eaf69bd3c77e.png"
+    },
+    {
+      "id": "aichi",
+      "prefecture": "愛知",
+      "file": "aichi.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 愛知 (aichi). indigo craftworker jacket, mustard scarf and small cap; holding miniature golden shachihoko castle ornament. Backdrop: Nagoya castle with teal roofs.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-2873ae6e-5997-4ca1-8653-44395417e5f1.png"
+    },
+    {
+      "id": "mie",
+      "prefecture": "三重",
+      "file": "mie.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 三重 (mie). ivory pearl-diver inspired jacket and simple white head scarf, navy shorts; holding a tiny pearl shell. Backdrop: Ise coastal bay and wooden shrine approach, understated respectful setting.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-bd27c77f-0b85-41f2-ac4a-e04c732b046d.png"
+    },
+    {
+      "id": "shiga",
+      "prefecture": "滋賀",
+      "file": "shiga.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 滋賀 (shiga). lake-blue sailor jacket, white brimmed hat and tiny boots; holding a miniature binocular pair. Backdrop: Lake Biwa waterfront and distant Hikone castle.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-c0d20cf2-a412-4706-8462-28ca258bd8d6.png"
+    },
+    {
+      "id": "wakayama",
+      "prefecture": "和歌山",
+      "file": "wakayama.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 和歌山 (wakayama). forest-green pilgrim walking coat, tan hat and walking boots; holding a tiny mandarin orange basket. Backdrop: Kumano Nachi waterfall and vermilion three-tier pagoda.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-55ba47ca-4541-417f-9073-9c3027d2c770.png"
+    },
+    {
+      "id": "tottori",
+      "prefecture": "鳥取",
+      "file": "tottori.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 鳥取 (tottori). sand-beige desert explorer vest, broad-brim hat and blue scarf; holding a tiny pear and small sand-scoop. Backdrop: Tottori sand dunes meeting the blue sea.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-a6675712-9094-41e8-ade0-7ef7a6b0f04d.png"
+    },
+    {
+      "id": "shimane",
+      "prefecture": "島根",
+      "file": "shimane.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 島根 (shimane). cream travel coat, deep purple scarf and woven cap; holding a tiny braided rope souvenir. Backdrop: Izumo Taisha approach with monumental shimenawa rope, respectful quiet setting.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-90ce273f-109e-4c2d-953b-3780294b3bac.png"
+    },
+    {
+      "id": "okayama",
+      "prefecture": "岡山",
+      "file": "okayama.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 岡山 (okayama). peach-pink hooded travel vest, green leaf brooch, cream shorts; holding a miniature peach and small kibidango pouch. Backdrop: Kurashiki white-walled canal district and willow trees.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-eae325b0-4eb7-4b22-83c5-50a028834cca.png"
+    },
+    {
+      "id": "hiroshima",
+      "prefecture": "廣島",
+      "file": "hiroshima.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 廣島 (hiroshima). rust-red travel coat with maple leaf embroidery, cream cap; holding a miniature maple-shaped momiji sweet. Backdrop: Miyajima vermilion floating torii gate over calm water.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-bb0a15b5-cb70-40e3-b349-d0afe5608c58.png"
+    },
+    {
+      "id": "yamaguchi",
+      "prefecture": "山口",
+      "file": "yamaguchi.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 山口 (yamaguchi). indigo seaside jacket, woven straw hat and cream scarf; holding a small folded bridge drawing without text. Backdrop: Iwakuni Kintaikyo five-arch wooden bridge.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-c33529d6-570d-48ab-bdad-22e973638cc1.png"
+    },
+    {
+      "id": "tokushima",
+      "prefecture": "德島",
+      "file": "tokushima.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 德島 (tokushima). indigo Awa Odori dance happi, woven amigasa hat, tiny tabi footwear; holding a small plain festival fan. Backdrop: soft Naruto tidal whirlpools and bridge.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-e2889736-54a1-4685-bef1-32a8088979fc.png"
+    },
+    {
+      "id": "kagawa",
+      "prefecture": "香川",
+      "file": "kagawa.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 香川 (kagawa). cream udon-maker apron over blue shirt, white headband and brown boots; holding a miniature bowl of thick udon noodles with chopsticks. Backdrop: Ritsurin garden pond and pine trees.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-d529f83f-7f6b-43c2-b991-5095a13f95ff.png"
+    },
+    {
+      "id": "ehime",
+      "prefecture": "愛媛",
+      "file": "ehime.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 愛媛 (ehime). orange wool cardigan, green leaf beret and cream shorts; holding a miniature basket of mikan oranges. Backdrop: Dogo Onsen historic wooden bathhouse.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-f02a8f26-193d-4165-a934-046298869512.png"
+    },
+    {
+      "id": "kochi",
+      "prefecture": "高知",
+      "file": "kochi.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 高知 (kochi). navy festival happi with red sash, white headband and tiny boots; holding two miniature wooden naruko clappers. Backdrop: Kochi castle and festive warm evening.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-650c9710-9cc1-46db-b9cc-c4439c3b026d.png"
+    },
+    {
+      "id": "fukuoka",
+      "prefecture": "福岡",
+      "file": "fukuoka.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 福岡 (fukuoka). cream street-food apron over navy jacket, red neck scarf and small cap; holding a miniature bowl of Hakata ramen. Backdrop: softly lit riverside yatai food stalls.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-1a592d81-fc7b-4d5e-931b-ec388ce59c51.png"
+    },
+    {
+      "id": "saga",
+      "prefecture": "佐賀",
+      "file": "saga.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 佐賀 (saga). indigo ceramic artisan apron, ivory shirt and small cap; holding a miniature blue-and-white Arita porcelain bowl. Backdrop: traditional ceramic kiln town with tiny distant hot air balloons.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-444a19b2-27d0-47ba-8102-41ff338691f4.png"
+    },
+    {
+      "id": "nagasaki",
+      "prefecture": "長崎",
+      "file": "nagasaki.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 長崎 (nagasaki). navy harbor sailor jacket, white cap and red scarf; holding a tiny castella cake slice. Backdrop: Nagasaki hillside harbor and historic Western-style Glover Garden house.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-e771caf8-9a4c-49fd-bcbb-cd816dcc001e.png"
+    },
+    {
+      "id": "kumamoto",
+      "prefecture": "熊本",
+      "file": "kumamoto.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 熊本 (kumamoto). forest-green hiking jacket, brown brimmed hat and boots; holding a tiny tomato basket. Backdrop: Kumamoto castle and distant Aso volcanic grassland, no other mascot character.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-4bbcd729-88a1-44ab-8352-8a4de2323e07.png"
+    },
+    {
+      "id": "oita",
+      "prefecture": "大分",
+      "file": "oita.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 大分 (oita). pale blue onsen yukata, white sash and folded towel cap; holding a miniature wooden bath bucket. Backdrop: Beppu steaming hot spring town with distant Yufu mountain.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-126e7e31-1920-4185-af21-e10906639d1e.png"
+    },
+    {
+      "id": "miyazaki",
+      "prefecture": "宮崎",
+      "file": "miyazaki.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 宮崎 (miyazaki). sunny cream tropical shirt with palm embroidery, straw hat and sandals; holding a tiny mango basket. Backdrop: Aoshima coast with distinctive ribbed Devil's Washboard rock formations.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-b3b5576e-3a58-465d-9df0-05ab8c74f57b.png"
+    },
+    {
+      "id": "kagoshima",
+      "prefecture": "鹿兒島",
+      "file": "kagoshima.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 鹿兒島 (kagoshima). navy volcanic-island hiking vest, rust scarf and tan hat; holding a miniature purple sweet potato. Backdrop: Sakurajima volcano across Kagoshima bay, gentle distant steam.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-e8fac18d-0dc9-4a51-bab9-548525e33dc3.png"
+    },
+    {
+      "id": "okinawa",
+      "prefecture": "沖繩",
+      "file": "okinawa.png",
+      "status": "generated",
+      "prompt": "Use case: stylized-concept. Create ONE square premium destination-exclusive chicTrip travel mascot illustration in the exact needle-felt handcrafted miniature photographic series of reference image 1. Reference 1 locks wool texture, camera, full-body proportions, quality and tactile clothing. Reference 2 locks official identity: asymmetrical rounded yellow RIGHT-pointing triangular body, cyan vertical LEFT body section, two large white oval eyes with small dark round pupils; short felt arms and feet, NO mouth, beak, human face or bird anatomy. Keep yellow face and cyan side visible. ONE hero centered, entire hat and shoes within frame, occupying 60-65% image height, front three-quarter view, both eyes visible. Fine wool fibers, embroidered stitches, handmade miniature props and scenery, soft grounded shadow, warm restrained colors, macro photography, shallow depth of field. No typography, logo, watermark, borders or collage. New destination and wardrobe: 沖繩 (okinawa). turquoise and coral bingata-inspired floral shirt, straw island hat and tiny sandals; holding a miniature sanshin instrument. Backdrop: turquoise sea, coral sand and red-tiled Ryukyu house.",
+      "source": "/Users/jamessu/.codex/generated_images/01a116bf-e31b-7870-954d-43dde6587fe8/exec-2d4eb50f-f06d-48c0-8d88-1e086a66465c.png"
+    }
+  ]
+}
