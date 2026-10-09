@@ -1,13 +1,11 @@
-import { creationStyles, makeExample, photosForTrip, photoById, creationFriendsForTrip, isRealStyle, isExampleWork, type CreationId, type CreationPhoto, type CreationWork, type CreationExchange } from '~/data/creation';
+import { creationStyles, makeExample, photosForTrip, photoById, creationFriendsForTrip, isExampleWork, type CreationPhoto, type CreationWork, type CreationExchange } from '~/data/creation';
 import { collectedWorks } from '~/data/collection';
 import { stopForPhoto, stopsForTrip } from '~/data/recap';
 import type { TripId } from '~/data/trips';
-import { listCreations, listPhotos, photoFromServer, pollCreation, requestCreation, statusText, uploadPhoto, workFromServer } from '~/utils/creation-api';
+import { listPhotos, photoFromServer, uploadPhoto } from '~/utils/creation-api';
 import { resizeToJpeg } from '~/utils/image-resize';
 
-// 跨頁共用。沒有後端（GitHub Pages）時重新整理就重來；有後端（GCP）時照片與 AI 作品存在伺服器，重新整理接得回來
-const isServerPhoto = (photo: CreationPhoto) => /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(photo.id);
-
+// 跨頁共用。作品一律是預製圖或本機合成的示範圖，重新整理就重來；有後端（GCP）時上傳的照片存在伺服器，重新整理接得回來
 export function useCreation() {
   const { activeId } = useTripContext();
   const api = useApi();
@@ -26,18 +24,14 @@ export function useCreation() {
   const collectedFor = (tripId: TripId) => collectedWorks(tripId, allWorks.value);
   function findPhoto(id?: string) { return uploadedPhotos.value.find(photo => photo.id === id) || photoById(id); }
 
-  // 每趟行程只向伺服器要一次這台手機的照片與作品。先記下再發請求：好幾個元件同時呼叫時不會重複載入
+  // 每趟行程只向伺服器要一次這台手機的照片。先記下再發請求：好幾個元件同時呼叫時不會重複載入
   async function sync(tripId: TripId) {
     if (synced.value.includes(tripId)) return;
     synced.value.push(tripId);
     if (!(await api.check())) return;
     try {
-      const [serverPhotos, creations] = await Promise.all([listPhotos(tripId), listCreations(tripId)]);
       const knownPhotos = new Set(uploadedPhotos.value.map(photo => photo.id));
-      uploadedPhotos.value.push(...serverPhotos.map(photoFromServer).filter(photo => !knownPhotos.has(photo.id)));
-      const knownWorks = new Set(allWorks.value.map(work => work.serverId).filter(Boolean));
-      const restored = creations.filter(item => !knownWorks.has(item.id)).map(item => workFromServer(item, id => uploadedPhotos.value.find(photo => photo.id === id))).filter((work): work is CreationWork => !!work);
-      allWorks.value.unshift(...restored);
+      uploadedPhotos.value.push(...(await listPhotos(tripId)).map(photoFromServer).filter(photo => !knownPhotos.has(photo.id)));
     } catch {
       synced.value = synced.value.filter(id => id !== tripId);
     }
@@ -63,30 +57,12 @@ export function useCreation() {
         if (source.startsWith('blob:')) URL.revokeObjectURL(source);
         return photo;
       } catch {
-        // 上傳失敗：退回只存在這支手機的照片，生成走原本的示範流程
+        // 上傳失敗：退回只存在這支手機的照片
       }
     }
     const photo: CreationPhoto = { id: 'upload-' + crypto.randomUUID(), tripId, title, location, source, styles: template ? [...template.styles] : [], sourceCrop: template?.sourceCrop, demoPhotoId, stopId };
     uploadedPhotos.value.unshift(photo);
     return photo;
-  }
-
-  // 真的交給 Gemini：排進伺服器的佇列、輪詢到做好或退回。
-  // 回傳 null：這張照片或風格不能在伺服器生成（沒有後端、場景積木與旅伴、只存在手機上的照片），呼叫端照舊走示範流程
-  async function generateOnServer(photo: CreationPhoto, styleId: CreationId, onProgress: (text: string) => void, cancelled: () => boolean) {
-    if (!isRealStyle(styleId) || !(await api.check())) return null;
-    const source = isServerPhoto(photo) ? { photoId: photo.id } : photoById(photo.id)?.tripId === photo.tripId ? { demoPhotoId: photo.id } : null;
-    if (!source) return null;
-    try {
-      const created = await requestCreation({ tripId: photo.tripId, styleId, ...source });
-      if (created.status !== 'queued') return { serverId: created.id, imageUrl: null, message: '' };
-      onProgress(statusText('queued'));
-      const result = await pollCreation(created.id, (status, position) => onProgress(statusText(status, position)), cancelled);
-      return { serverId: created.id, imageUrl: result.status === 'done' ? result.imageUrl : null, message: '' };
-    } catch (error) {
-      // 429：今天的次數用完了，伺服器的訊息直接給評審看
-      return { serverId: undefined, imageUrl: null, message: (error as { data?: { message?: string } }).data?.message || '' };
-    }
   }
 
   function save(work: CreationWork) {
@@ -119,7 +95,7 @@ export function useCreation() {
       if (!allWorks.value.some(item => item.id === exchange.outgoing.id)) allWorks.value.push({ ...exchange.outgoing });
     }
   }
-  return { works, exchanges, allWorks, collected, collectedFor, pending, friends, photos, findPhoto, addPhoto, generateOnServer, save, record, request, resolve };
+  return { works, exchanges, allWorks, collected, collectedFor, pending, friends, photos, findPhoto, addPhoto, save, record, request, resolve };
 }
 
 export function useCreationAsset() {

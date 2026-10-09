@@ -29,7 +29,7 @@ spec:
       containers:
         - name: redis
           image: {{ .Values.redis.image }}
-          # 只放生成佇列，跟 MEDDEMO 一樣不存檔：工作狀態記在 Postgres，Redis 重啟後 worker 會從資料表接回來
+          # 只放照片標類別與每日卡片的佇列，跟 MEDDEMO 一樣不存檔：工作狀態記在 Postgres，Redis 重啟後 worker 會從資料表接回來
           args: ["--save", "", "--appendonly", "no"]
           ports:
             - containerPort: 6379

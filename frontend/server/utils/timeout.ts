@@ -1,4 +1,4 @@
-// 外部服務（Gemini、Redis）卡住時不能讓請求或工作一直等：逾時就丟錯，呼叫端改走預製圖
+// 外部服務（Gemini、Redis）卡住時不能讓請求或工作一直等：逾時就丟錯，呼叫端改走不需要 AI 的版本
 export function withTimeout<T>(work: Promise<T>, ms: number, label: string): Promise<T> {
     let timer: ReturnType<typeof setTimeout> | undefined;
     const timeout = new Promise<never>((_, reject) => {

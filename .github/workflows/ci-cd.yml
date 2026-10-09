@@ -1,8 +1,7 @@
 # 每次 push 與 PR 都跑測試；推到 main 才建映像檔，並由 care-vm 上的 self-hosted runner 用 Helm 部署到 K3s
 # （chart 在 deploy/helm/chictrip，VM 用 deploy/setup-vm.sh 準備）。做法照 MEDDEMO。
 # GitHub Pages（nuxt-pages.yml）照舊部署，兩邊互不影響。
-# 需要的 repo secrets：POSTGRES_PASSWORD（只能用英數字，會直接放進資料庫連線網址）、GEMINI_API_KEY
-#   GEMINI_API_KEY 所在的專案要綁帳單：免費方案的生圖額度是 0，生成會全部退回預製圖（10/7 實測）
+# 需要的 repo secrets：POSTGRES_PASSWORD（只能用英數字，會直接放進資料庫連線網址）、GEMINI_API_KEY（只用文字模型，不生圖）
 # 需要的 repo variables：SITE_URL
 name: CI/CD
 
@@ -152,7 +151,7 @@ jobs:
           $KC create secret generic chictrip-secrets \
             --from-literal=POSTGRES_PASSWORD="$POSTGRES_PASSWORD" \
             --dry-run=client -o yaml | $KC apply -f -
-          # Gemini 金鑰：沒設定是空字串，生成一律退回預製圖。用哪個模型、上限多少在 values.yaml 的 config
+          # Gemini 金鑰：沒設定是空字串，文案與每日卡片一律用範本。用哪個模型在 values.yaml 的 config
           $KC create secret generic chictrip-ai \
             --from-literal=GEMINI_API_KEY="$GEMINI_API_KEY" \
             --dry-run=client -o yaml | $KC apply -f -

@@ -19,7 +19,7 @@ redis:
   # 跟 MEDDEMO 同一個映像，VM 上已經有
   image: redis:8.10.1-alpine
 
-# 評審上傳的照片與生成的圖（api、worker 共用）。一張照片縮圖後約 0.5 MB、生成圖約 1 MB；
+# 評審上傳的照片與分享圖卡（api、worker 共用）。一張照片縮圖後約 0.5 MB；
 # 跟 db 一樣，local-path 不強制上限
 media:
   storage: 10Gi
@@ -28,16 +28,11 @@ media:
 # 這裡寫什麼鍵，ConfigMap 就產生同名的環境變數（server/utils/config.ts 讀），留空＝用程式裡的預設值。
 # 金鑰不放這裡，放 GitHub Secrets（見下面的 secrets）
 config:
-  # 生圖：gemini-3.1-flash-lite-image 與 gemini-nano-banana-2.1 都是 1K 一張 US$0.0336（Gemini 官方定價頁）
-  IMAGE_MODEL: gemini-3.1-flash-lite-image
-  # 生圖前先看照片、填 prompt 範本的空格
+  # 貼文文案、eSIM 推薦理由、照片標類別、每日卡片。AI 創作的成品不生成，一律用預製圖或手機上合成的示範圖
   TEXT_MODEL: gemini-3.5-flash-lite
-  # 每台手機、全站每天能生成幾張（台北時間午夜重置）。全站 1,000 張約 US$34，是一天花費的上限
-  DEVICE_DAILY_LIMIT: "20"
-  GLOBAL_DAILY_LIMIT: "1000"
   # worker 同時處理幾件
   WORKER_CONCURRENCY: "4"
-  # 單次 Gemini 呼叫的逾時，以及排隊超過多久就改顯示預製圖（毫秒）
+  # 每日卡片單次 Gemini 呼叫的逾時，以及排隊超過多久就退回不配文字的卡片（毫秒）
   JOB_TIMEOUT_MS: "90000"
   QUEUE_STALE_MS: "300000"
 
@@ -45,5 +40,5 @@ config:
 secrets:
   # POSTGRES_PASSWORD
   database: chictrip-secrets
-  # GEMINI_API_KEY；還沒建時照樣啟動，生成一律退回預製圖
+  # GEMINI_API_KEY；還沒建時照樣啟動，文案與每日卡片一律用範本
   ai: chictrip-ai

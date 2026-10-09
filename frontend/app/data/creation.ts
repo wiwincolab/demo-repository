@@ -21,8 +21,6 @@ export interface CreationWork {
   id: string; styleId: CreationId; title: string; image: string; location: string;
   creator: string; createdAt: string; receivedFrom?: string; exchangeId?: string;
   tripId: TripId; photoId?: string; source?: string; sourceCrop?: boolean; sourceTripId?: TripId; preset?: boolean; renderedImage?: string;
-  // 有後端時：serverId 對到資料表 creations；fallback 表示 AI 沒做成、顯示的是預製或合成的示範圖
-  serverId?: string; fallback?: boolean;
   // 上傳的照片由使用者指定在哪一站（內建照片看 recap.ts 的 stopPhotoIds），立體重遊靠它把作品放回那一站
   stopId?: string;
 }
@@ -40,10 +38,6 @@ export interface CreationExchange {
   createdAt: string; resolvedAt?: string; tripId: TripId;
 }
 export const styleById = (id: CreationId) => creationStyles.find(style => style.id === id)!;
-// 有後端時真的交給 Gemini 生成的風格（server/utils/creation-prompts.ts）。
-// 場景積木要 3D 零件、景點限定旅伴要透明角色與動畫素材，生圖模型產不出能直接用的，維持預製
-export const realStyles: CreationId[] = ['sticker', 'photo', 'ticket', 'pin'];
-export const isRealStyle = (id: unknown): id is CreationId => realStyles.includes(id as CreationId);
 
 export interface CreationPhoto {
   id: string; tripId: TripId; title: string; location: string; source: string;
@@ -55,7 +49,7 @@ export const creationPhotos: CreationPhoto[] = [
   {id:'kyoto-shrine',tripId:'kansai',title:'樹影下的鳥居',location:'京都 · 野宮神社',source:'references/kyoto-shrine-source.png',styles:['pin'],referenceOnly:true,note:'先前京都示範素材，非這次五日路線'},
   {id:'nara-deer',tripId:'kansai',title:'奈良公園的鹿',location:'奈良 · 鹿公園',source:'journey/nara-source.png',styles:['sticker'],note:'AI 示範照片'},
   {id:'kiyomizu',tripId:'kansai',title:'清水舞台的綠意',location:'京都 · 清水寺',source:'../photos/kansai/kiyomizu.jpg',styles:['pin']},
-  // 立體重遊每一站的照片也能拿來做收藏；沒有預製成品，有後端交給 AI，沒有後端用本機版型合成
+  // 立體重遊每一站的照片也能拿來做收藏；沒有預製成品，用本機版型合成
   {id:'kobe-night',tripId:'kansai',title:'港邊的夜色',location:'神戶 · Harborland',source:'../photos/kansai/kobe-night.jpg',styles:[]},
   {id:'amanohashidate',tripId:'kansai',title:'橫過海面的沙洲',location:'海之京都 · 傘松公園',source:'../photos/kansai/amanohashidate.jpg',styles:[]},
   {id:'ine-cruise',tripId:'kansai',title:'海灣邊的舟屋',location:'海之京都 · 伊根灣',source:'../photos/kansai/ine-cruise.jpg',styles:[]},

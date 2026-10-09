@@ -18,7 +18,7 @@ services:
       timeout: 3s
       retries: 20
 
-  # 生成工作的佇列（BullMQ）。6379 是 MEDDEMO 的，這裡用 6380；跟正式環境一樣不存檔
+  # 照片標類別與每日卡片的佇列（BullMQ）。6379 是 MEDDEMO 的，這裡用 6380；跟正式環境一樣不存檔
   redis:
     image: redis:8.10.1-alpine
     command: ["redis-server", "--save", "", "--appendonly", "no"]
