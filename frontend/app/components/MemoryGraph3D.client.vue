@@ -116,7 +116,7 @@ function render() {
   labels.value = projected;
   renderer.render(scene, camera);
 }
-function resize() { if (!host.value || !renderer) return; width = host.value.clientWidth; height = host.value.clientHeight; renderer.setSize(width, height); camera.aspect = width / Math.max(1, height); camera.updateProjectionMatrix(); distance = Math.max(distance, 13 / camera.aspect); render(); }
+function resize() { if (!host.value || !renderer) return; width = host.value.clientWidth; height = host.value.clientHeight; if (!width || !height) return; renderer.setSize(width, height); camera.aspect = width / Math.max(1, height); camera.updateProjectionMatrix(); distance = Math.max(distance, 13 / camera.aspect); render(); }
 function zoom(delta: number) { distance = Math.max(10, Math.min(38, distance + delta)); render(); }
 function reset() { yaw = .15; pitch = .12; distance = Math.max(20, 13 / camera.aspect); render(); }
 function down(e: PointerEvent) { if ((e.target as Element).closest('button')) return; rotating.value = false; pressOrigin = { x: e.clientX, y: e.clientY }; moved = false; pointers.set(e.pointerId, { x: e.clientX, y: e.clientY }); host.value?.setPointerCapture(e.pointerId); previousPinch = 0; }
@@ -172,7 +172,7 @@ onBeforeUnmount(() => { disposed = true; cancelAnimationFrame(frame); observer?.
       <svg class="label-guides" :viewBox="`0 0 ${width} ${height}`" aria-hidden="true"><path v-for="label in labels" v-show="label.visible" :key="label.id" :d="`M ${label.ax} ${label.ay} L ${label.x} ${label.y}`" :stroke="label.color" :opacity="label.opacity * .25"/></svg>
       <button v-for="label in labels" v-show="label.visible" :key="label.id" class="node-label" :class="{ selected: label.id === selected }" :aria-label="`開啟${label.title}`" :aria-pressed="label.id === selected" :style="{ left: label.x + 'px', top: label.y + 'px', opacity: label.opacity, '--node-color': label.color }" @mouseenter="hovered = label.id" @mouseleave="hovered = ''" @focus="hovered = label.id" @blur="hovered = ''" @click="emit('select', label.id)">{{ label.title }}</button>
       <div class="connection-caption"><i/>{{ relation }} 條{{ subject === '偏好' ? '偏好關聯' : '回憶線索' }}<span>{{ subject === '偏好' ? '選用關鍵字，作為這次推薦的依據' : '光點沿著關係，串起旅途片段' }}</span></div>
-      <div v-if="!ready" class="space-status" role="status">{{ error || '正在展開你的記憶宇宙…' }}</div>
+      <div v-if="!ready" class="space-status" role="status">{{ error || (subject === '偏好' ? '正在載入偏好圖…' : '正在展開你的記憶宇宙…') }}</div>
     </div>
     <div class="space-controls"><span>拖曳旋轉 · 滾輪／雙指縮放</span><div><button aria-label="縮小" @click="zoom(1.5)">−</button><button aria-label="重設視角" @click="reset">置中</button><button aria-label="放大" @click="zoom(-1.5)">＋</button><button :aria-pressed="flowing" @click="flowing = !flowing">{{ flowing ? '暫停流光' : '播放流光' }}</button><button :aria-pressed="rotating" @click="rotating = !rotating">{{ rotating ? '暫停旋轉' : '自動旋轉' }}</button></div></div>
   </div>

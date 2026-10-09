@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {tripItineraries,plannerStorageKey} from '~/data/trips';
 import type { Stop } from '~/types/trip';
-import { plannerKeywords, plannerPreferenceStorageKey, validPlannerKeywords, type PlannerKeywordId } from '~/data/planner-preferences';
+import { plannerKeywords } from '~/data/planner-preferences';
 import { recommendPlaces, type Recommendation } from '~/utils/planner';
 const asset = useAsset();
 const { notify } = useDemo();
@@ -13,16 +13,9 @@ const places = computed<Stop[]>(()=>{
   if(activeId.value==='kansai')return trip.flatMap(d=>d.stops).filter(s=>[1,2,7,8,9,10,11].includes(s.id));
   return trip.flatMap(d=>d.stops).filter((s,i,all)=>all.findIndex(p=>p.name===s.name)===i).slice(0,5);
 });
-const keywordIds = ref<PlannerKeywordId[]>(plannerKeywords.filter(k => k.defaultOn).map(k => k.id));
-const useKeywords = ref(true);
+const { keywordIds, enabled: useKeywords } = useTravelPreferences();
 const appliedKeywords = computed(() => useKeywords.value ? keywordIds.value : []);
 const appliedTitles = computed(() => plannerKeywords.filter(k => appliedKeywords.value.includes(k.id)).map(k => k.title));
-let keywordsReady = false;
-onMounted(() => {
-  try { const stored = JSON.parse(localStorage.getItem(plannerPreferenceStorageKey) || 'null'); if (stored) { keywordIds.value = validPlannerKeywords(stored.ids); useKeywords.value = stored.enabled !== false; } } catch {}
-  keywordsReady = true;
-});
-watch([keywordIds, useKeywords], () => { if (keywordsReady) try { localStorage.setItem(plannerPreferenceStorageKey, JSON.stringify({ ids: keywordIds.value, enabled: useKeywords.value })); } catch { notify('偏好暫存於此頁，瀏覽器目前無法儲存。'); } }, { deep: true });
 const ids = ref<number[]>([]), drawing = ref(true), preferences = ref(''), pace = ref(3);
 const extension = ref(30), planNotes = ref<string[]>([]), previousNotes = ref<string[]>([]);
 const panel = ref<'preferences' | 'preview' | 'saved' | null>(null);
@@ -107,7 +100,11 @@ onBeforeUnmount(() => clearTimeout(generationTimer));
       <h1>圈出想去的地方，<br>剩下的，聊聊就好。</h1>
       <p>參考你的偏好關鍵字，圈出範圍，再補充這次的時間和限制。</p>
     </div>
-    <PlannerPreferenceGraph v-model="keywordIds" v-model:enabled="useKeywords" />
+    <aside class="planner-memory" aria-label="旅行偏好摘要">
+      <div><strong>吉祥物記住的偏好</strong><p>{{ appliedTitles.length ? appliedTitles.join('、') : '這次只依圈選與額外條件推薦' }}</p></div>
+      <label><input v-model="useKeywords" type="checkbox">這次套用</label>
+      <NuxtLink :to="{ path: '/wardrobe', query: { view: 'preferences', trip: activeId } }">管理偏好 →</NuxtLink>
+    </aside>
     <ol class="planner-steps" aria-label="規劃流程"><li :class="{ current: !ids.length }">① 大致圈選</li><li :class="{ current: ids.length && (!draft.length || dirty) }">② 補充需求</li><li :class="{ current: draft.length && !dirty }">③ 看推薦、儲存</li></ol>
     <div class="view-bar">
       <h2>{{ activeTrip.location }}</h2>
@@ -158,7 +155,7 @@ onBeforeUnmount(() => clearTimeout(generationTimer));
     <AppSheet :model-value="!!panel" :title="panel === 'preferences' ? '這一天，想怎麼玩？' : panel === 'preview' ? '先看看你的安排' : '行程已儲存'" @update:model-value="panel = null">
       <template v-if="panel === 'preferences'">
         <p class="planner-area">主要範圍：{{ places.filter(p => ids.includes(p.id)).map(p => p.name).join('、') }}</p>
-        <div class="panel"><b>本次參考的偏好關鍵字</b><p class="small-note">{{ appliedTitles.length ? appliedTitles.join('、') : '未選用偏好，只依本次條件推薦' }}</p><small>本次明確排除的項目會優先處理；可關閉此視窗，回到偏好圖調整。</small></div><p class="muted">再補充這次的額外條件（選填）</p>
+        <div class="panel"><b>本次參考的偏好關鍵字</b><p class="small-note">{{ appliedTitles.length ? appliedTitles.join('、') : '未選用偏好，只依本次條件推薦' }}</p><small>本次明確排除的項目會優先處理；偏好可到上方吉祥物的「記憶偏好」管理。</small></div><p class="muted">再補充這次的額外條件（選填）</p>
         <textarea v-model="preferences" aria-label="旅行偏好" maxlength="300" placeholder="我有四小時，喜歡自然景點，圈外多搭 20 分鐘也可以。預算 3000 日圓，已買周遊券。" />
         <div class="choice-row">
           <button v-for="hint in ['喜歡自然景點', '老街與甜點', '有四小時', '雨天室內']" :key="hint" @click="addPreference(hint)">{{ hint }}</button>
@@ -191,3 +188,7 @@ onBeforeUnmount(() => clearTimeout(generationTimer));
   </section>
 </template>
 
+
+<style scoped>
+.planner-memory{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 16px;align-items:center;background:#f0f7f6;border:1px solid #dce9e7;border-radius:14px;padding:14px 16px;margin:16px 0}.planner-memory strong{font-size:13px;color:#325e66}.planner-memory p{font-size:11px;color:#74898e;margin:5px 0 0;line-height:1.5}.planner-memory label{display:flex;align-items:center;gap:5px;font-size:12px;white-space:nowrap}.planner-memory input{accent-color:#397b87}.planner-memory a{grid-column:1/-1;justify-self:end;color:#397b87;font-size:12px;text-decoration:none;padding:4px 0}.planner-memory a:focus-visible{outline:2px solid #397b87;outline-offset:3px}
+</style>
