@@ -24,3 +24,10 @@ test('someone outside the group sees members in join order', () => {
 test('a group holds at most eight people, like the existing demo', () => {
     assert.equal(MAX_MEMBERS, 8);
 });
+
+
+test('each member keeps their own mascot when the viewer moves to the first seat', () => {
+    const view = memberView(rows.map((row, i) => ({ ...row, mascot_id: ['fuji', 'nara', 'asakusa'][i] })), 'me');
+    assert.deepEqual(view.map(member => member.mascotId), ['asakusa', 'fuji', 'nara']);
+    assert.equal(memberView(rows, 'me')[0]!.mascotId, null);
+});

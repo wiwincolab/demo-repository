@@ -1,0 +1,57 @@
+<script setup lang="ts">
+import type { Member } from '~/types/trip';
+import { mascots } from '~/data/mascots';
+const asset = useAsset();
+function mascotFor(member: Member) { return mascots.find(m => m.id === member.mascotId) || mascots[0]!; }
+const props = withDefaults(defineProps<{ members: Member[]; count: number; location: string; compact?: boolean; live?: boolean }>(), { compact: false, live: false });
+const emit = defineEmits<{ open: []; invite: []; purchase: [index: number] }>();
+const seats = computed(() => Array.from({ length: Math.max(4, props.members.length) }, (_, i) => props.members[i]));
+const tiers = [{ n: 2, icon: 'signal', title: '多 500MB', desc: '旅途多一點餘裕' }, { n: 3, icon: 'point', title: '多 30 點', desc: '留給下一次出發' }, { n: 4, icon: 'gift', title: '省 NT$20', desc: '每個人都享優惠' }];
+const next = computed(() => tiers.find(t => props.count < t.n));
+</script>
+
+<template>
+  <section class="travel-crew" :class="{ 'crew-compact': compact, 'crew-complete': count >= 4 }">
+    <div class="crew-cover">
+      <div class="crew-eyebrow"><span>一起出發，一起解鎖</span><span class="crew-demo">優惠提案</span></div>
+      <h3>{{ compact ? '旅伴一起省' : location + '旅行小隊' }}</h3>
+      <p>{{ count >= 4 ? '全隊福利解鎖！好旅伴，好划算。' : '旅費各自付，優惠一起享。' }}</p>
+      <div class="crew-portrait-row" aria-hidden="true">
+        <span class="crew-spark spark-one">✦</span><span class="crew-spark spark-two">✧</span>
+        <div v-for="(member, i) in seats.slice(0, 4)" :key="i" class="crew-character" :class="['character-' + i, { 'character-empty': !member }]"><img v-if="member" :src="asset(mascotFor(member).image)" alt=""/><span v-else>＋</span></div>
+        <span class="crew-ticket"><EsimIcon name="sim" :size="20"/> eSIM</span>
+      </div>
+    </div>
+
+    <div class="crew-body">
+      <div class="crew-progress-heading"><strong>{{ count >= 4 ? '默契滿分，福利全開' : '揪滿 4 人，解鎖全部福利' }}</strong><span>{{ count }} <small>/ 4 人購買</small></span></div>
+      <div class="crew-progress" role="progressbar" :aria-valuenow="Math.min(count, 4)" :aria-valuemin="0" :aria-valuemax="4" aria-label="組隊購買進度"><span :style="{ width: Math.min(count / 4, 1) * 100 + '%' }"/></div>
+      <p class="crew-next" aria-live="polite">{{ next ? `再 ${next.n - count} 人購買，全隊${next.title}` : '每人多 500MB ＋ 30 點 ＋ NT$20 回饋' }}</p>
+
+      <template v-if="!compact">
+        <div class="crew-section-label"><h4>我的旅伴</h4><span>{{ members.length }} 人已加入</span></div>
+        <div class="crew-seats">
+          <div v-for="(member, i) in seats" :key="i" class="crew-seat" :class="{ 'seat-paid': member?.paid }">
+            <template v-if="member">
+              <span class="crew-avatar" :class="'avatar-' + i % 4"><img :src="asset(mascotFor(member).image)" :alt="`${member.name}的吉祥物：${mascotFor(member).name}`"/><b v-if="member.paid">✓</b></span>
+              <strong>{{ member.name.replace('（你）', '') }}</strong><small>{{ i === 0 ? '你' : '旅伴' }} · {{ member.paid ? '已購買' : '待購買' }}</small>
+            </template>
+            <button v-else class="crew-empty" aria-label="邀請旅伴加入小隊" @click="live ? emit('open') : emit('invite')"><span>＋</span><strong>留位給你</strong><small>邀請旅伴</small></button>
+          </div>
+        </div>
+        <div class="crew-section-label"><h4>全隊共享福利</h4><span>依購買人數累加</span></div>
+        <div class="crew-rewards"><div v-for="tier in tiers" :key="tier.n" class="crew-reward" :class="{ unlocked: count >= tier.n }"><span class="crew-reward-icon"><EsimIcon :name="tier.icon" :size="22"/></span><div><strong>{{ tier.title }}</strong><small>{{ tier.desc }}</small></div><span class="crew-tier-state">{{ count >= tier.n ? '✓ 已解鎖' : tier.n + ' 人解鎖' }}</span></div></div>
+        <div v-if="live" id="crew-invite"><slot name="invite"/></div>
+        <button v-else class="crew-primary" :disabled="members.length >= 8" @click="emit('invite')"><EsimIcon name="people" :size="20"/>{{ members.length >= 8 ? '旅伴已全數加入' : '邀請旅伴加入' }}<span v-if="members.length < 8">＋</span></button>
+        <p class="crew-caption">{{ live ? '分享連結，讓旅伴加入這趟旅行。' : 'Demo：點一下加入一位示範旅伴' }}</p>
+        <details class="crew-demo-controls"><summary>體驗購買與福利解鎖</summary><div v-for="(member, i) in members" :key="i" class="crew-purchase"><span>{{ member.name }}</span><button v-if="!live || i === 0" :disabled="member.paid" @click="emit('purchase', i)">{{ member.paid ? '✓ 已購買' : i === 0 ? '選購我的方案' : '示範購買' }}</button><small v-else>{{ member.paid ? '已購買' : '等待旅伴購買' }}</small></div></details>
+        <p class="crew-terms">購買 eSIM 才計入優惠；每人可選不同方案。達 4 人後，已購買者同享 NT$20 回饋。500MB 限本趟；30 點下次滿 NT$299 可用，有效 30 天。競賽提案，非官方現行優惠。</p>
+      </template>
+      <button v-else class="crew-primary" @click="emit('open')">看看我的旅行小隊<EsimIcon name="arrow" :size="18"/></button>
+    </div>
+  </section>
+</template>
+
+<style scoped>
+.travel-crew{--crew-green:#417d37;--crew-ink:#26372c;color:var(--crew-ink);border:2px solid #e1e8d9;border-radius:26px;overflow:hidden;background:#fff;margin-bottom:20px}.crew-cover{background:#f0f7df;padding:22px 22px 0;text-align:center;overflow:hidden}.crew-eyebrow{display:flex;justify-content:space-between;align-items:center;font-size:11px;letter-spacing:1px;color:#5b774a;font-weight:700}.crew-demo{background:#ffffffa6;padding:4px 8px;border-radius:7px;letter-spacing:0}.travel-crew .crew-cover h3{font-size:29px!important;line-height:1.4;margin:19px 0 5px;font-weight:850;letter-spacing:.02em}.crew-cover p{font-size:14px!important;color:#6a785e;margin:0}.crew-portrait-row{height:139px;position:relative;display:flex;align-items:flex-end;justify-content:center;gap:8px;padding-top:24px}.crew-character{width:65px;height:102px;position:relative;flex-shrink:0;transform:rotate(-7deg);transform-origin:bottom;border-radius:24px 24px 0 0;overflow:hidden;background:#f8ede3;box-shadow:0 0 0 3px #ffffff80}.crew-character img{width:100%;height:100%;object-fit:cover;transform:scale(1.22);transform-origin:50% 60%}.character-1{height:117px;transform:rotate(4deg)}.character-2{height:108px;transform:rotate(-4deg)}.character-3{height:95px;transform:rotate(8deg)}.character-empty{background:#e7efda;border:2px dashed #c2d3ad;box-shadow:none;display:grid;place-items:center;color:#adc395;font-size:30px}.crew-spark{position:absolute;color:#9ab658;font-size:26px;top:20px;left:6px}.spark-two{left:auto;right:5px;top:43px}.crew-ticket{position:absolute;bottom:12px;left:50%;transform:translateX(-50%) rotate(-7deg);z-index:4;display:flex;gap:5px;align-items:center;background:#fffdf3;border:2px solid #d6ca9a;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:800;color:#60754b;box-shadow:0 3px 0 #00000009}.crew-body{padding:22px}.crew-progress-heading{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:13px}.crew-progress-heading>span{font-size:20px;font-weight:800;white-space:nowrap;color:var(--crew-green)}.crew-progress-heading small{font-size:11px;color:#7c8777;font-weight:500}.crew-progress{height:13px;border-radius:10px;background:#ecf0e8;margin-top:13px;overflow:hidden;box-shadow:inset 0 2px 0 #00000005}.crew-progress>span{display:block;height:100%;border-radius:10px;background:#94c94a;border-top:3px solid #b7df79;transition:width .4s ease}.crew-next{font-size:12px!important;color:var(--crew-green);margin:10px 0 22px}.crew-section-label{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:24px 0 15px}.crew-section-label h4{margin:0;font-size:15px}.crew-section-label>span{font-size:11px;color:#83907e}.crew-seats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px 5px}.crew-seat{display:flex;flex-direction:column;align-items:center;min-width:0;text-align:center}.crew-avatar{position:relative;display:grid;place-items:center;width:50px;height:54px;border:2px solid #ded5f0;background:#ede6fb;border-radius:19px;font-size:22px;font-weight:800;color:#8064b1;box-shadow:0 3px 0 #e4dcef;margin-bottom:11px}.avatar-1{background:#fff0cc;border-color:#ecdcae;color:#a77733;box-shadow:0 3px 0 #eedfb9}.avatar-2{background:#deeff7;border-color:#c2deec;color:#548caa;box-shadow:0 3px 0 #cfdee5}.avatar-3{background:#fbe4e7;border-color:#ebc8ce;color:#bb7883;box-shadow:0 3px 0 #edcdd3}.crew-avatar>img{width:100%;height:100%;object-fit:cover;border-radius:16px;transform:scale(1.02)}.crew-avatar b{position:absolute;right:-6px;bottom:-5px;background:#75b642;border:2px solid white;border-radius:50%;font-size:11px;color:white;width:20px;height:20px;display:grid;place-items:center}.crew-seat strong{font-size:12px;overflow-wrap:anywhere}.crew-seat small{font-size:10px!important;color:#82907c;display:block;margin-top:5px}.seat-paid small{color:var(--crew-green)}.crew-empty{display:flex;align-items:center;flex-direction:column;padding:0;background:none;border:0;color:#8b9784;cursor:pointer;width:100%}.crew-empty>span{width:50px;height:54px;display:grid;place-items:center;border:2px dashed #d4dfc7;border-radius:19px;font-size:25px;background:#fafcf6;margin-bottom:11px}.crew-rewards{display:grid;gap:9px;margin-bottom:24px}.crew-reward{display:flex;gap:12px;align-items:center;border:1.5px solid #e6eadd;border-radius:15px;padding:12px;background:#fff}.crew-reward-icon{display:grid;place-items:center;width:39px;height:39px;flex-shrink:0;background:#f2f4ed;color:#879477;border-radius:12px}.crew-reward>div{flex:1}.crew-reward strong{font-size:15px}.crew-reward small{display:block;font-size:11px!important;color:#849078;margin-top:3px}.crew-tier-state{font-size:10px;white-space:nowrap;color:#87907d;background:#f1f4ec;border-radius:8px;padding:5px 7px}.unlocked{background:#f7fbed;border-color:#c5dfa2}.unlocked .crew-reward-icon{color:#669b37;background:#e7f2d7}.unlocked .crew-tier-state{color:#477932;background:#e7f2d7}.crew-primary{border:0;border-bottom:4px solid #54862d;border-radius:14px;background:#83b846;color:#fff;min-height:51px;padding:12px 16px;font-size:15px;font-weight:750;width:100%;display:flex;align-items:center;justify-content:center;gap:9px;cursor:pointer;transition:transform .15s,background .15s}.crew-primary:hover{background:#75a93b}.crew-primary:active{transform:translateY(2px);border-bottom-width:2px}.crew-primary:disabled{background:#d9dfd1;border-color:#c4ccb9;cursor:default}.crew-primary>span{margin-left:auto;font-size:20px}.crew-caption{text-align:center;color:#89927f;font-size:10px!important;margin:10px 0 20px}.crew-demo-controls{border-top:1px solid #e9ede3;padding-top:16px;font-size:12px}.crew-demo-controls summary{cursor:pointer;color:#708063;min-height:32px}.crew-purchase{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 0}.crew-purchase button{border:1px solid #d4dfc8;border-radius:9px;padding:10px;background:#f5f9ef;color:#477932;cursor:pointer;font-size:12px}.crew-purchase button:disabled{opacity:.6;cursor:default}.crew-terms{font-size:10px!important;line-height:1.8;color:#949b8d;margin:18px 0 0}.crew-compact .crew-cover h3{margin-top:16px}.crew-compact .crew-portrait-row{height:125px}.crew-compact .crew-next{margin-bottom:18px}.crew-complete .crew-cover{background:#edf6d5}.travel-crew button:focus-visible,.travel-crew summary:focus-visible{outline:3px solid #4d7fb7;outline-offset:3px}@media(max-width:360px){.crew-body{padding:17px}.crew-cover{padding-inline:16px}.crew-character{width:52px}.crew-progress-heading{font-size:12px}.crew-section-label>span{font-size:10px}.crew-reward{gap:9px;padding:10px}}@media(prefers-reduced-motion:reduce){.travel-crew *{transition:none!important}}
+</style>

@@ -7,13 +7,14 @@ const route = useRoute();
 const section = computed(() => route.query.view === 'preferences' ? 'preferences' : 'outfits');
 const { keywordIds } = useTravelPreferences();
 const { tripHref } = useTripContext();
-const { selectedId, ready, select } = useMascot();
+const { selectedId, ready, syncStatus, select } = useMascot();
 const previewId = ref<MascotId>(selectedId.value);
 const message = ref('');
 const countries = ['全部', '日本', '台灣', '韓國'] as const;
 const country = ref<typeof countries[number]>('全部');
 const visibleMascots = computed(() => mascots.filter(mascot => country.value === '全部' || mascot.country === country.value));
 watch(ready, value => { if (value) previewId.value = selectedId.value; }, { immediate: true });
+watch(selectedId, (value, previous) => { if (previewId.value === previous) previewId.value = value; });
 const preview = computed(() => mascots.find(m => m.id === previewId.value)!);
 const applied = computed(() => selectedId.value === previewId.value);
 function show(id: MascotId) { previewId.value = id; message.value = ''; }
@@ -60,7 +61,7 @@ function apply() {
             <small>{{ mascot.country }} · {{ mascot.trip }}</small><strong>{{ mascot.name }}</strong>
           </button>
         </div>
-        <div class="wardrobe-action"><button class="wardrobe-apply" :disabled="applied || !ready" @click="apply">{{ applied ? '目前的吉祥物' : '選為我的吉祥物' }}<span aria-hidden="true">{{ applied ? '✓' : '→' }}</span></button><p role="status" aria-live="polite">{{ message || '套用後，所有行程共用這個造型。' }}</p></div>
+        <div class="wardrobe-action"><button class="wardrobe-apply" :disabled="applied || !ready" @click="apply">{{ applied ? '目前的吉祥物' : '選為我的吉祥物' }}<span aria-hidden="true">{{ applied ? '✓' : '→' }}</span></button><p role="status" aria-live="polite">{{ syncStatus === 'error' ? '造型已在本機套用，但尚未同步給旅伴。重新整理可重試。' : message || '套用後，所有行程共用這個造型。' }}</p></div>
       </div>
     </div>
   </section>
