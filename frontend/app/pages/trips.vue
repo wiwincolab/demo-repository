@@ -23,7 +23,7 @@ useHead({ title: '我的行程 · 去趣 chicTrip' });
 </script>
 <template>
   <section class="trips-page">
-    <div class="trips-heading"><div><p class="trips-eyebrow">MY JOURNEYS</p><h1 class="journeys-title">我的行程<ChictripMotion motion="idle" :size="64" /></h1><p>{{ route.query.next ? '選擇一趟旅行，繼續剛才的操作。' : '從出發前的安排，到回家後的收藏。' }}</p></div><NuxtLink to="/atlas" class="trips-atlas-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2V5Z"/><path d="M9 3v16M15 5v16"/></svg>回憶地圖<span aria-hidden="true">↗</span></NuxtLink></div>
+    <div class="trips-heading"><div><p class="trips-eyebrow">MY JOURNEYS</p><h1 class="journeys-title">我的行程<PageMascot /></h1><p>{{ route.query.next ? '選擇一趟旅行，繼續剛才的操作。' : '從出發前的安排，到回家後的收藏。' }}</p></div><NuxtLink to="/atlas" class="trips-atlas-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2V5Z"/><path d="M9 3v16M15 5v16"/></svg>回憶地圖<span aria-hidden="true">↗</span></NuxtLink></div>
     <div class="trips-view-toggle" aria-label="行程顯示方式"><button :aria-pressed="view==='calendar'" @click="view='calendar'">日曆</button><button :aria-pressed="view==='list'" @click="view='list'">所有行程 {{ tripSummaries.length }}</button></div>
     <Transition name="journeys-view" mode="out-in">
     <div :key="view" class="journeys-view">

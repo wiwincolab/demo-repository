@@ -96,11 +96,11 @@ onBeforeUnmount(() => clearTimeout(generationTimer));
 </script>
 <template>
   <section v-if="activeTrip" class="screen active">
-    <div class="page-heading">
+    <div class="mascot-perch"><div class="page-heading">
       <span class="eyebrow">{{ activeTrip.english }} / DAY PLANNER</span>
       <h1>圈出想去的地方，<br>剩下的，聊聊就好。</h1>
       <p>參考你的偏好關鍵字，圈出範圍，再補充這次的時間和限制。</p>
-    </div>
+    </div><PageMascot /></div>
     <aside class="planner-memory" aria-label="旅行偏好摘要">
       <div><strong>吉祥物記住的偏好</strong><p>{{ appliedTitles.length ? appliedTitles.join('、') : '這次只依圈選與額外條件推薦' }}</p></div>
       <label><input v-model="useKeywords" type="checkbox">這次套用</label>

@@ -37,7 +37,7 @@ const funnels = computed(() => stats.value ? [
   <section class="share-page stats-page" aria-labelledby="stats-title">
     <div>
       <span class="share-eyebrow">即時更新 · 每 5 秒</span>
-      <h1 id="stats-title">去趣 social loop 漏斗</h1>
+      <div class="mascot-perch"><h1 id="stats-title">去趣 social loop 漏斗</h1><PageMascot /></div>
       <p v-if="stats" class="creation-muted">{{ stats.devices }} 台裝置參與 · 更新於 {{ new Date(stats.at).toLocaleTimeString('zh-TW') }}</p>
     </div>
     <p v-if="available === false" class="share-hero"><span>這個版本沒有後端，請到 GCP 版查看即時數字。</span></p>

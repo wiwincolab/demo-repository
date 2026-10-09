@@ -53,6 +53,7 @@ async function create() {
 
 <template>
   <section class="share-page" aria-labelledby="share-title">
+    <PageMascot />
     <template v-if="share">
       <div>
         <span class="share-eyebrow">{{ share.nickname }}分享的旅行</span>

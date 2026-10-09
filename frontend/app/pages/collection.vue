@@ -67,7 +67,7 @@ function play(){
     <template v-if="activeTrip">
     <nav class="collection-top"><NuxtLink to="/atlas"><MemoryMotionIcon name="back"/>回憶廣場</NuxtLink><NuxtLink :to="tripHref('/memory')">去製作新收藏 <span aria-hidden="true">↗</span></NuxtLink></nav>
     <header class="collection-hero">
-      <div><p class="collection-eyebrow">THE TRAVEL COLLECTION</p><h1 id="collection-title">旅行收集冊<span aria-hidden="true">●</span></h1><p class="collection-intro">一枚貼紙，一段票根。<br>把這趟旅行的小東西，好好收起來。</p><div class="collection-tally"><b>{{ collected.length }}</b><span>件已收藏</span><i>·</i><span>{{ tradedCount }} 件來自朋友</span></div></div>
+      <div><p class="collection-eyebrow">THE TRAVEL COLLECTION</p><h1 id="collection-title">旅行收集冊<span aria-hidden="true">●</span></h1><p class="collection-intro">一枚貼紙，一段票根。<br>把這趟旅行的小東西，好好收起來。</p><PageMascot /><div class="collection-tally"><b>{{ collected.length }}</b><span>件已收藏</span><i>·</i><span>{{ tradedCount }} 件來自朋友</span></div></div>
       <img class="collection-hero-art" :src="asset('assets/atlas-plaza/v3/collection.png')" alt="翻開的旅行收集冊，放著小鹿貼紙、富士山照片與票根" />
     </header>
     <div class="collection-shelves" role="group" aria-label="收藏來源"><button :aria-pressed="mode==='catalog'" @click="mode='catalog'">風格圖鑑<span>{{ entries.length }}</span></button><button :aria-pressed="mode==='owned'" @click="mode='owned'">我的收藏<span>{{ collected.length }}</span></button><button :aria-pressed="mode==='exchanged'" @click="mode='exchanged'">交換來的<span>{{ tradedCount }}</span></button></div>

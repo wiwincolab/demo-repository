@@ -55,10 +55,10 @@ useHead({title:'旅行上網 · eSIM · 去趣'});
 
 <template>
   <section v-if="activeTrip && (!activeTrip.country || activeTrip.country==='japan')" ref="page" class="esim-page" aria-labelledby="esim-title">
-    <header class="esim-heading">
+    <div class="mascot-perch"><header class="esim-heading">
       <div><h1 id="esim-title">旅行上網</h1><p>{{ locationName }} · {{ activeTrip.dayCount }} 天</p></div>
       <button class="esim-info" aria-label="方案與展示說明" @click="open('help')"><EsimIcon name="info" :size="20"/></button>
-    </header>
+    </header><PageMascot /></div>
 
     <button v-if="!eligible" class="esim-advisor-entry" @click="open('habits')">
       <span class="esim-advisor-symbol"><EsimIcon name="signal" :size="25"/><i/></span>
@@ -139,5 +139,5 @@ useHead({title:'旅行上網 · eSIM · 去趣'});
       </template>
     </AppSheet>
   </section>
-  <section v-if="activeTrip?.country && activeTrip.country!=='japan'" class="trip-selection-gate"><h1>{{ activeTrip.location }}上網方案</h1><p>目前展示日本 eSIM 方案，這個目的地的方案尚未加入。</p><NuxtLink class="primary" :to="tripHref('/trip')">返回行程</NuxtLink></section>
+  <section v-if="activeTrip?.country && activeTrip.country!=='japan'" class="trip-selection-gate"><PageMascot /><h1>{{ activeTrip.location }}上網方案</h1><p>目前展示日本 eSIM 方案，這個目的地的方案尚未加入。</p><NuxtLink class="primary" :to="tripHref('/trip')">返回行程</NuxtLink></section>
 </template>

@@ -116,7 +116,7 @@ onBeforeUnmount(() => { run++; generating.value = false; });
 </script>
 <template>
   <section v-if="activeTrip" class="creation-page trip-studio" :class="{ 'studio-demo-gallery': !selectedPhoto }" aria-labelledby="creation-title">
-    <header class="creation-heading trip-studio-heading">
+    <div class="mascot-perch"><header class="creation-heading trip-studio-heading">
       <div class="studio-heading-row">
         <div class="studio-title-group">
           <div class="studio-heading-pin-trail" aria-hidden="true">
@@ -148,7 +148,7 @@ onBeforeUnmount(() => { run++; generating.value = false; });
           <i v-if="pending" class="creation-unread">{{ pending }}</i>
         </button>
       </div>
-    </header>
+    </header><PageMascot /></div>
     <div class="travel-route-divider travel-route-bottom" aria-hidden="true">
       <svg class="route-mountains" viewBox="0 0 36 22" fill="none">
         <polygon points="18,22 28,8 36,22" fill="#9ec0cb" />

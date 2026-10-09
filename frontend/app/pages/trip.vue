@@ -69,7 +69,7 @@ function savedPlan() {
     </div>
     <div class="trip-summary">
       <div>
-        <div class="trip-date-companion"><ChictripMotion :key="activeId || 'trip'" motion="go" :size="58"/><strong>{{ activeTrip.dateLabel }}</strong></div>
+        <div class="trip-date-companion"><PageMascot :key="activeId || 'trip'" /><strong>{{ activeTrip.dateLabel }}</strong></div>
         <p>{{ activeTrip.dayCount }} 天 {{ activeTrip.dayCount - 1 }} 夜 · {{ days.flatMap(d=>d.stops).length }} 個停留點</p>
       </div>
       <button class="invite-button" :aria-label="members.length + ' 人共編，邀請旅伴'" @click="groupOpen = true">

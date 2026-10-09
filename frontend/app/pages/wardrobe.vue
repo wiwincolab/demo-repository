@@ -33,7 +33,7 @@ function apply() {
 <template>
   <section class="wardrobe-page" :class="{ 'is-preferences': section === 'preferences' }">
     <div class="wardrobe-top"><NuxtLink to="/atlas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m14 5-7 7 7 7M7 12h13"/></svg>回憶廣場</NuxtLink><span v-if="section === 'outfits'">景點限定系列 · {{ mascots.length }}</span></div>
-    <header class="wardrobe-heading"><p>MY TRAVEL COMPANION</p><h1>我的吉祥物</h1><span>陪你旅行，也記住你喜歡的事。</span></header>
+    <div class="mascot-perch"><header class="wardrobe-heading"><p>MY TRAVEL COMPANION</p><h1>我的吉祥物</h1><span>陪你旅行，也記住你喜歡的事。</span></header><PageMascot /></div>
     <nav class="companion-tabs" aria-label="吉祥物功能">
       <NuxtLink :to="{ path: '/wardrobe', query: { ...route.query, view: 'outfits' } }" :aria-current="section === 'outfits' ? 'page' : undefined">吉祥物造型</NuxtLink>
       <NuxtLink :to="{ path: '/wardrobe', query: { ...route.query, view: 'preferences' } }" :aria-current="section === 'preferences' ? 'page' : undefined">記憶偏好</NuxtLink>

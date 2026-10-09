@@ -46,6 +46,7 @@ async function accept() {
 
 <template>
   <section class="share-page" aria-labelledby="invite-title">
+    <PageMascot />
     <template v-if="invite">
       <div>
         <span class="share-eyebrow">{{ invite.ownerNickname }}邀你一起旅行</span>

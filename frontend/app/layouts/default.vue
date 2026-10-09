@@ -58,7 +58,7 @@ async function changeTrip(id: TripId) {
       <div v-show="!isScoped || (ready && activeTrip)" class="route-content"><slot /></div>
       <div v-if="isScoped && ready && !activeTrip" class="trip-selection-gate">
         <span class="trip-gate-symbol" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4 7 8-3 8 3 8-3v21l-8 3-8-3-8 3V7Z"/><path d="M12 4v21M20 7v21"/></svg></span>
-        <h1>先選一趟旅行</h1>
+        <PageMascot /><h1>先選一趟旅行</h1>
         <p>照片、同行朋友與創作作品，<br>都會收在你選擇的行程裡。</p>
         <NuxtLink class="primary" :to="{ path: '/trips', query: { next: route.fullPath } }">選擇我的行程</NuxtLink>
       </div>
