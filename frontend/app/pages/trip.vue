@@ -57,7 +57,7 @@ function savedPlan() {
 }
 </script>
 <template>
-  <section v-if="activeTrip && days.length" class="screen active" aria-labelledby="trip-title">
+  <section v-if="activeTrip && days.length" class="screen active trip-motion-page" aria-labelledby="trip-title">
     <div class="trip-cover">
       <img :src="asset(activeTrip.cover)" :alt="activeTrip.location+'・旅行封面'" :style="activeId==='fuji'?{objectPosition:'50% 10%'}:{}">
       <div class="cover-copy">
@@ -99,8 +99,10 @@ function savedPlan() {
       <p>{{ days[day]?.transport }}</p>
       <span v-if="days[day]?.lodging">今晚住 {{ days[day]?.lodging }}</span>
     </div>
-    <div v-if="view === 'list'" class="stop-list">
-      <article v-for="(s, i) in shown" :key="s.id" class="stop-row" :style="{ '--day': dayColors[s.day] }">
+    <Transition name="itinerary-view" mode="out-in">
+    <div :key="view" class="itinerary-view">
+    <div v-if="view === 'list'" :key="`${activeId}-${day}`" class="stop-list">
+      <article v-for="(s, i) in shown" :key="s.id" class="stop-row" :style="{ '--day': dayColors[s.day], '--stop-delay': `${Math.min(i, 6) * 45}ms` }">
         <div class="stop-track">
           <span class="stop-number">{{ i + 1 }}</span>
         </div>
@@ -129,6 +131,8 @@ function savedPlan() {
       </article>
       <p v-else class="page-note">各色實線為單日行程，虛線為日間移動。選一天，看每站照片與流量。</p>
     </template>
+    </div>
+    </Transition>
     <p class="page-note">{{ activeId === 'kansai' ? '路線參考喜鴻五日行程；日期、時刻與車程為示範估算。' : '示範行程。' }} 流量依使用行為估算。</p>
     <section v-if="tripPointOrders.length" class="panel"><h3>點數安排 · 示範</h3><p v-for="o in tripPointOrders" :key="o.id">{{pointsProducts.find(p=>p.id===o.productId)?.name}} · {{o.targetId===null?'旅後使用，不占用當日行程':'已替換第 '+((o.day||0)+1)+' 天景點'}}<small>（未實際預訂）</small></p></section>
     <AppSheet v-model="pointsOpen" title="用和泰點數安排旅行" class="points-sheet"><PointsMarket v-if="pointsOpen" planning/></AppSheet>
@@ -187,4 +191,33 @@ function savedPlan() {
 
 <style scoped>
 .trip-date-companion{display:flex;align-items:center;gap:8px}
+/* Short, one-shot motion keeps the itinerary easy to scan. */
+@keyframes trip-arrive {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes trip-cover-reveal {
+  from { transform: scale(1.045); }
+  to { transform: scale(1); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .trip-cover { overflow: hidden; }
+  .trip-cover > img { animation: trip-cover-reveal 900ms cubic-bezier(.2,.7,.2,1) both; }
+  .cover-copy > * { animation: trip-arrive 520ms ease-out both; }
+  .cover-copy h1 { animation-delay: 70ms; }
+  .cover-copy p { animation-delay: 140ms; }
+  .trip-summary { animation: trip-arrive 480ms 100ms ease-out both; }
+  .trip-tools { animation: trip-arrive 480ms 160ms ease-out both; }
+  .stop-row { animation: trip-arrive 420ms var(--stop-delay, 0ms) cubic-bezier(.2,.7,.2,1) backwards; }
+  .day-bar button, .segmented button { transition: background-color 200ms, color 200ms, box-shadow 200ms, transform 200ms; }
+  .day-bar button:active, .segmented button:active { transform: scale(.96); }
+  .stop-card { transition: transform 220ms, box-shadow 220ms; }
+  .stop-card:active { transform: scale(.99); }
+  .itinerary-view-enter-active, .itinerary-view-leave-active { transition: opacity 160ms ease, transform 160ms ease; }
+  .itinerary-view-enter-from { opacity: 0; transform: translateY(8px); }
+  .itinerary-view-leave-to { opacity: 0; transform: translateY(-4px); }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .stop-card:hover { transform: translateY(-2px); box-shadow: 0 8px 22px #183e4c12; }
+}
 </style>

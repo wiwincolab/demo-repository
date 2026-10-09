@@ -25,18 +25,45 @@ useHead({ title: '我的行程 · 去趣 chicTrip' });
   <section class="trips-page">
     <div class="trips-heading"><div><p class="trips-eyebrow">MY JOURNEYS</p><h1 class="journeys-title">我的行程<ChictripMotion motion="idle" :size="64" /></h1><p>{{ route.query.next ? '選擇一趟旅行，繼續剛才的操作。' : '從出發前的安排，到回家後的收藏。' }}</p></div><NuxtLink to="/atlas" class="trips-atlas-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2V5Z"/><path d="M9 3v16M15 5v16"/></svg>回憶地圖<span aria-hidden="true">↗</span></NuxtLink></div>
     <div class="trips-view-toggle" aria-label="行程顯示方式"><button :aria-pressed="view==='calendar'" @click="view='calendar'">日曆</button><button :aria-pressed="view==='list'" @click="view='list'">所有行程 {{ tripSummaries.length }}</button></div>
+    <Transition name="journeys-view" mode="out-in">
+    <div :key="view" class="journeys-view">
     <TripCalendar v-if="view==='calendar'" :trips="tripSummaries" :ready="ready" @open="openTrip" @show-list="view='list'"/>
     <nav v-if="view==='list'" class="trips-country-filter" aria-label="依國家篩選行程"><button v-for="filter in filters" :key="filter.id" :aria-pressed="country===filter.id" @click="country=filter.id">{{ filter.label }} <span>{{ countTrips(filter.id) }}</span></button></nav>
-    <div v-if="view==='list'" class="trips-list">
-      <button v-for="trip in visibleTrips" :key="trip.id" class="trip-choice" :data-trip="trip.id" :disabled="!ready" :class="{ 'trip-choice-current': activeId === trip.id }" @click="openTrip(trip.id)">
+    <TransitionGroup v-if="view==='list'" name="journey-card" tag="div" class="trips-list" appear>
+      <button v-for="(trip, index) in visibleTrips" :key="trip.id" :style="{ '--card-delay': `${Math.min(index, 5) * 45}ms` }" class="trip-choice" :data-trip="trip.id" :disabled="!ready" :class="{ 'trip-choice-current': activeId === trip.id }" @click="openTrip(trip.id)">
         <div class="trip-choice-image"><img :src="asset(trip.cover)" :alt="trip.location" /><span class="trip-choice-status" :class="{ upcoming: trip.status === 'upcoming' }">{{ trip.statusLabel }}</span><span class="trip-choice-days">{{ trip.dayCount }} 天</span></div>
         <div class="trip-choice-body"><span class="trip-choice-date">{{ trip.dateLabel }}</span><h2>{{ trip.title }}</h2><p>{{ trip.summary }}</p><div v-if="trip.companions.length" class="trip-choice-company"><span class="trip-mini-avatars" aria-hidden="true"><i v-for="(friend, i) in trip.companions.slice(0, 3)" :key="friend" :style="{ '--avatar-order': i }">{{ friend.slice(0, 1) }}</i></span><span>{{ trip.companions.join('、') }}</span></div><div class="trip-choice-action"><span>{{ actionName }}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6" /></svg></div></div>
       </button>
+    </TransitionGroup>
     </div>
+    </Transition>
     <p v-if="view==='list'" class="trips-footnote">先選行程，再查看這趟的照片、創作與同行朋友。回憶地圖則收藏所有旅程。</p>
   </section>
 </template>
 
 <style scoped>
 .journeys-title{display:flex;align-items:center;gap:12px}
+.trips-list { position: relative; }
+@keyframes journeys-arrive {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .trips-heading { animation: journeys-arrive 500ms ease-out both; }
+  .trips-view-toggle { animation: journeys-arrive 500ms 70ms ease-out both; }
+  .journeys-view-enter-active, .journeys-view-leave-active { transition: opacity 160ms ease, transform 160ms ease; }
+  .journeys-view-enter-from { opacity: 0; transform: translateY(8px); }
+  .journeys-view-leave-to { opacity: 0; transform: translateY(-4px); }
+  .journey-card-enter-active { transition: opacity 360ms ease var(--card-delay), transform 360ms cubic-bezier(.2,.7,.2,1) var(--card-delay); }
+  .journey-card-leave-active { transition: opacity 120ms ease; pointer-events: none; }
+  .journey-card-move { transition: transform 360ms cubic-bezier(.2,.7,.2,1); }
+  .journey-card-enter-from { opacity: 0; transform: translateY(16px); }
+  .journey-card-leave-to { opacity: 0; }
+  .trip-choice-action svg { transition: transform 220ms ease; }
+  .trip-choice:active { transform: scale(.985); }
+  .trips-country-filter button, .trips-view-toggle button { transition: background-color 200ms, color 200ms; }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .trip-choice:hover .trip-choice-action svg { transform: translateX(4px); }
+}
 </style>
