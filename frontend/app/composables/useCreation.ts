@@ -55,6 +55,8 @@ export function useCreationAsset() {
   return (path: string) => {
     const candidate = path.replace(/^assets\/memory\//, '');
     // 本機預覽（blob:、data:）與伺服器上的照片、作品（/api/media/…）直接用，其他是網站內建的素材
-    return /^(blob:|data:image\/|\/api\/media\/)/.test(candidate) ? candidate : asset(path);
+    if (/^(blob:|data:image\/|\/api\/media\/)/.test(candidate)) return candidate;
+    if (candidate.startsWith('assets/')) return asset(candidate);
+    return asset(path.startsWith('assets/') ? path : `assets/memory/${path}`);
   };
 }

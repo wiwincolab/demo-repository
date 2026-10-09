@@ -30,7 +30,7 @@ const generating = ref(false), complete = ref(false), original = ref(false), exp
 // run：每次開始或離開都換號，還在跑的製作看到號碼變了就停
 let run = 0;
 const saved = computed(() => !!work.value && works.value.some(item => item.id === work.value!.id));
-const hasResult = computed(() => saved.value || complete.value);
+const hasResult = computed(() => saved.value || complete.value || work.value?.preset === true);
 // Style previews use our existing examples; only finished works use the chosen photo.
 const previewStyle = computed(() => creationStyles.find(item => item.id === selected.value)!);
 const previewWork = computed(() => makeExample(previewStyle.value, 'AI 示範'));
@@ -199,9 +199,9 @@ onBeforeUnmount(() => { run++; generating.value = false; });
           <template v-if="!received">
             <button class="studio-source-card" @click="sourceZoom = true"><span :class="{ 'creation-cropped-source': selectedPhoto.sourceCrop }"><img :src="sourceImage" :alt="selectedPhoto.title" /></span><span><small>這次使用的原照片</small><b>{{ selectedPhoto.title }}</b></span><em>查看原圖 ›</em></button>
             <div class="creation-section-label"><h2>想怎麼留下這張照片？</h2><button class="studio-format-help" aria-label="查看六種風格原圖與成品範例" @click="openFormats(selected)"><span>看風格範例</span><b>?</b></button></div>
-            <div class="creation-style-picker studio-compatible-styles" role="group" aria-label="六種 AI 生成風格"><button v-for="item in styles" :key="item.id" :aria-pressed="selected === item.id" :disabled="generating" @click="pick(item.id)"><span class="creation-style-image"><img :src="asset('assets/memory/' + (creationStyles.find(example => example.id === item.id)?.image || item.image))" alt="" /><i v-if="selected === item.id">✓</i></span><b>{{ item.name }}</b><small>看風格範例</small></button></div>
+            <div class="creation-style-picker studio-compatible-styles" role="group" aria-label="六種 AI 生成風格"><button v-for="item in styles" :key="item.id" :aria-pressed="selected === item.id" :disabled="generating" @click="pick(item.id)"><span class="creation-style-image"><img :src="asset('assets/memory/' + item.image)" alt="" /><i v-if="selected === item.id">✓</i></span><b>{{ item.name }}</b><small>看風格範例</small></button></div>
             <p class="studio-format-context">{{ hasResult ? '這張照片的收藏，可以交換，也可以分享給朋友。' : '上方是已有的成品範例。挑一種喜歡的風格，用你的原照開始製作。' }}</p>
-            <button class="creation-primary creation-generate" :disabled="generating" @click="generate">{{ generating ? '正在製作…' : hasResult ? '再創作一件' : '製作並加入本次作品' }}<span v-if="!generating">✦</span></button>
+            <button class="creation-primary creation-generate" :disabled="generating" @click="generate">{{ generating ? '正在製作…' : saved ? '再創作一件' : '製作並加入本次作品' }}<span v-if="!generating">✦</span></button>
             <p class="creation-generation-note">完成後，作品會收進這趟旅行的收藏。</p>
 
             <section class="studio-photo-library" aria-labelledby="photo-library-title">
