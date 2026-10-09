@@ -5,6 +5,7 @@ import type { Usage } from '~/types/trip';
 import '~/assets/css/esim.css';
 import '~/assets/css/esim-advisor.css';
 import '~/assets/css/esim-carousel.css';
+import '~/assets/css/esim-integrated.css';
 const { usage, eligible, members, group, days, esim, notify, addMember, buy } = useDemo();
 // 有後端（GCP 版）：旅伴用真的邀請連結加入、在自己的手機上購買；Pages 版維持「示範加入／示範購買」
 const { available: live } = useApi();
@@ -53,13 +54,13 @@ useHead({title:'旅行上網 · eSIM · 去趣'});
 <template>
   <section v-if="activeTrip" ref="page" class="esim-page" aria-labelledby="esim-title">
     <header class="esim-heading">
-      <div><span class="esim-overline">CONNECTED TO YOUR JOURNEY</span><h1 id="esim-title">日本旅行，輕鬆上網。</h1><p>找路、分享、聯絡旅伴，都準備好。</p></div>
+      <div><h1 id="esim-title">旅行上網</h1><p>{{ locationName }} {{ activeTrip.dayCount }} 天，選個剛好的方案。</p></div>
       <button class="esim-info" aria-label="方案與展示說明" @click="open('help')"><EsimIcon name="info" :size="20"/></button>
     </header>
 
     <button v-if="!eligible" class="esim-advisor-entry" @click="open('habits')">
       <span class="esim-advisor-symbol"><EsimIcon name="signal" :size="25"/><i/></span>
-      <span><small>AI 流量顧問</small><strong>{{ advised?'再調整我的上網需求':'不知道要買幾 GB？' }}</strong><span>回答 3 個問題，找到適合的方案</span></span>
+      <span><strong>{{ advised?'調整我的上網需求':'幫我挑適合的流量' }}</strong><span>回答 3 個問題，找到適合的方案</span></span>
       <span class="esim-entry-arrow"><EsimIcon name="arrow" :size="18"/></span>
     </button>
 

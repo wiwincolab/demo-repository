@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { tripSummaries, type TripId } from '~/data/trips';
 import '~/assets/css/trips.css';
+import '~/assets/css/app-chrome.css';
 const route = useRoute();
 const { toast, reset } = useDemo();
 // 旅伴群組（有後端時）：每趟先問一次；有群組才每 4 秒更新，朋友加入、購買幾秒內就出現。
@@ -49,7 +50,7 @@ async function changeTrip(id: TripId) {
       <NuxtLink to="/trips" class="trip-context-back" aria-label="返回我的行程">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg>
       </NuxtLink>
-      <div class="trip-context-name"><span>{{ activeTrip.dateLabel }}</span><strong>{{ activeTrip.title }}</strong></div>
+      <div class="trip-context-name"><strong>{{ activeTrip.title }}</strong></div>
       <button class="trip-context-change" @click="switcher = true">切換行程<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m5 8 5 5 5-5" /></svg></button>
     </div>
     <main id="main">
@@ -88,4 +89,3 @@ async function changeTrip(id: TripId) {
   <div class="toast" :class="{ show: toast }" role="status" aria-live="polite">{{ toast }}</div>
 </template>
 <style>.app-bar .mascot-badge{margin-left:auto}.app-shell.journey-shell{max-width:1160px}.journey-shell .app-bar{padding-inline:24px}@media(max-width:600px){.journey-shell .app-bar{padding-inline:18px}}</style>
-

@@ -4,7 +4,7 @@ const asset=useAsset();
 </script>
 <template>
   <section class="esim-benefits" aria-labelledby="esim-benefits-title">
-    <header><div><span>MORE FROM YOUR JOURNEY</span><h2 id="esim-benefits-title">上網之外，多帶一點回憶。</h2></div><small>加值提案</small></header>
+    <header><div><h2 id="esim-benefits-title">這趟旅行，還有這些。</h2></div><small>加值提案</small></header>
     <button class="esim-benefit-art esim-benefit-creation" @click="emit('open','benefits')">
       <span class="esim-benefit-copy"><span class="esim-benefit-tag">AI 創作 1 次</span><strong>一張旅途照片，<br>變成專屬收藏。</strong><span>貼紙、徽章、場景積木<br>6 種風格，選你的喜歡</span><span class="esim-benefit-action">看看能做什麼<EsimIcon name="arrow" :size="13"/></span></span>
       <span class="esim-benefit-visual creation-visual" aria-hidden="true"><span class="benefit-photo"><img :src="asset('assets/memory/fuji-editorial.png')" alt=""/><i>THAT DAY, KEPT.</i></span><span class="benefit-ticket"><img :src="asset('assets/memory/fuji-ticket.png')" alt=""/></span><span class="benefit-sticker"><svg viewBox="0 0 90 70"><path d="M5 58 38 12q7-9 14 1l33 44q5 9-6 9H13Q1 66 5 58Z" fill="#82bad0" stroke="white" stroke-width="7"/><path d="m26 29 16-18 11 7 12 23-15-6-10 4-3-10Z" fill="#fff9e8"/><path d="m16 59 25-29 2 29" fill="#477e98"/><path d="M60 47q11-9 24 0" fill="none" stroke="#fff" stroke-width="4"/></svg></span><span class="benefit-spark">✦</span></span>
