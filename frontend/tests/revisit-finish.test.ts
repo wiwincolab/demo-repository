@@ -38,7 +38,7 @@ function tileMap(){
   return {loaded,listeners,isSourceLoaded:(id:string)=>loaded.has(id),
     on:(event:string,fn:()=>void)=>{if(!listeners.has(event))listeners.set(event,new Set());listeners.get(event)!.add(fn);},
     off:(event:string,fn:()=>void)=>listeners.get(event)?.delete(fn),
-    fire:()=>listeners.get('sourcedata')?.forEach(fn=>fn()),
+    fire:(event='sourcedata')=>listeners.get(event)?.forEach(fn=>fn()),
     count:()=>[...listeners.values()].reduce((n,items)=>n+items.size,0)};
 }
 test('partial tiles cannot complete readiness; finishing removes listeners',async()=>{
@@ -46,7 +46,9 @@ test('partial tiles cannot complete readiness; finishing removes listeners',asyn
   let complete=false;
   const ready=waitForRevisitTiles(map,['satellite','aerial'],run,100).then(value=>{complete=true;return value;});
   map.loaded.add('satellite');map.fire();await Promise.resolve();assert.equal(complete,false);
-  map.loaded.add('aerial');map.fire();assert.equal(await ready,true);assert.equal(map.count(),0);
+  map.loaded.add('aerial');map.fire();await Promise.resolve();assert.equal(complete,false);
+  map.fire('render');await Promise.resolve();assert.equal(complete,false);
+  map.fire('render');assert.equal(await ready,true);assert.equal(map.count(),0);
 });
 test('slow imagery and cancelled legs release the waiter; a later event cannot arrive in the old leg',async()=>{
   const map=tileMap(),old=createRevisitRun();

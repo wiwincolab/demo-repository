@@ -9,11 +9,15 @@ body:has(.revisit-shell){padding:0;overflow:hidden}
 .revisit-map,.revisit-map-canvas{position:absolute;inset:0}
 .revisit .revisit-map-canvas{position:absolute;width:100%;height:100%}
 .revisit-map .maplibregl-canvas-container{height:100%}
-.revisit-map .maplibregl-canvas{outline:none}
+.revisit-map .maplibregl-canvas{outline:none;touch-action:none}
 .revisit-vignette{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,#edf3efcc 0,transparent 180px,transparent 70%,#e4eeea80);z-index:1}
 .revisit-map-status{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;background:radial-gradient(ellipse at 65% 45%,#c9e3e5,#e9eee3 70%);padding-left:390px;color:#4c7682;font-size:14px;text-align:center}
 .revisit-map-status>span{font-size:20px;font-weight:600;letter-spacing:.05em}
 .revisit-map-status p{font-size:12px}
+.revisit-preparation{position:absolute;z-index:7;left:50%;top:100px;transform:translateX(-50%);width:min(310px,calc(100% - 110px));display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:16px 18px;border:1px solid #ffffffd9;border-radius:16px;background:#fffef9f5;box-shadow:0 9px 32px #193e4f20;font-size:11px}
+.revisit-preparation b{flex-basis:100%;font-size:13px;font-weight:600}.revisit-preparation progress{width:100%;height:4px;accent-color:#287e92}.revisit-preparation span{color:#6c858a;font-size:10px;flex-basis:100%}.revisit-preparation button{min-height:38px;border-radius:9px;padding:8px 10px;background:#edf5f5;color:#246e83;border:1px solid #d4e6e6;font-size:11px}
+.revisit-primary:disabled{opacity:.5;cursor:wait}
+@media(max-width:759px){.revisit-preparation{top:166px;left:16px;transform:none;width:calc(100% - 88px);padding:12px 14px}}
 .revisit-header{position:absolute;z-index:5;top:max(24px,env(safe-area-inset-top));left:30px;right:30px;display:flex;align-items:center;gap:15px;pointer-events:none}
 .revisit-header>*{pointer-events:auto}
 .revisit-back{width:46px;height:46px;border:1px solid #ffffffcb;background:#ffffffbf;backdrop-filter:blur(12px);border-radius:50%;display:grid;place-items:center;box-shadow:0 3px 14px #254b5810}
@@ -99,7 +103,7 @@ body:has(.revisit-shell){padding:0;overflow:hidden}
 .revisit-pin.is-group{border-radius:12px;padding:4px;box-shadow:3px -3px 0 #dce7dd,6px -6px 0 #f8faf2,0 6px 16px #193e4f30}
 .revisit-pin.is-group img{width:72px;height:52px}
 .revisit-pin.is-group span{font-size:11px;padding-block:8px}
-.revisit-dialog{width:min(900px,calc(100vw - 36px));max-height:calc(100dvh - 48px);padding:0;border:1px solid #fff;border-radius:19px;background:#fffef9;color:#284e5c;box-shadow:0 30px 100px #102f4350;overflow:auto}
+.revisit-dialog{z-index:8;width:min(900px,calc(100vw - 36px));max-height:calc(100dvh - 48px);padding:0;border:1px solid #fff;border-radius:19px;background:#fffef9;color:#284e5c;box-shadow:0 30px 100px #102f4350;overflow:auto}
 .revisit-dialog::backdrop{background:#163f52a8;backdrop-filter:blur(7px)}
 .revisit-dialog>header{position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:#fffef9f5;border-bottom:1px solid #e5ebe5;font-size:13px}
 .revisit-dialog>header button{font-size:25px;border:1px solid #dce6e4;border-radius:50%;width:42px;height:42px;line-height:1}
