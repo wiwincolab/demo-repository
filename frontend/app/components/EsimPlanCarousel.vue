@@ -43,7 +43,7 @@ watch(()=>props.modelValue,()=>{offset.value=0;});
           <div class="esim-destination"><img :src="asset(cover)" :alt="location+'旅行風景'" draggable="false"/><div><strong>{{ location }}<small>{{ days }} 天</small></strong><span class="esim-destination-label">{{ purchased?'我的 eSIM':advised?'為你推薦':'日本上網' }}</span></div></div>
           <div class="esim-plan-body">
             <div class="esim-plan-title"><h2>{{ offer.name }}</h2><button v-if="!purchased" @click="emit('compare')">方案詳情<EsimIcon name="arrow" :size="13"/></button><span v-else class="esim-paid-tag">已購買</span></div>
-            
+
             <p class="esim-plan-rule">{{ offer.unlimited?'每日 10GB 高速，超額降至 256kbps':'每日額度重置，不跨日累積' }}</p>
             <p v-if="offer.days!==days" class="esim-duration-note">{{ days }} 天行程，搭配 {{ offer.days }} 天方案。</p>
             <div class="esim-plan-price"><div><small>{{ offer.days }} 天參考價</small><strong><small>NT$</small>{{ offer.price }}</strong></div></div>
