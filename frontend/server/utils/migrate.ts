@@ -13,7 +13,9 @@ export async function migrate(sql: Sql) {
         await tx`create table if not exists schema_migrations (name text primary key, applied_at timestamptz not null default now())`;
         const applied = (await tx<{ name: string }[]>`select name from schema_migrations`).map(row => row.name);
         for (const name of pendingMigrations(applied, migrations.map(m => m.name))) {
-            await tx.unsafe(migrations.find(m => m.name === name)!.sql);
+            const migration = migrations.find(m => m.name === name)!;
+            await migration.before?.(tx);
+            await tx.unsafe(migration.sql);
             await tx`insert into schema_migrations (name) values (${name})`;
         }
     });
