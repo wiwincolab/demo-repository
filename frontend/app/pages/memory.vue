@@ -10,7 +10,7 @@ const asset = useCreationAsset();
 const route = useRoute();
 const { notify } = useDemo();
 const { activeId, activeTrip, tripHref } = useTripContext();
-const { works, collected, exchanges, save, friends, photos, findPhoto } = useCreation();
+const { works, collected, exchanges, pending, save, friends, photos, findPhoto } = useCreation();
 // 有後端（GCP 版）：分享走真的連結與限動圖卡（ShareSheet）；Pages 版維持 Threads 預覽
 const { available: apiAvailable } = useApi();
 const selectedPhoto = ref<CreationPhoto | null>(null);
@@ -141,7 +141,7 @@ onBeforeUnmount(() => { run++; generating.value = false; });
         </div>
       </div>
       <div class="creation-top-actions">
-        <button @click="openLibrary('collection')">本次作品 <span>{{ count }}</span></button>
+        <button @click="openLibrary('collection')">本次作品 <span>{{ collected.length }}</span></button>
         <button class="creation-exchange-action" aria-label="交換 AI 作品" @click="startExchange()">
           <img class="creation-exchange-illustration" :src="asset('assets/memory/exchange-collectibles.png')" alt="" />
           <span class="creation-exchange-copy"><b>交換作品</b><small>用收藏，換個風景</small></span>
