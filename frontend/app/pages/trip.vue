@@ -256,6 +256,7 @@ function savedPlan() {
   .trip-summary { animation: trip-arrive 480ms 100ms ease-out both; }
   .trip-tools { animation: trip-arrive 480ms 160ms ease-out both; }
   .day-sliding-indicator { transition: transform 280ms cubic-bezier(.22,.75,.25,1), width 280ms cubic-bezier(.22,.75,.25,1); }
+  .stop-row { animation: trip-arrive 420ms var(--stop-delay, 0ms) cubic-bezier(.2,.7,.2,1) backwards; }
   .day-bar button, .segmented button { transition: background-color 200ms, color 200ms, box-shadow 200ms, transform 200ms; }
   .day-bar button:active, .segmented button:active { transform: scale(.96); }
   .stop-card { transition: transform 220ms, box-shadow 220ms; }

@@ -61,15 +61,94 @@ export const creationPhotos: CreationPhoto[] = [
 ];
 export const photosForTrip = (id: TripId | null) => creationPhotos.filter(photo => photo.tripId === id && !photo.referenceOnly);
 export const photoById = (id?: string) => creationPhotos.find(photo=>photo.id===id);
+export const photoStyleAssets: Record<string, Partial<Record<CreationId, string>>> = {
+  'usj-scene': {
+    sticker: 'assets/ai-image-reserve/2026-10-04/kansai-usj-source/sticker.png',
+    photo: 'assets/ai-image-reserve/2026-10-04/kansai-usj-source/photo.png',
+    ticket: 'assets/ai-image-reserve/2026-10-04/kansai-usj-source/ticket.png',
+    pin: 'assets/ai-image-reserve/2026-10-04/kansai-usj-source/pin.png',
+    scene: 'journey/usj-scene-preview.png',
+    companion: 'assets/ai-image-reserve/2026-10-04/kansai-usj-source/companion.png',
+  },
+  'usj-panorama': {
+    photo: 'assets/ai-image-reserve/2026-10-04/kansai-usj-nintendo-source/photo.png',
+    ticket: 'assets/ai-image-reserve/2026-10-04/kansai-usj-nintendo-source/ticket.png',
+    pin: 'assets/ai-image-reserve/2026-10-04/kansai-usj-nintendo-source/pin.png',
+    companion: 'usj-companion-test.png',
+  },
+  'nara-deer': {
+    sticker: 'journey/nara-sticker.png',
+    photo: 'assets/ai-image-reserve/2026-10-04/kansai-nara-source/photo.png',
+    ticket: 'assets/ai-image-reserve/2026-10-04/kansai-nara-source/ticket.png',
+    pin: 'assets/ai-image-reserve/2026-10-04/kansai-nara-source/pin.png',
+    scene: 'assets/ai-image-reserve/2026-10-04/kansai-nara-source/scene.png',
+    companion: 'assets/ai-image-reserve/2026-10-04/kansai-nara-source/companion.png',
+  },
+  'kiyomizu': {
+    sticker: 'assets/ai-image-reserve/2026-10-04/kansai-kiyomizu/sticker.png',
+    photo: 'assets/ai-image-reserve/2026-10-04/kansai-kiyomizu/photo.png',
+    ticket: 'assets/ai-image-reserve/2026-10-04/kansai-kiyomizu/ticket.png',
+    pin: 'revisit/kiyomizu-pin.png',
+    scene: 'assets/ai-image-reserve/2026-10-04/kansai-kiyomizu/scene.png',
+    companion: 'assets/ai-image-reserve/2026-10-04/kansai-kiyomizu/companion.png',
+  },
+  'kobe-night': {
+    sticker: 'assets/ai-image-reserve/2026-10-04/kansai-kobe-night/sticker.png',
+    photo: 'assets/ai-image-reserve/2026-10-04/kansai-kobe-night/photo.png',
+    ticket: 'assets/ai-image-reserve/2026-10-04/kansai-kobe-night/ticket.png',
+    pin: 'assets/ai-image-reserve/2026-10-04/kansai-kobe-night/pin.png',
+    scene: 'assets/ai-image-reserve/2026-10-04/kansai-kobe-night/scene.png',
+    companion: 'assets/ai-image-reserve/2026-10-04/kansai-kobe-night/companion.png',
+  },
+  'amanohashidate': {
+    sticker: 'assets/ai-image-reserve/2026-10-04/kansai-amanohashidate/sticker.png',
+    photo: 'assets/ai-image-reserve/2026-10-04/kansai-amanohashidate/photo.png',
+    ticket: 'assets/ai-image-reserve/2026-10-04/kansai-amanohashidate/ticket.png',
+    pin: 'assets/ai-image-reserve/2026-10-04/kansai-amanohashidate/pin.png',
+    scene: 'assets/ai-image-reserve/2026-10-04/kansai-amanohashidate/scene.png',
+    companion: 'assets/ai-image-reserve/2026-10-04/kansai-amanohashidate/companion.png',
+  },
+  'ine-cruise': {
+    sticker: 'assets/ai-image-reserve/2026-10-04/kansai-ine-cruise/sticker.png',
+    photo: 'assets/ai-image-reserve/2026-10-04/kansai-ine-cruise/photo.png',
+    ticket: 'assets/ai-image-reserve/2026-10-04/kansai-ine-cruise/ticket.png',
+    pin: 'assets/ai-image-reserve/2026-10-04/kansai-ine-cruise/pin.png',
+    scene: 'assets/ai-image-reserve/2026-10-04/kansai-ine-cruise/scene.png',
+    companion: 'assets/ai-image-reserve/2026-10-04/kansai-ine-cruise/companion.png',
+  },
+  'dotonbori': {
+    sticker: 'assets/ai-image-reserve/2026-10-04/kansai-dotonbori/sticker.png',
+    photo: 'assets/ai-image-reserve/2026-10-04/kansai-dotonbori/photo.png',
+    ticket: 'assets/ai-image-reserve/2026-10-04/kansai-dotonbori/ticket.png',
+    pin: 'assets/ai-image-reserve/2026-10-04/kansai-dotonbori/pin.png',
+    scene: 'assets/ai-image-reserve/2026-10-04/kansai-dotonbori/scene.png',
+    companion: 'assets/ai-image-reserve/2026-10-04/kansai-dotonbori/companion.png',
+  },
+};
+
 export function styleForPhoto(photo: CreationPhoto, id: CreationId): CreationStyle {
   if (photo.demoPhotoId) {
     const template = photoById(photo.demoPhotoId);
     if (template) return { ...styleForPhoto(template, id), location: photo.location, source: photo.source, sourceCrop: photo.sourceCrop };
   }
-  const base=styleById(id);
-  const hasPreset=photo.styles.includes(id);
-  const override=photo.id==='nara-deer'&&id==='sticker'?{image:'journey/nara-sticker.png',interactive:'揭起貼紙'}:photo.id==='usj-scene'&&id==='scene'?{image:'journey/usj-scene-preview.png',interactive:'走進這個場景'}:photo.id==='kiyomizu'&&id==='pin'?{image:'revisit/kiyomizu-pin.png'}:{};
-  return {...base,...override,image:hasPreset?({...base,...override}.image):photo.source,location:photo.location,source:photo.source,sourceCrop:photo.sourceCrop,interactive:!hasPreset&&id==='scene'?'轉動場景預覽':({...base,...override}.interactive),preset:hasPreset};
+  const base = styleById(id);
+  const reserveImage = photoStyleAssets[photo.id]?.[id];
+  const hasPreset = photo.styles.includes(id) || !!reserveImage;
+  const image = reserveImage || (hasPreset ? base.image : photo.source);
+  const interactive = (photo.id === 'usj-scene' && id === 'scene')
+    ? '走進這個場景'
+    : (photo.id === 'nara-deer' && id === 'sticker')
+      ? '揭起貼紙'
+      : (!hasPreset && id === 'scene' ? '轉動場景預覽' : base.interactive);
+  return {
+    ...base,
+    image,
+    location: photo.location,
+    source: photo.source,
+    sourceCrop: photo.sourceCrop,
+    interactive,
+    preset: hasPreset,
+  };
 }
 export function workForPhoto(photo:CreationPhoto,id:CreationId,creator='你',suffix=''):CreationWork {
   const style=styleForPhoto(photo,id);

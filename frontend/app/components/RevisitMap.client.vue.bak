@@ -368,13 +368,7 @@ onMounted(async () => {
     }); observer.observe(canvas.value!);
   } catch { fail(); }
 });
-function focus(id: string) {
-  const target = props.stops.find(stop => stop.id === id);
-  if (!target || !loaded || disposed) return;
-  const view = revisitCamera(target.zoom, target.bearing, target.id, props.three);
-  map?.flyTo({ center: target.coords, ...view.scene, padding: padding(true), duration: props.reduced ? 0 : 600 });
-}
-defineExpose({ cancel, skip:()=>void execute(true), retry:()=>{prepare();void execute();}, focus });
+defineExpose({ cancel, skip:()=>void execute(true), retry:()=>{prepare();void execute();} });
 onBeforeUnmount(() => { disposed = true; preparationRun?.cancel(); clearTimeout(loadTimer); observer?.disconnect(); cancel(); markers.forEach(item => item.marker.remove()); map?.remove(); });
 </script>
 <template>
