@@ -35,7 +35,7 @@ function makeStop(id: number, day: number, name: string, at: [number,number], ti
 }
 const fuji='assets/memory/fuji-editorial.png';
 export const tripItineraries: Record<TripId, TripDay[]> = {
-  ...Object.fromEntries(classicRoutes.map(route => [route.id, route.days.map(day => ({ ...day, stops: day.stops.map(stop => ({ ...stop, photo: { ...stop.photo, src: stop.photo.src || `assets/routes/${route.country}.svg`, alt: `${stop.name}・路線示意圖`, credit: '路線示意圖' } })) }))])) as Record<TripId, TripDay[]>,
+  ...Object.fromEntries(classicRoutes.map(route => [route.id, structuredClone(route.days)])) as Record<TripId, TripDay[]>,
   tokyo: structuredClone(original.days),
   kansai: kansaiDays,
   fuji: [

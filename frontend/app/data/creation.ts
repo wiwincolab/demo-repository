@@ -44,6 +44,9 @@ export interface CreationPhoto {
   sourceCrop?: boolean; styles: CreationId[]; featured?: 'usj'; note?: string; referenceOnly?: boolean; demoPhotoId?: string; stopId?: string;
 }
 export const creationPhotos: CreationPhoto[] = [
+  {id:'tokyo-asakusa',tripId:'tokyo',title:'淺草的午後',location:'東京 · 淺草寺',source:'../photos/sensoji.jpg',styles:[]},
+  {id:'tokyo-shibuya',tripId:'tokyo',title:'走進城市的節奏',location:'東京 · 澀谷',source:'../photos/shibuya-crossing.jpg',styles:[]},
+  {id:'tokyo-skytree',tripId:'tokyo',title:'抬頭遇見東京',location:'東京 · 晴空塔',source:'../photos/tokyo-skytree.jpg',styles:[]},
   {id:'usj-scene',tripId:'kansai',title:'蘑菇餐廳前',location:'大阪 · 超級任天堂世界',source:'journey/usj-source.png',styles:['scene'],featured:'usj'},
   {id:'usj-panorama',tripId:'kansai',title:'園區全景',location:'大阪 · 超級任天堂世界',source:'references/usj-nintendo-source.png',styles:['photo','companion']},
   {id:'kyoto-shrine',tripId:'kansai',title:'樹影下的鳥居',location:'京都 · 野宮神社',source:'references/kyoto-shrine-source.png',styles:['pin'],referenceOnly:true,note:'先前京都示範素材，非這次五日路線'},
@@ -92,4 +95,17 @@ export function creationFriendsForTrip(id: TripId|null) {
       : id==='tokyo'
         ? creationFriends.slice(0,2).map(friend=>({...friend,trip:'東京 5 日旅行',date:'2026.10.12 — 10.16'})) : [];
   return [...group,creationFriends[2]!];
+}
+
+/** A ready-to-use demo copy keeps exchange available before the first creation. */
+export function demoExchangeWork(tripId: TripId): CreationWork {
+  const work = workForPhoto(photoById('fuji-blue')!, 'sticker', '你', '-demo-exchange');
+  return { ...work, id: `${tripId}-demo-exchange`, tripId, sourceTripId: work.tripId };
+}
+
+/** Prefer the trip's preset collectibles; Tokyo photos have no preset outputs. */
+export function exchangeOffers(tripId: TripId | null, creator: string): CreationWork[] {
+  const presets = photosForTrip(tripId).filter(photo => !photo.featured && photo.styles.length);
+  const available = presets.length ? presets : photosForTrip('kansai').filter(photo => !photo.featured && photo.styles.length);
+  return available.flatMap(photo => photo.styles.map(style => workForPhoto(photo, style, creator)));
 }

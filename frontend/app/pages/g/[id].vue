@@ -47,6 +47,7 @@ async function openTrip(path: '/trip' | '/memory') {
 
 <template>
   <section class="share-page" aria-labelledby="gift-title">
+    <PageMascot />
     <template v-if="gift && plan">
       <div>
         <span class="share-eyebrow">{{ gift.sender }}送你一份禮物</span>

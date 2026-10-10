@@ -1,0 +1,6 @@
+{
+  "tool": "built-in image_gen",
+  "source": "companion.png",
+  "output": "mascot-seated.png",
+  "prompt": "Use case: precise-object-edit. Edit target: supplied ChicTrip felt mascot. Create one production UI cutout of exactly this character SITTING DOWN with bent legs, both white shoes pointing forward, little hands resting beside its hips on an implied flat ledge. Preserve its triangular yellow face, blue left side, two large white eyes and black pupils, red baseball cap, stitched denim overalls and warm felt texture. Whole seated body, three-quarter front view, centered tightly with 5% transparent padding, no cropped feet. Truly transparent background. No ground, pedestal, scenery, text, UI, extra characters, motion marks or cast shadow. The sitting contact point should be near the bottom of the image; feet project forward at same baseline. Friendly relaxed pose, identical character identity and materials."
+}

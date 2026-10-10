@@ -4,16 +4,17 @@ import { mascots, type MascotId } from '~/data/mascots';
 useHead({ title: '我的吉祥物 · 去趣 chicTrip' });
 const asset = useAsset();
 const route = useRoute();
-const section = computed(() => route.query.view === 'preferences' ? 'preferences' : 'outfits');
+const section = computed(() => route.query.view === 'preferences' ? 'preferences' : route.query.view === 'planet' ? 'planet' : 'outfits');
 const { keywordIds } = useTravelPreferences();
 const { tripHref } = useTripContext();
-const { selectedId, ready, select } = useMascot();
+const { selectedId, ready, syncStatus, select } = useMascot();
 const previewId = ref<MascotId>(selectedId.value);
 const message = ref('');
 const countries = ['全部', '日本', '台灣', '韓國'] as const;
 const country = ref<typeof countries[number]>('全部');
 const visibleMascots = computed(() => mascots.filter(mascot => country.value === '全部' || mascot.country === country.value));
 watch(ready, value => { if (value) previewId.value = selectedId.value; }, { immediate: true });
+watch(selectedId, (value, previous) => { if (previewId.value === previous) previewId.value = value; });
 const preview = computed(() => mascots.find(m => m.id === previewId.value)!);
 const applied = computed(() => selectedId.value === previewId.value);
 function show(id: MascotId) { previewId.value = id; message.value = ''; }
@@ -30,14 +31,16 @@ function apply() {
 </script>
 
 <template>
-  <section class="wardrobe-page" :class="{ 'is-preferences': section === 'preferences' }">
+  <section class="wardrobe-page" :class="{ 'is-preferences': section === 'preferences', 'is-planet': section === 'planet' }">
     <div class="wardrobe-top"><NuxtLink to="/atlas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m14 5-7 7 7 7M7 12h13"/></svg>回憶廣場</NuxtLink><span v-if="section === 'outfits'">景點限定系列 · {{ mascots.length }}</span></div>
-    <header class="wardrobe-heading"><p>MY TRAVEL COMPANION</p><h1>我的吉祥物</h1><span>陪你旅行，也記住你喜歡的事。</span></header>
+    <div class="mascot-perch"><header class="wardrobe-heading"><p>MY TRAVEL COMPANION</p><h1>我的吉祥物</h1><span>陪你旅行，也記住你喜歡的事。</span></header><PageMascot /></div>
     <nav class="companion-tabs" aria-label="吉祥物功能">
       <NuxtLink :to="{ path: '/wardrobe', query: { ...route.query, view: 'outfits' } }" :aria-current="section === 'outfits' ? 'page' : undefined">吉祥物造型</NuxtLink>
       <NuxtLink :to="{ path: '/wardrobe', query: { ...route.query, view: 'preferences' } }" :aria-current="section === 'preferences' ? 'page' : undefined">記憶偏好</NuxtLink>
+      <NuxtLink :to="{ path: '/wardrobe', query: { ...route.query, view: 'planet' } }" :aria-current="section === 'planet' ? 'page' : undefined">旅行名片</NuxtLink>
     </nav>
-    <section v-if="section === 'preferences'" class="companion-preferences">
+    <TravelPlanetCard v-if="section === 'planet'" />
+    <section v-else-if="section === 'preferences'" class="companion-preferences">
       <PlannerPreferenceGraph v-model="keywordIds" />
       <NuxtLink class="preference-plan-link" :to="tripHref('/planner')">帶著偏好去規劃行程 →</NuxtLink>
     </section>
@@ -60,13 +63,15 @@ function apply() {
             <small>{{ mascot.country }} · {{ mascot.trip }}</small><strong>{{ mascot.name }}</strong>
           </button>
         </div>
-        <div class="wardrobe-action"><button class="wardrobe-apply" :disabled="applied || !ready" @click="apply">{{ applied ? '目前的吉祥物' : '選為我的吉祥物' }}<span aria-hidden="true">{{ applied ? '✓' : '→' }}</span></button><p role="status" aria-live="polite">{{ message || '套用後，所有行程共用這個造型。' }}</p></div>
+        <div class="wardrobe-action"><button class="wardrobe-apply" :disabled="applied || !ready" @click="apply">{{ applied ? '目前的吉祥物' : '選為我的吉祥物' }}<span aria-hidden="true">{{ applied ? '✓' : '→' }}</span></button><p role="status" aria-live="polite">{{ syncStatus === 'error' ? '造型已在本機套用，但尚未同步給旅伴。重新整理可重試。' : message || '套用後，所有行程共用這個造型。' }}</p></div>
       </div>
     </div>
   </section>
 </template>
 
 <style scoped>
+.wardrobe-page.is-planet{max-width:1320px}.is-planet .companion-tabs{margin-bottom:20px}
+
 .wardrobe-page.is-preferences{max-width:760px}.is-preferences .wardrobe-top{display:none}.is-preferences .wardrobe-heading{margin:6px 0 16px}.is-preferences .wardrobe-heading p{display:none}.is-preferences .wardrobe-heading h1{font-size:24px}
 
 .companion-tabs{display:flex;gap:6px;padding:4px;background:#edf3f4;border-radius:12px;margin-bottom:18px}.companion-tabs a{flex:1;text-align:center;padding:12px;color:#789098;text-decoration:none;font-size:13px;border-radius:9px}.companion-tabs a[aria-current=page]{background:white;color:#255f6f;box-shadow:0 2px 6px #243e4b0a}.preference-plan-link{display:block;text-align:center;padding:14px;border-radius:12px;background:#285d68;color:#fff;text-decoration:none;font-size:13px;margin-top:16px}.companion-tabs a:focus-visible,.preference-plan-link:focus-visible{outline:3px solid #e6b84c;outline-offset:3px}

@@ -67,3 +67,45 @@ test('explicit interests rank ahead of the selected long-term preferences', () =
   ];
   assert.equal(recommendPlaces(places, [10,11], '今天想喝咖啡', 1, 0, ['nature']).stops[0]?.id, 11);
 });
+
+test('text edits promote a named outside place and support removal in order', async () => {
+  const { refineSelection } = await import('../app/utils/planner.ts');
+  const a = stops[0]!, b = stops[1]!;
+  assert.deepEqual(refineSelection(stops, [a.id], `加入${b.name}，移除${a.name}`).ids, [b.id]);
+  assert.deepEqual(refineSelection(stops, [], `加入${b.name}，不要${b.name}`).ids, []);
+  assert.deepEqual(refineSelection(stops, [a.id], '喜歡自然景點，加入不存在的景點').ids, [a.id]);
+});
+
+test('selected-only planning does not automatically include gray places', () => {
+  const result = recommendPlaces(stops, [1], '喜歡自然景點，圈外多搭 60 分鐘', 4, 60, [], true);
+  assert.deepEqual(result.stops.map(s => s.id), [1]);
+});
+
+test('every generated stop has a rain plan without requiring rain keywords', async () => {
+  const { rainPlanFor } = await import('../app/utils/planner.ts');
+  const indoor = { ...stops[0]!, id: 100, name: '城市博物館' };
+  const places = [...stops, indoor];
+  const plan = recommendPlaces(places, places.map(p => p.id), '', 4, 0, [], true);
+  assert.ok(plan.stops.length > 0);
+  assert.ok(plan.stops.every(s => s.rainPlan.length > 0));
+  assert.match(rainPlanFor(stops[0]!, places), /城市博物館/);
+  assert.match(rainPlanFor(indoor, places), /保留城市博物館/);
+  assert.match(rainPlanFor(stops[0]!, [stops[0]!]), /沒有可確認/);
+});
+
+test('hour-based visits do not fit into an undersized time budget', () => {
+  const themePark = { ...stops[0]!, id: 20, name: '東京迪士尼樂園', stay: '停留 8 小時' };
+  assert.equal(recommendPlaces([themePark], [20], '有四小時', 3, 0).stops.length, 0);
+  assert.equal(recommendPlaces([themePark], [20], '有九小時', 3, 0).stops.length, 1);
+  const mixed = { ...themePark, stay: '停留 1 小時 30 分鐘' };
+  assert.equal(recommendPlaces([mixed], [20], '只有一小時', 3, 0).stops.length, 0);
+});
+
+test('rain backups avoid explicitly excluded interests and distant indoor venues', async () => {
+  const { rainPlanFor } = await import('../app/utils/planner.ts');
+  const outdoor = { ...stops[0]!, name: '城市公園' };
+  const coffee = { ...stops[1]!, name: '街角咖啡店', at: outdoor.at };
+  const result = recommendPlaces([outdoor, coffee], [outdoor.id], '不要咖啡', 3, 0);
+  assert.doesNotMatch(result.stops[0]!.rainPlan, /街角咖啡店/);
+  assert.match(rainPlanFor(outdoor, [outdoor, { ...coffee, at: [120, 23] }]), /沒有可確認/);
+});

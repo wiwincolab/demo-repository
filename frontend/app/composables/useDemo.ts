@@ -24,7 +24,7 @@ export function useDemo() {
     const groupApi=useGroup();
     const serverGroup=computed(()=>activeId.value?groupApi.groups.value[activeId.value]??null:null);
     const members=computed<Member[]>({
-      get:()=>serverGroup.value?serverGroup.value.members.map(m=>({name:m.me?`${m.nickname}（你）`:m.nickname,paid:m.paid,me:m.me,price:esimPlan((m.paid?m.usage:m.me?esim.value.selectedUsage||usage.value:null)||'normal',activeTrip.value?.dayCount||5).price})):localMembers.value,
+      get:()=>serverGroup.value?serverGroup.value.members.map(m=>({name:m.me?`${m.nickname}（你）`:m.nickname,paid:m.paid,me:m.me,mascotId:m.mascotId || undefined,price:esimPlan((m.paid?m.usage:m.me?esim.value.selectedUsage||usage.value:null)||'normal',activeTrip.value?.dayCount||5).price})):localMembers.value,
       set:value=>{localMembers.value=value;},
     });
     onMounted(()=>{
@@ -79,7 +79,7 @@ export function useDemo() {
         if (members.value.length >= 8)
             return;
         const names=['Scott（你）',...(activeTrip.value?.companions||[]),'小晴','小恩','小凱','小文'];
-        members.value.push({ name: names[members.value.length]||`旅伴 ${members.value.length}`, paid: false, price: esimPlan('normal',activeTrip.value?.dayCount||5).price });
+        members.value.push({ mascotId: ['usj','fuji','nara','asakusa','ine','kobe'][members.value.length % 6], name: names[members.value.length]||`旅伴 ${members.value.length}`, paid: false, price: esimPlan('normal',activeTrip.value?.dayCount||5).price });
         notify('旅伴已加入共編，尚未購買 eSIM');
     }
     // 邀請旅伴（有後端時）：拿到這趟的群組與邀請連結；先前在這支手機上已經模擬買過，就一併記到群組裡

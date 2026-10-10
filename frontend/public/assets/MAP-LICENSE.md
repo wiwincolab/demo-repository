@@ -47,3 +47,14 @@ Twelve Japanese destination areas use locally prepared GSI seamless aerial image
 Source: 国土地理院「全国最新写真（シームレス）」, https://maps.gsi.go.jp/development/ichiran.html . GSI terms: https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html . Processing: geographic mosaicking, WebP compression, lower-resolution pyramid generation and outer-edge alpha feathering. Source attribution stays visible on the map. Seoul and Hong Kong still use streamed global imagery.
 
 Wide-area landing context is prepared separately at zoom 14 (9 × 9 source tiles) in `memory/revisit/aerial/regional/`, with its own `sources.json` provenance. It supplies a coherent landscape during the overhead and early descent beats before the zoom-18 detail fades in. Missing GSI ocean tiles use a plain sea-color fill to avoid black holes in terrain raster rendering; no missing terrain or landmark imagery is invented.
+
+## Itinerary maps and inter-stop directions
+
+All itinerary destinations use MapLibre with the OpenFreeMap Liberty style
+(`https://tiles.openfreemap.org/styles/liberty`). Tiles are streamed on demand;
+OpenFreeMap / OpenMapTiles / OpenStreetMap attribution remains visible in the map.
+See https://openfreemap.org/quick_start/ . Solid and dashed lines show itinerary
+order, not calculated roads or navigation. Each adjacent pair also links to Google
+Maps directions using Maps URLs with latitude/longitude endpoints; users choose
+their transport mode there. No directions API key or routing estimates are stored.
+See https://developers.google.com/maps/documentation/urls/get-started .

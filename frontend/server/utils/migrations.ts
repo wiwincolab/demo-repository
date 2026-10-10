@@ -197,4 +197,8 @@ create table daily_cards (
         },
         sql: `drop table creations;`,
     },
+    {
+        name: '007_member_mascot',
+        sql: `alter table devices add column mascot_id text;`,
+    },
 ];

@@ -33,7 +33,7 @@ watch(selectedId, () => { detailOpen.value = false; newWorksOpen.value = false; 
 </script>
 <template>
   <div class="trip-atlas" :class="{ 'is-period': scope === 'period' }">
-    <header v-if="!selectedTrip || scope === 'period'" class="trip-atlas-heading"><span class="journey-eyebrow">MEMORY ATLAS</span><h1>旅行會結束，收藏會留下。</h1><p>重走一趟旅行，也把不同日子的回憶串起來。</p></header>
+    <header v-if="!selectedTrip || scope === 'period'" class="trip-atlas-heading"><span class="journey-eyebrow">MEMORY ATLAS</span><div class="mascot-perch"><h1>旅行會結束，收藏會留下。</h1><PageMascot /></div><p>重走一趟旅行，也把不同日子的回憶串起來。</p></header>
     <div class="trip-atlas-scope" role="group" aria-label="回顧範圍"><button :aria-pressed="scope === 'trip'" @click="setScope('trip')">依旅程</button><button :aria-pressed="scope === 'period'" @click="setScope('period')">依期間</button></div>
     <nav v-if="scope === 'trip'" class="trip-atlas-filters" aria-label="依旅程瀏覽收藏">
       <button :aria-pressed="!selectedId" @click="browse(null)">所有旅程</button>
@@ -58,7 +58,7 @@ watch(selectedId, () => { detailOpen.value = false; newWorksOpen.value = false; 
       <JourneyAtlas @recap="startRecap('kansai')" />
     </template>
     <section v-else-if="selectedTrip" class="trip-atlas-collection">
-      <header class="trip-atlas-collection-heading"><div><span class="journey-eyebrow">{{ selectedTrip.english }} / {{ selectedTrip.startDate.slice(0, 4) }}</span><h1>{{ selectedTrip.title }}</h1><p>{{ selectedTrip.dateLabel }} <span>·</span> {{ works.length }} 件收藏</p></div><div class="trip-atlas-heading-actions"><button v-if="selectedTrip.status === 'completed'" class="creation-primary" @click="startRecap(selectedTrip.id)">開始回顧<span aria-hidden="true">▷</span></button><button class="creation-secondary" @click="create(selectedTrip.id)">{{ selectedTrip.status === 'upcoming' ? '查看行程照片' : '繼續創作' }}<span aria-hidden="true">↗</span></button></div></header>
+      <header class="trip-atlas-collection-heading"><div><span class="journey-eyebrow">{{ selectedTrip.english }} / {{ selectedTrip.startDate.slice(0, 4) }}</span><div class="mascot-perch"><h1>{{ selectedTrip.title }}</h1><PageMascot /></div><p>{{ selectedTrip.dateLabel }} <span>·</span> {{ works.length }} 件收藏</p></div><div class="trip-atlas-heading-actions"><button v-if="selectedTrip.status === 'completed'" class="creation-primary" @click="startRecap(selectedTrip.id)">開始回顧<span aria-hidden="true">▷</span></button><button class="creation-secondary" @click="create(selectedTrip.id)">{{ selectedTrip.status === 'upcoming' ? '查看行程照片' : '繼續創作' }}<span aria-hidden="true">↗</span></button></div></header>
       <div v-if="works.length" class="trip-atlas-works">
         <button v-for="work in works" :key="work.id" class="trip-atlas-work" @click="open(work)"><div><img :src="workImage(work)" :alt="work.title" /></div><span>{{ styleById(work.styleId).name }}</span><h2>{{ work.location }}</h2><p>{{ work.receivedFrom ? '與朋友交換的收藏' : work.creator + ' 的作品' }}<span aria-hidden="true">↗</span></p></button>
       </div>

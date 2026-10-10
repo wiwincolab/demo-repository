@@ -16,7 +16,6 @@ const playWork=computed<CreationWork | null>(()=>active.value && props.stop.trip
 } : null);
 // 示範收藏只給人看樣子；真的想要，用這一站的照片自己做一件，做好就換成你的
 const kinds = {sticker:'貼紙',pin:'徽章',ticket:'票根'} as const;
-const amounts = {sticker:'一組',pin:'一枚',ticket:'一張'} as const;
 const makeLink = computed(() => active.value?.demo && props.stop.photoId && props.stop.tripId !== 'last-year'
   ? { path:'/memory', query:{ trip:props.stop.tripId, photo:props.stop.photoId, style:active.value.kind, stop:props.stop.id } } : null);
 const ratio = ref(1.5), failed = ref(false), ready = ref(false);
@@ -61,7 +60,7 @@ onBeforeUnmount(()=>emit('hold',false));
           <CreationPinPlay v-else-if="active.kind==='pin'" creator="你" :image="asset(active.image)" :location="stop.location" :date="stop.date.replaceAll('-','.')" :work="savedWork" />
           <CreationTicketPlay v-else :image="asset(active.image)" creator="你" :location="stop.location" :date="stop.date.replaceAll('-','.')" :caption="stop.caption" />
         </div>
-        <div class="revisit-souvenir-description"><template v-if="makeLink"><p>這是{{ kinds[active.kind] }}的示範樣式，還不是你的收藏。</p><NuxtLink class="revisit-primary revisit-make-own" :to="makeLink">用這張照片做{{ amounts[active.kind] }}{{ kinds[active.kind] }} <span aria-hidden="true">✦</span></NuxtLink></template><small v-else-if="active.demo">旅程示範收藏 · 不會寫入你的個人收藏</small><small v-else>你的收藏 · 跟著這一站保存</small></div>
+        <div class="revisit-souvenir-description"><template v-if="makeLink"><p>這是{{ kinds[active.kind] }}的示範樣式，還不是你的收藏。</p><NuxtLink class="revisit-primary revisit-make-own" :to="makeLink">查看{{ kinds[active.kind] }}範例 <span aria-hidden="true">✦</span></NuxtLink></template><small v-else-if="active.demo">旅程示範收藏 · 不會寫入你的個人收藏</small><small v-else>你的收藏 · 跟著這一站保存</small></div>
       </div>
     </div>
     <footer class="revisit-photo-room-footer">

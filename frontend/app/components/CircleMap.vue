@@ -6,10 +6,12 @@ const props = defineProps<{
     places: Stop[];
     selected: number[];
     drawing: boolean;
-    recommended?: number[];
+    boundary?: Point[];
+    resetKey?: number;
     route?: number[];
 }>();
 const emit = defineEmits<{
+    range: [ids: number[], boundary: Point[]];
     select: [
         ids: number[]
     ];
@@ -27,7 +29,6 @@ let observer: ResizeObserver | null = null, data: BaseMap | null = null, active 
 function draw() {
     if (!box.value || !canvas.value || !props.places.length)
         return;
-    const oldSize = size.value;
     size.value = { width: box.value.clientWidth, height: box.value.clientHeight };
     const dpr = Math.min(devicePixelRatio, 2);
     canvas.value.width = size.value.width * dpr;
@@ -45,7 +46,7 @@ function draw() {
       for(let y=0;y<size.value.height;y+=36){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(size.value.width,y);ctx.stroke();}
     }
     points.value = props.places.map(stop => ({ stop, point: project(stop.at) }));
-    polygon.value = polygon.value.map(p => [p[0]! / oldSize.width * size.value.width, p[1]! / oldSize.height * size.value.height]);
+    polygon.value = (props.boundary || []).map(project);
 }
 function coordinate(event: PointerEvent): Point { const r = box.value!.getBoundingClientRect(); return [event.clientX - r.left, event.clientY - r.top]; }
 function start(event: PointerEvent) {
@@ -62,14 +63,17 @@ function finish() {
         return;
     active = false;
     if (polygon.value.length < 3) {
-        polygon.value = [];
+        cancel();
         return;
     }
-    emit('select', points.value.filter(p => pointInPolygon(p.point, polygon.value)).map(p => p.stop.id));
+    const project = projection(props.places, size.value.width, size.value.height);
+    emit('range', points.value.filter(p => pointInPolygon(p.point, polygon.value)).map(p => p.stop.id), polygon.value.map(project.invert));
 }
+function cancel() { active = false; draw(); }
 function toggle(id: number) { emit('select', props.selected.includes(id) ? props.selected.filter(n => n !== id) : [...props.selected, id]); }
-watch(() => props.selected, ids => { if (!ids.length && !active)
-    polygon.value = []; });
+watch(() => props.resetKey, () => { active = false; polygon.value = []; });
+watch(() => props.places, () => { polygon.value = []; draw(); });
+watch(() => props.boundary, draw);
 onMounted(async () => { observer = new ResizeObserver(draw); observer.observe(box.value!); draw(); if(!isTokyo.value)return; try {
     data = await $fetch<BaseMap>(asset('assets/tokyo-map.json'));
     draw();
@@ -78,18 +82,25 @@ catch { } });
 onBeforeUnmount(() => observer?.disconnect());
 </script>
 <template>
-  <div ref="box" class="route-map planner-map">
+  <div ref="box" class="route-map planner-map" :class="{ drawing }">
     <canvas ref="canvas" aria-hidden="true" />
     <svg class="planner-route" :viewBox="'0 0 ' + size.width + ' ' + size.height" aria-hidden="true"><polyline v-if="routePoints.length > 1" :points="routePoints.map(p => p.join(',')).join(' ')" fill="none" stroke="#148dba" stroke-width="3" stroke-dasharray="6 5" /></svg>
-    <svg class="planner-draw" :viewBox="'0 0 ' + size.width + ' ' + size.height" aria-label="在地圖上圈選景點" @pointerdown="start" @pointermove="move" @pointerup="finish" @pointercancel="active = false">
+    <svg class="planner-draw" :viewBox="'0 0 ' + size.width + ' ' + size.height" aria-label="在地圖上圈選景點" @pointerdown="start" @pointermove="move" @pointerup="finish" @pointercancel="cancel">
       <polygon v-if="polygon.length > 2" :points="polygon.map(p => p.join(',')).join(' ')" fill="#009fe822" stroke="#009fe8" stroke-width="2" stroke-dasharray="5 5" />
     </svg>
-    <button v-for="(p, i) in points" :key="p.stop.id" class="map-pin" :style="{ left: p.point[0] + 'px', top: p.point[1] + 'px', '--day': recommended?.includes(p.stop.id) ? '#db7c22' : '#009fe8' }" :aria-label="p.stop.name + (recommended?.includes(p.stop.id) ? '・圈外推薦' : '')" :aria-pressed="selected.includes(p.stop.id)" @click="toggle(p.stop.id)">
+    <button v-for="(p, i) in points" :key="p.stop.id" class="map-pin" :style="{ left: p.point[0] + 'px', top: p.point[1] + 'px', '--day': selected.includes(p.stop.id) ? '#009fe8' : '#929ba3' }" :aria-label="p.stop.name + (selected.includes(p.stop.id) ? '・已選取' : '・未選取，可加入')" :disabled="drawing" :aria-pressed="selected.includes(p.stop.id)" @click="toggle(p.stop.id)">
       <span>{{ route?.includes(p.stop.id) ? route.indexOf(p.stop.id) + 1 : route?.length ? '·' : i + 1 }}</span>
     </button>
-    <span class="map-note">{{ recommended?.length ? '橘色標記為圈外推薦，可對照推薦清單' : drawing ? '大致圈出想探索的範圍，也可直接點景點' : '點選景點加入行程' }}</span>
+    <span class="map-note">{{ drawing ? '拖曳圈出範圍，放開後查看景點' : '藍色已選取・灰色未選取，可用文字加入' }}</span>
     <a v-if="isTokyo" class="map-credit" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>
     <span v-else class="map-credit">景點位置示意・非道路地圖</span>
   </div>
 </template>
 
+
+<style scoped>
+.planner-map .map-pin[aria-pressed=true]>span{background:#009fe8;border:2px solid white;animation:none}
+.planner-map.drawing .planner-draw{z-index:5;cursor:crosshair}
+.planner-map:not(.drawing) .planner-draw{pointer-events:none}
+.map-note{pointer-events:none}
+</style>

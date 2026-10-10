@@ -2,7 +2,7 @@
 import { creationFriends, type CreationWork, type CreationExchange } from '~/data/creation';
 const open = defineModel<boolean>({ default: false });
 const props = defineProps<{ startTab: 'collection' | 'history' }>();
-const emit = defineEmits<{ select: [work: CreationWork]; exchange: [work: CreationWork]; generate: [photoId: string]; browse: [] }>();
+const emit = defineEmits<{ select: [work: CreationWork]; exchange: [work: CreationWork]; browse: [] }>();
 const { collected, exchanges, resolve, friends, photos: sourcePhotos } = useCreation();
 const { activeId, activeTrip } = useTripContext();
 const { state: journey } = useJourneyCollection();
@@ -21,28 +21,27 @@ watch(open, value => { if (value) { tab.value = props.startTab; selected.value =
 function pick(work: CreationWork) { selectedWork.value = work; }
 function viewWork() { if (!selectedWork.value) return; emit('select', selectedWork.value); open.value = false; }
 function exchangeWork() { if (!selectedWork.value) return; emit('exchange', selectedWork.value); open.value = false; }
-function generate(photoId: string) { emit('generate', photoId); open.value = false; }
 function browse() { emit('browse'); open.value = false; }
 function openStop(id:string){open.value=false;navigateTo('/atlas?journey=kansai&stop='+id);}
 </script>
 <template>
   <CreationDialog v-model="open" :title="selected ? '交換紀錄' : selectedWork ? 'AI 作品' : (activeTrip?.title || '這趟旅行') + ' · 本次作品'">
     <template v-if="!selected && !selectedWork">
-      <div class="creation-segment"><button :aria-pressed="tab === 'collection'" @click="tab = 'collection'">本次作品 · {{ displayedWorks.length }}</button><button :aria-pressed="tab === 'history'" @click="tab = 'history'">交換紀錄 · {{ exchanges.length + Number(hasFriend) }}</button></div>
+      <div class="creation-segment"><button :aria-pressed="tab === 'collection'" @click="tab = 'collection'">本次作品</button><button :aria-pressed="tab === 'history'" @click="tab = 'history'">交換紀錄</button></div>
       <div v-if="tab === 'collection'" class="creation-library-sections">
         <section class="creation-source-library" aria-labelledby="source-library-title">
-          <div class="creation-library-title"><span><small>ORIGINAL PHOTOS</small><h3 id="source-library-title">原風景照片</h3></span><em>{{ sourcePhotos.length }} 張</em></div>
+          <div class="creation-library-title"><span><small>ORIGINAL PHOTOS</small><h3 id="source-library-title">原風景照片</h3></span></div>
           <div class="creation-source-track">
-            <article v-for="photo in sourcePhotos" :key="photo.id"><span :class="{ 'creation-cropped-source': photo.sourceCrop }"><img :src="asset('assets/memory/' + photo.source)" :alt="photo.title" /></span><div><b>{{ photo.title }}</b><small>{{ photo.location }}</small><button @click="generate(photo.id)">去生成 <i>✦</i></button></div></article>
+            <article v-for="photo in sourcePhotos" :key="photo.id"><span :class="{ 'creation-cropped-source': photo.sourceCrop }"><img :src="asset('assets/memory/' + photo.source)" :alt="photo.title" /></span><div><b>{{ photo.title }}</b><small>{{ photo.location }}</small></div></article>
           </div>
         </section>
-        <button class="creation-library-bridge" @click="browse"><span>＋</span> 去生成新的 AI 作品</button>
+        <button class="creation-library-bridge" @click="browse">瀏覽照片與風格範例</button>
         <section class="creation-ai-library" aria-labelledby="ai-library-title">
           <div class="creation-library-title"><span><small>AI CREATIONS</small><h3 id="ai-library-title">AI 旅行收藏</h3></span><em>點作品可交換</em></div>
           <div class="creation-library-grid">
             <button v-for="work in displayedWorks" :key="work.id" @click="pick(work)"><CreationArtwork :work="work" :alt="work.title" compact /><b>{{ work.title }}</b><small>{{ work.location }}</small><span v-if="work.receivedFrom" class="creation-origin">{{ friend(work.receivedFrom).companion ? '↔ 同行' : '⇄' }} {{ friend(work.receivedFrom).name }} 交換給你</span><span v-else class="creation-origin">{{ work.creator === 'AI 示範' ? '範例收藏' : '你的 AI 作品' }}</span></button>
           </div>
-          <p v-if="!displayedWorks.length" class="creation-empty">還沒有 AI 作品。從上方選一張原照開始。</p>
+          <p v-if="!displayedWorks.length" class="creation-empty">目前還沒有收藏作品，可以先瀏覽風格範例。</p>
         </section>
       </div>
       <div v-else class="creation-history">

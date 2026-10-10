@@ -47,11 +47,11 @@ useHead({ title: '我們的旅行紀錄 · 去趣 chicTrip' });
 
 <template>
   <section class="journal-page" aria-labelledby="journal-title">
-    <header>
+    <div class="mascot-perch"><header>
       <span class="share-eyebrow">{{ activeTrip?.title.replace(/。$/, '') }}</span>
       <h1 id="journal-title">我們的旅行紀錄</h1>
       <p class="creation-muted">旅伴的照片都在這裡，每天一張 AI 挑的回憶卡。</p>
-    </header>
+    </header><PageMascot /></div>
     <p v-if="available === false" class="share-hero"><span>共同遊記需要後端，請到 GCP 版看。</span></p>
     <p v-else-if="!activeId" class="share-hero"><span>先選一趟旅行。</span><NuxtLink class="creation-primary" to="/trips?next=/journal">選擇行程</NuxtLink></p>
     <p v-else-if="loading" class="journal-loading" role="status">正在整理大家的照片…</p>

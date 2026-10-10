@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f5faf8"><title>旅行星球 · 小宇的旅行名片</title><meta name="description" content="轉動地球，遇見旅行裡的我。探索旅行足跡、行程與吉祥物收藏。"><link rel="stylesheet" href="style.css"><script defer src="assets/globe.gl.min.js"></script><script type="module" src="app.js"></script></head>
+<body>
+<header class="topbar"><a class="brand" href="#" aria-label="旅行星球首頁"><span class="brand-mark">✳</span> 去趣 <span class="brand-divider"></span><span class="brand-sub">旅行星球</span></a><div class="header-right"><span class="demo-label">概念體驗 · 示意資料</span><button class="share-button" data-share>↗ <span>分享我的星球</span></button></div></header>
+<main>
+<div class="page-heading"><div><p class="eyebrow">A LITTLE MORE OF MY WORLD</p><h1>旅行，是我的另一種自我介紹<span>。</span></h1><p class="lead">從一張名片開始，看看我走過的世界。</p></div><span class="edition">TRAVELER / 001</span></div>
+<section class="experience" aria-label="旅行名片與互動地球">
+<aside class="profile-card">
+<div class="card-topline"><span>TRAVELER CARD</span><span class="live-dot">探索中</span></div>
+<div class="identity"><div class="avatar"><img src="assets/asakusa.png" alt="小宇的淺草吉祥物頭像"></div><div><h2>小宇 <span>✦</span></h2><p>@yu.travels</p></div></div>
+<p class="bio">用旅行收藏世界。<br>喜歡巷弄、咖啡，還有沒有計畫的午後。</p><div class="interest-tags"><span>☕ 城市散步</span><span>📷 風景收藏家</span></div>
+<div class="stats"><div><strong>3</strong><span>去過的國家／地區</span></div><div><strong>3</strong><span>旅行城市</span></div><div><strong>3</strong><span>珍藏行程</span></div></div>
+<div class="countries"><div class="section-label">我的世界版圖 <span>03</span></div><div class="country-row"><button data-city="taipei">🇹🇼 <span>台灣</span></button><button data-city="tokyo">🇯🇵 <span>日本</span></button><button data-city="seoul">🇰🇷 <span>韓國</span></button></div></div>
+<div class="companions"><div class="section-label">一起看世界的旅伴 <button id="see-mascots">全部 4 位 ↗</button></div><div class="mini-mascots"><button data-mascot="asakusa"><img src="assets/asakusa.png" alt="淺草祭典客"><span>淺草祭典客</span></button><button data-mascot="fuji"><img src="assets/fuji.png" alt="富士山看山派"><span>富士山看山派</span></button><button data-mascot="seoul"><img src="assets/seoul.png" alt="首爾旅伴"><span>首爾旅伴</span></button></div></div>
+<button class="card-footer" data-share><img src="assets/profile-qr.svg" alt="旅行名片 QR Code"><span><strong>把我的世界，放進你的口袋</strong><small>掃描名片，探索旅行星球</small></span><span class="arrow">↗</span></button>
+</aside>
+<div class="planet-panel" id="planet">
+<div class="planet-heading"><div><span class="eyebrow">MY TRAVEL PLANET</span><h2>世界很大，足跡慢慢留下。</h2></div><span class="orbit-badge"><i></i> 3 個旅行座標</span></div>
+<div id="globe" aria-label="可拖曳及縮放的 3D 旅行地球"></div><div id="globe-status" role="status">正在展開你的世界…</div>
+<div class="planet-controls"><button id="rotate" aria-pressed="true" aria-label="暫停地球自轉">Ⅱ</button><span></span><button id="zoom-in" aria-label="放大地球">＋</button><button id="zoom-out" aria-label="縮小地球">−</button><button id="sun-view" aria-label="查看日夜分界">◐</button><button id="reset" aria-label="重設地球視角">⌂</button></div>
+<div class="planet-bottom"><p class="drag-hint">↔ 拖曳轉動地球 · 點選地標探索</p><div class="city-selector" aria-label="選擇旅行城市"><button data-city="taipei">台北</button><button data-city="tokyo" class="selected">東京</button><button data-city="seoul">首爾</button></div></div>
+<div class="selected-place" id="selected-place" aria-live="polite"></div>
+</div>
+</section>
+<section class="collection" id="collection"><div class="collection-header"><div><p class="eyebrow">COLLECT MOMENTS, NOT THINGS</p><h2>每一步，都有故事。</h2></div><div class="tabs" role="tablist" aria-label="旅行收藏"><button id="tab-trips" role="tab" aria-selected="true" aria-controls="collection-content" data-tab="trips">我的行程 <span>3</span></button><button id="tab-mascots" role="tab" aria-selected="false" aria-controls="collection-content" tabindex="-1" data-tab="mascots">吉祥物 <span>4</span></button></div></div><div id="collection-content" role="tabpanel" aria-labelledby="tab-trips"></div></section>
+<footer><span>✳ 去趣 · 每一次出發，都更認識自己。</span><span>互動概念原型 · 示意資料　<a href="credits.html">素材來源 ↗</a></span></footer>
+</main>
+<dialog id="detail-dialog"><button class="close" aria-label="關閉詳細內容">×</button><div id="detail-content"></div></dialog>
+<dialog id="share-dialog"><button class="close" aria-label="關閉分享名片">×</button><p class="eyebrow">A WORLD WORTH SHARING</p><h2>這是我的旅行名片。</h2><p class="dialog-subtitle">一張卡，連結我的旅行世界。</p><div class="share-card"><div class="share-identity"><img src="assets/asakusa.png" alt="小宇的旅行頭像"><div><h3>小宇</h3><p>用旅行收藏世界</p></div><span>✳</span></div><div class="share-stats">3 國家／地區 <i>·</i> 3 城市 <i>·</i> 3 行程</div><div class="share-bottom"><div><p>🇹🇼　🇯🇵　🇰🇷</p><strong>掃描，探索我的地球 ↗</strong><small>概念原型 · 示意資料</small></div><img src="assets/profile-qr.svg" alt="掃描開啟旅行星球"></div></div><button id="copy-link" class="primary-button">複製星球連結 ↗</button><p class="share-note">目前為私人預覽，連結需使用擁有者帳號開啟。</p></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+</body></html>

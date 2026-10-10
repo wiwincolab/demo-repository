@@ -21,7 +21,10 @@ export function projection(stops: Pick<Stop, 'at'>[], width: number, height: num
         sx = sy * aspect;
     else
         sy = sx / aspect;
-    return (p: Point): Point => [(p[0]! - x) / sx * width + width / 2, (y - p[1]!) / sy * height + height / 2];
+    const project = (p: Point): Point => [(p[0]! - x) / sx * width + width / 2, (y - p[1]!) / sy * height + height / 2];
+    return Object.assign(project, {
+        invert: (p: Point): Point => [(p[0]! - width / 2) / width * sx + x, y - (p[1]! - height / 2) / height * sy],
+    });
 }
 export function paintBase(ctx: CanvasRenderingContext2D, data: BaseMap, project: (p: Point) => Point, width: number, height: number) {
     ctx.fillStyle = '#edf1e9';

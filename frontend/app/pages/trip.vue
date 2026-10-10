@@ -4,6 +4,7 @@ import { pointsProducts } from '~/utils/points';
 import ChictripMotion from '~/components/ChictripMotion.vue';
 import { kansaiReference } from '~/data/kansai';
 import { dayColors } from '~/utils/map';
+import { directionsUrl } from '~/utils/directions';
 import type { Stop } from '~/types/trip';
 import { tripItineraries, tripAlternatives, plannerStorageKey } from '~/data/trips';
 const { days, members, adjusted, applyAdjustment, undoAdjustment, notify, saved: sharedTrip } = useDemo();
@@ -15,6 +16,45 @@ const {wallet:pointsWallet}=usePointsWallet();
 const tripPointOrders=computed(()=>pointsWallet.value.orders.filter(o=>o.tripId===activeId.value));
 function requestedDay() { const value = Number(route.query.day); return Number.isInteger(value) && value >= 0 && value < days.value.length ? value : 0; }
 const day = ref(requestedDay()), view = ref<'list' | 'map'>('list'), selected = ref(0);
+const dayBar = ref<HTMLElement | null>(null);
+const dayContent = ref<HTMLElement | null>(null);
+const dayIndicator = ref({ transform: 'translateX(0px)', width: '0px' });
+let dayResizeObserver: ResizeObserver | undefined;
+let dayAnimation: Animation | undefined;
+function positionDayIndicator() {
+    const bar = dayBar.value;
+    const button = bar?.querySelector<HTMLElement>('button[aria-pressed="true"]');
+    if (!bar || !button) return;
+    const transform = `translateX(${button.offsetLeft + 12}px)`;
+    const width = `${Math.max(0, button.offsetWidth - 24)}px`;
+    if (dayIndicator.value.transform !== transform || dayIndicator.value.width !== width)
+        dayIndicator.value = { transform, width };
+}
+onMounted(() => {
+    positionDayIndicator();
+    dayResizeObserver = new ResizeObserver(positionDayIndicator);
+    if (dayBar.value) dayResizeObserver.observe(dayBar.value);
+});
+onUpdated(positionDayIndicator);
+onBeforeUnmount(() => { dayResizeObserver?.disconnect(); dayAnimation?.cancel(); });
+watch(day, (next, previous) => {
+    positionDayIndicator();
+    dayAnimation?.cancel();
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const bar = dayBar.value;
+    const button = bar?.querySelector<HTMLElement>('button[aria-pressed="true"]');
+    if (bar && button) {
+        const left = button.offsetLeft;
+        if (left < bar.scrollLeft || left + button.offsetWidth > bar.scrollLeft + bar.clientWidth)
+            bar.scrollTo({ left: Math.max(0, left - (bar.clientWidth - button.offsetWidth) / 2), behavior: reducedMotion ? 'instant' : 'smooth' });
+    }
+    if (!reducedMotion && dayContent.value) {
+        dayAnimation = dayContent.value.animate([
+            { opacity: 0, transform: `translateX(${next > previous ? 18 : -18}px)` },
+            { opacity: 1, transform: 'translateX(0)' }
+        ], { duration: 280, easing: 'cubic-bezier(.22,.75,.25,1)' });
+    }
+}, { flush: 'post' });
 const groupOpen = ref(false);
 const sheet = ref<'info' | 'adjust' | 'compare' | 'done' | 'saved' | null>(null);
 const stop = ref<Stop | null>(null);
@@ -25,6 +65,7 @@ const saved = ref<{
     time: string;
     name: string;
     reason?: string;
+    rainPlan?: string;
 }[]>([]);
 const title = computed(() => ({ info: activeTrip.value?.title || '旅程資訊', adjust: 'AI 局部微調', compare: '只換一站，其他照舊', done: '已套用局部替換', saved: '圈選排程 · 已儲存' }[sheet.value || 'info']));
 const originalStop=computed(()=>activeId.value?tripItineraries[activeId.value][0]?.stops[1]:undefined);
@@ -57,7 +98,7 @@ function savedPlan() {
 }
 </script>
 <template>
-  <section v-if="activeTrip && days.length" class="screen active" aria-labelledby="trip-title">
+  <section v-if="activeTrip && days.length" class="screen active trip-motion-page" aria-labelledby="trip-title">
     <div class="trip-cover">
       <img :src="asset(activeTrip.cover)" :alt="activeTrip.location+'・旅行封面'" :style="activeId==='fuji'?{objectPosition:'50% 10%'}:{}">
       <div class="cover-copy">
@@ -69,7 +110,7 @@ function savedPlan() {
     </div>
     <div class="trip-summary">
       <div>
-        <div class="trip-date-companion"><ChictripMotion :key="activeId || 'trip'" motion="go" :size="58"/><strong>{{ activeTrip.dateLabel }}</strong></div>
+        <div class="trip-date-companion"><PageMascot :key="activeId || 'trip'" /><strong>{{ activeTrip.dateLabel }}</strong></div>
         <p>{{ activeTrip.dayCount }} 天 {{ activeTrip.dayCount - 1 }} 夜 · {{ days.flatMap(d=>d.stops).length }} 個停留點</p>
       </div>
       <button class="invite-button" :aria-label="members.length + ' 人共編，邀請旅伴'" @click="groupOpen = true">
@@ -84,10 +125,12 @@ function savedPlan() {
       <button v-if="alternative" @click="sheet = 'adjust'">AI 微調</button>
       <button @click="savedPlan">已儲存</button><button @click="pointsOpen=true">用和泰點數改行程</button>
     </div>
-    <div class="day-bar" aria-label="選擇旅遊日期">
+    <div ref="dayBar" class="day-bar" role="group" aria-label="選擇旅遊日期">
       <button :aria-pressed="day === -1" @click="chooseDay(-1)"><strong>全程</strong>{{ activeTrip.dayCount }} 天</button>
       <button v-for="(d, i) in days" :key="d.area" :style="{ '--day': dayColors[i] }" :aria-pressed="day === i" @click="chooseDay(i)"><strong>第 {{ i + 1 }} 天</strong><span class="day-dot" />{{ dayLabel(i) }}</button>
+      <span class="day-sliding-indicator" :style="dayIndicator" aria-hidden="true" />
     </div>
+    <div ref="dayContent" class="day-content">
     <div class="view-bar">
       <h2>{{ day < 0 ? activeTrip.location+'全程' : days[day]?.area }}</h2>
       <div class="segmented" aria-label="行程顯示方式">
@@ -99,8 +142,10 @@ function savedPlan() {
       <p>{{ days[day]?.transport }}</p>
       <span v-if="days[day]?.lodging">今晚住 {{ days[day]?.lodging }}</span>
     </div>
-    <div v-if="view === 'list'" class="stop-list">
-      <article v-for="(s, i) in shown" :key="s.id" class="stop-row" :style="{ '--day': dayColors[s.day] }">
+    <Transition name="itinerary-view" mode="out-in">
+    <div :key="view" class="itinerary-view">
+    <div v-if="view === 'list'" :key="`${activeId}-${day}`" class="stop-list">
+      <article v-for="(s, i) in shown" :key="s.id" class="stop-row" :style="{ '--day': dayColors[s.day], '--stop-delay': `${Math.min(i, 6) * 45}ms` }">
         <div class="stop-track">
           <span class="stop-number">{{ i + 1 }}</span>
         </div>
@@ -114,6 +159,7 @@ function savedPlan() {
           </div>
           <img :src="asset(s.photo.src)" :alt="s.photo.alt" loading="lazy" :style="{ objectPosition: s.photo.objectPosition }">
         </button>
+        <a v-if="shown[i + 1]" class="stop-route-link" :href="directionsUrl(s, shown[i + 1]!)" target="_blank" rel="noopener noreferrer">{{ s.day !== shown[i + 1]!.day ? '隔日移動' : '前往下一站' }} · {{ shown[i + 1]!.name }} <span>查看交通路線 ↗</span></a>
       </article>
     </div>
     <template v-else>
@@ -129,6 +175,9 @@ function savedPlan() {
       </article>
       <p v-else class="page-note">各色實線為單日行程，虛線為日間移動。選一天，看每站照片與流量。</p>
     </template>
+    </div>
+    </Transition>
+    </div>
     <p class="page-note">{{ activeId === 'kansai' ? '路線參考喜鴻五日行程；日期、時刻與車程為示範估算。' : '示範行程。' }} 流量依使用行為估算。</p>
     <section v-if="tripPointOrders.length" class="panel"><h3>點數安排 · 示範</h3><p v-for="o in tripPointOrders" :key="o.id">{{pointsProducts.find(p=>p.id===o.productId)?.name}} · {{o.targetId===null?'旅後使用，不占用當日行程':'已替換第 '+((o.day||0)+1)+' 天景點'}}<small>（未實際預訂）</small></p></section>
     <AppSheet v-model="pointsOpen" title="用和泰點數安排旅行" class="points-sheet"><PointsMarket v-if="pointsOpen" planning/></AppSheet>
@@ -176,7 +225,7 @@ function savedPlan() {
         <p>{{ saved.length ? '來自你在圈選排程頁儲存的草案。' : '還沒有儲存圈選行程。先圈選想去的區域，輸入偏好後預覽並保存。' }}</p>
         <div v-for="s in saved" :key="s.name" class="member-row">
           <time>{{ s.time }}</time>
-          <span><strong>{{ s.name }}</strong><small v-if="s.reason">{{ s.reason }}</small></span>
+          <span><strong>{{ s.name }}</strong><small v-if="s.reason">{{ s.reason }}</small><small v-if="s.rainPlan" class="saved-rain-plan">☂ 雨天備案：{{ s.rainPlan }}</small></span>
         </div>
         <NuxtLink class="primary" :to="tripHref('/planner')" @click="sheet = null">{{ saved.length ? '繼續編輯' : '開始圈選排程' }}</NuxtLink>
       </template>
@@ -187,4 +236,40 @@ function savedPlan() {
 
 <style scoped>
 .trip-date-companion{display:flex;align-items:center;gap:8px}
+.day-bar button[aria-pressed=true]::after { display: none; }
+.day-sliding-indicator { position: absolute; bottom: 0; left: 0; height: 3px; border-radius: 3px; background: var(--blue); pointer-events: none; }
+/* Short, one-shot motion keeps the itinerary easy to scan. */
+@keyframes trip-arrive {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes trip-cover-reveal {
+  from { transform: scale(1.045); }
+  to { transform: scale(1); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .trip-cover { overflow: hidden; }
+  .trip-cover > img { animation: trip-cover-reveal 900ms cubic-bezier(.2,.7,.2,1) both; }
+  .cover-copy > * { animation: trip-arrive 520ms ease-out both; }
+  .cover-copy h1 { animation-delay: 70ms; }
+  .cover-copy p { animation-delay: 140ms; }
+  .trip-summary { animation: trip-arrive 480ms 100ms ease-out both; }
+  .trip-tools { animation: trip-arrive 480ms 160ms ease-out both; }
+  .day-sliding-indicator { transition: transform 280ms cubic-bezier(.22,.75,.25,1), width 280ms cubic-bezier(.22,.75,.25,1); }
+  .day-bar button, .segmented button { transition: background-color 200ms, color 200ms, box-shadow 200ms, transform 200ms; }
+  .day-bar button:active, .segmented button:active { transform: scale(.96); }
+  .stop-card { transition: transform 220ms, box-shadow 220ms; }
+  .stop-card:active { transform: scale(.99); }
+  .itinerary-view-enter-active, .itinerary-view-leave-active { transition: opacity 160ms ease, transform 160ms ease; }
+  .itinerary-view-enter-from { opacity: 0; transform: translateY(8px); }
+  .itinerary-view-leave-to { opacity: 0; transform: translateY(-4px); }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .stop-card:hover { transform: translateY(-2px); box-shadow: 0 8px 22px #183e4c12; }
+}
+</style>
+
+<style scoped>
+.stop-route-link { grid-column:2; display:flex; flex-wrap:wrap; gap:6px 12px; padding:10px 12px; margin:4px 0 8px; border-radius:9px; color:#286e80; background:#edf5f5; font-size:12px; line-height:1.6; }
+.stop-route-link span { margin-left:auto; font-weight:600; }
 </style>

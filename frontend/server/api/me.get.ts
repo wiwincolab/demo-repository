@@ -2,6 +2,6 @@
 export default defineEventHandler(async event => {
     const device = await requireDevice(event);
     const sql = await db();
-    const [row] = await sql<{ nickname: string | null }[]>`select nickname from devices where id = ${device}`;
-    return { nickname: row?.nickname ?? null };
+    const [row] = await sql<{ nickname: string | null; mascot_id: string | null }[]>`select nickname, mascot_id from devices where id = ${device}`;
+    return { nickname: row?.nickname ?? null, mascotId: row?.mascot_id ?? null };
 });

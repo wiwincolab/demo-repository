@@ -37,12 +37,14 @@ test('places every stop inside its own country',()=>{
   }
 });
 
-test('credits the agency itinerary each route adapts and leaves photos to be chosen',()=>{
+test('preserves agency route references alongside separately credited scene photos',()=>{
   for(const route of routes){
     assert.match(route.reference.url,/^https:\/\/(tour|trip)\.settour\.com\.tw\//,route.id);
     for(const stop of route.days.flatMap(day=>day.stops)){
-      assert.equal(stop.photo.source,route.reference.url);
-      assert.equal(stop.photo.src,'',`${route.id}: ${stop.name} has no licensed photo yet`);
+      assert.match(stop.photo.source,/^https:\/\//,`${route.id}: ${stop.name}`);
+      assert.match(stop.photo.src,/^assets\/photos\/classic\/.+\.webp$/);
+      assert.ok(stop.photo.credit);
+      assert.ok(stop.photo.license);
     }
   }
 });

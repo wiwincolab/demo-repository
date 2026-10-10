@@ -1,6 +1,6 @@
-import { japanMascots } from './japan-mascots';
-import { taiwanMascots } from './taiwan-mascots';
-import { koreaMascots } from './korea-mascots';
+import { japanMascots } from './japan-mascots.ts';
+import { taiwanMascots } from './taiwan-mascots.ts';
+import { koreaMascots } from './korea-mascots.ts';
 
 const japanCollection = [
   { id: 'usj', name: '樂園探險家', place: '大阪・超級任天堂世界', trip: '關西', image: 'assets/memory/usj-companion-test.png', outfit: '紅帽・吊帶褲・冒險地圖', description: '地圖拿好了，今天想先玩哪一區？', color: '#f8ede3' },
