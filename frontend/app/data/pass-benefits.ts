@@ -15,5 +15,5 @@ export function benefitsForPass(id?: string): PassBenefitPlace[] {
 // A 120 m location frame helps find a venue; it is not a park/property boundary.
 export function benefitLocationFrame(at: Point): Point[] {
   const lat = 120 / 111320, lon = lat / Math.cos(at[1]! * Math.PI / 180);
-  return [[at[0]! - lon, at[1]! - lat], [at[0]! + lon, at[1]! - lat], [at[0]! + lon, at[1]! + lat], [at[0]! - lon, at[1]! + lat]];
+  return Array.from({ length: 24 }, (_, i) => { const angle = i * Math.PI / 12; return [at[0]! + lon * Math.cos(angle), at[1]! + lat * Math.sin(angle)] as Point; });
 }

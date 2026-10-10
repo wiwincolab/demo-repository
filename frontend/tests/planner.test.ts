@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { recommendPlaces } from '../app/utils/planner.ts';
+import { recommendPlaces, rainPlanDetailsFor } from '../app/utils/planner.ts';
 import { tripItineraries } from '../app/data/trips.ts';
 const stops = tripItineraries.fuji.flatMap(d => d.stops).slice(0, 2);
 test('keeps recommendations inside the selection by default', () => {
@@ -108,4 +108,31 @@ test('rain backups avoid explicitly excluded interests and distant indoor venues
   const result = recommendPlaces([outdoor, coffee], [outdoor.id], '不要咖啡', 3, 0);
   assert.doesNotMatch(result.stops[0]!.rainPlan, /街角咖啡店/);
   assert.match(rainPlanFor(outdoor, [outdoor, { ...coffee, at: [120, 23] }]), /沒有可確認/);
+});
+
+test('rain alternatives retain the matching photo and attribution after saving and reloading', () => {
+  const places = tripItineraries.tokyo.flatMap(d => d.stops);
+  const outdoor = places.find(p => p.name.includes('淺草寺'))!;
+  const plan = recommendPlaces(places, [outdoor.id], '', 1, 0, [], true);
+  const saved = JSON.parse(JSON.stringify(plan));
+  const backup = saved.stops[0].rainAlternative;
+  assert.ok(backup?.photo.src);
+  assert.match(saved.stops[0].rainPlan, new RegExp(backup.name));
+  assert.deepEqual(backup.photo, places.find(p => p.id === backup.id)!.photo);
+  const retained = rainPlanDetailsFor(places.find(p => p.id === backup.id)!, places);
+  assert.equal(retained.rainAlternative?.id, backup.id);
+  assert.match(retained.rainPlan, /保留/);
+});
+
+test('rain photo choices stay nearby, respect exclusions and never borrow an unrelated image', () => {
+  const outdoor = { ...stops[0]!, id: 20, name: '城市公園', at: [139.7, 35.6] };
+  const noPhoto = { ...stops[1]!, id: 21, name: '室內展覽', at: outdoor.at, photo: { ...stops[1]!.photo, src: '' } };
+  const museum = { ...stops[1]!, id: 22, name: '城市博物館', at: [139.71, 35.61] };
+  assert.equal(rainPlanDetailsFor(outdoor, [noPhoto, museum]).rainAlternative?.id, museum.id);
+  assert.equal(rainPlanDetailsFor(outdoor, [noPhoto, museum], '不要文化景點').rainAlternative?.id, noPhoto.id);
+  assert.equal(rainPlanDetailsFor(outdoor, [noPhoto, { ...museum, at: [120, 23] }]).rainAlternative?.photo.src, '');
+  assert.equal(rainPlanDetailsFor(outdoor, []).rainAlternative, null);
+  const snapshot = rainPlanDetailsFor(outdoor, [museum]).rainAlternative!;
+  snapshot.photo.credit = 'changed';
+  assert.notEqual(snapshot.photo.credit, museum.photo.credit);
 });

@@ -6,6 +6,7 @@ import { kansaiReference } from '~/data/kansai';
 import { dayColors } from '~/utils/map';
 import { directionsUrl } from '~/utils/directions';
 import type { Stop } from '~/types/trip';
+import { rainPlanDetailsFor, type RainAlternative, type Recommendation } from '~/utils/planner';
 import { tripItineraries, tripAlternatives, plannerStorageKey } from '~/data/trips';
 const { days, members, adjusted, applyAdjustment, undoAdjustment, notify, saved: sharedTrip } = useDemo();
 const { activeId,activeTrip,tripHref }=useTripContext();
@@ -66,6 +67,7 @@ const saved = ref<{
     name: string;
     reason?: string;
     rainPlan?: string;
+    rainAlternative?: RainAlternative | null;
 }[]>([]);
 const title = computed(() => ({ info: activeTrip.value?.title || '旅程資訊', adjust: 'AI 局部微調', compare: '只換一站，其他照舊', done: '已套用局部替換', saved: '圈選排程 · 已儲存' }[sheet.value || 'info']));
 const originalStop=computed(()=>activeId.value?tripItineraries[activeId.value][0]?.stops[1]:undefined);
@@ -89,7 +91,13 @@ function savedPlan() {
     if(!activeId.value)return;
     try {
         const stored=localStorage.getItem(plannerStorageKey(activeId.value))||(activeId.value==='tokyo'?localStorage.getItem('chictrip-circle-planner-v1'):null);
-        saved.value = JSON.parse(stored || 'null')?.saved?.stops || [];
+        const plan = JSON.parse(stored || 'null')?.saved;
+        const places = tripItineraries[activeId.value].flatMap(d => d.stops);
+        saved.value = (plan?.stops || []).map((s: Recommendation) => {
+            if (s.rainAlternative !== undefined) return s;
+            const place = s.at?.length === 2 && s.photo ? s : places.find(p => p.name === s.name);
+            return place ? { ...s, ...rainPlanDetailsFor(place, places, plan.preference || '') } : s;
+        });
     }
     catch {
         saved.value = [];
@@ -205,11 +213,14 @@ function savedPlan() {
         <div class="change-pair">
           <div>
             <small>原本</small>
+            <img v-if="originalStop?.photo.src" class="change-photo" :src="asset(originalStop.photo.src)" :alt="originalStop.photo.alt" :style="{ objectPosition: originalStop.photo.objectPosition }">
             <strong>{{ originalStop?.time }} {{ originalStop?.name }}</strong>
           </div>
           <div>
             <small>替換草案</small>
+            <img v-if="alternative?.photo.src" class="change-photo" :src="asset(alternative.photo.src)" :alt="alternative.photo.alt" :style="{ objectPosition: alternative.photo.objectPosition }">
             <strong>{{ alternative?.time }} {{ alternative?.name }}</strong>
+            <small v-if="alternative?.photo.src" class="change-photo-credit"><a v-if="alternative.photo.source" :href="alternative.photo.source" target="_blank" rel="noopener">{{ alternative.photo.credit }} · {{ alternative.photo.license }} ↗</a><template v-else>{{ alternative.photo.credit }} · {{ alternative.photo.license }}</template></small>
           </div>
         </div>
         <p>保留{{ keptStops }}。實際交通與營業時間待確認。</p>
@@ -225,7 +236,7 @@ function savedPlan() {
         <p>{{ saved.length ? '來自你在圈選排程頁儲存的草案。' : '還沒有儲存圈選行程。先圈選想去的區域，輸入偏好後預覽並保存。' }}</p>
         <div v-for="s in saved" :key="s.name" class="member-row">
           <time>{{ s.time }}</time>
-          <span><strong>{{ s.name }}</strong><small v-if="s.reason">{{ s.reason }}</small><small v-if="s.rainPlan" class="saved-rain-plan">☂ 雨天備案：{{ s.rainPlan }}</small></span>
+          <div><strong>{{ s.name }}</strong><small v-if="s.reason">{{ s.reason }}</small><RainPlanCard v-if="s.rainPlan" :text="s.rainPlan" :alternative="s.rainAlternative" /></div>
         </div>
         <NuxtLink class="primary" :to="tripHref('/planner')" @click="sheet = null">{{ saved.length ? '繼續編輯' : '開始圈選排程' }}</NuxtLink>
       </template>
@@ -236,6 +247,9 @@ function savedPlan() {
 
 <style scoped>
 .trip-date-companion{display:flex;align-items:center;gap:8px}
+.change-photo{display:block;width:100%;height:130px;object-fit:cover;border-radius:9px;margin:8px 0}
+.change-photo-credit{font-size:9px;margin-top:7px;line-height:1.6}
+.change-photo-credit a{color:inherit}
 .day-bar button[aria-pressed=true]::after { display: none; }
 .day-sliding-indicator { position: absolute; bottom: 0; left: 0; height: 3px; border-radius: 3px; background: var(--blue); pointer-events: none; }
 /* Short, one-shot motion keeps the itinerary easy to scan. */

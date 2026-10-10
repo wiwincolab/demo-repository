@@ -1,0 +1,110 @@
+﻿id,name,country,mode,availability,networkWays,venues,stops,variants,missingComponents,officialUrl,checkedAt,file
+tokyo-subway,東京地鐵券,JP,network,current,863,0,0,,,https://www.kotsu.metro.tokyo.jp/eng/maps/,2026-10-10,tokyo-subway.json
+osaka-amazing,大阪周遊券,JP,partial,current,285,103,0,,,https://osaka-amazing-pass.com/en/service_about_train.html,2026-10-10,osaka-amazing.json
+discover-seoul,首爾旅遊卡,KR,venues,current,0,203,0,,,https://www.discoverseoulpass.com/app/spot/index/list?lang=2,2026-10-10,discover-seoul.json
+visit-busan,釜山旅遊卡,KR,venues,current,0,226,0,,,https://visitbusanpass.com/attractions,2026-10-10,visit-busan.json
+japan-rail,日本全國 JR 周遊券,JP,partial,current,64143,0,0,,JR 指定地方巴士；少數非 JR 通過路線的附加費／不可上下車條件；京都 49／快速 205 的其他方向與未完整匹配巴士班次；快速 205 只限 JR 營運便,https://japanrailpass.net/en/about_jrp/route/,2026-10-10,japan-rail.json
+jr-west-kansaimini,JR 關西迷你周遊券,JP,network,current,2818,0,0,,,https://www.westjr.co.jp/travel-information/en/tickets-passes/jrwest-rail-pass/kansaimini/,2026-10-10,jr-west-kansaimini.json
+jr-west-kansai_wide,JR 關西廣域周遊券,JP,partial,current,10495,0,0,,京都 49／快速 205 的其他方向與未完整匹配巴士班次；快速 205 只限 JR 營運便,https://www.westjr.co.jp/travel-information/en/tickets-passes/jrwest-rail-pass/kansai_wide/,2026-10-10,jr-west-kansai_wide.json
+jr-west-kansai_hiroshima,JR 關西・廣島周遊券,JP,partial,current,12607,0,0,,官方指定地方巴士；京都 49／快速 205 的其他方向與未完整匹配巴士班次；快速 205 只限 JR 營運便,https://www.westjr.co.jp/travel-information/en/tickets-passes/jrwest-rail-pass/kansai_hiroshima/,2026-10-10,jr-west-kansai_hiroshima.json
+jr-west-kansai_sanin,JR 關西・山陰周遊券,JP,partial,current,11341,0,0,,京都 49／快速 205 的其他方向與未完整匹配巴士班次；快速 205 只限 JR 營運便,https://www.westjr.co.jp/travel-information/en/tickets-passes/jrwest-rail-pass/kansai_sanin/,2026-10-10,jr-west-kansai_sanin.json
+jr-west-kansai_hokuriku,JR 關西・北陸周遊券,JP,partial,current,11075,0,0,,IR 石川／愛之風富山／Hapi-Line 指定通過條件；京都 49／快速 205 的其他方向與未完整匹配巴士班次；快速 205 只限 JR 營運便,https://www.westjr.co.jp/travel-information/en/tickets-passes/jrwest-rail-pass/kansai_hokuriku/,2026-10-10,jr-west-kansai_hokuriku.json
+jr-west-tottorimatsue,JR 鳥取・松江周遊券,JP,partial,current,683,0,0,,松江 Lake Line／鳥取 Loop 麒麟獅子巴士,https://www.westjr.co.jp/travel-information/en/tickets-passes/jrwest-rail-pass/tottorimatsue/,2026-10-10,jr-west-tottorimatsue.json
+jr-west-sanyo_sanin,JR 山陽・山陰周遊券,JP,partial,current,16890,0,0,,京都 49／快速 205 的其他方向與未完整匹配巴士班次；快速 205 只限 JR 營運便,https://www.westjr.co.jp/travel-information/en/tickets-passes/jrwest-rail-pass/sanyo_sanin/,2026-10-10,jr-west-sanyo_sanin.json
+jr-west-hiroshima_yamaguchi,JR 廣島・山口周遊券,JP,partial,current,4314,0,0,,指定 JR 地方巴士,https://www.westjr.co.jp/travel-information/en/tickets-passes/jrwest-rail-pass/hiroshima_yamaguchi/,2026-10-10,jr-west-hiroshima_yamaguchi.json
+jr-west-okayama_hiroshima_yamaguchi,JR 岡山・廣島・山口周遊券,JP,partial,current,6847,0,0,,指定 JR 地方巴士,https://www.westjr.co.jp/travel-information/en/tickets-passes/jrwest-rail-pass/okayama_hiroshima_yamaguchi/,2026-10-10,jr-west-okayama_hiroshima_yamaguchi.json
+jr-west-hokuriku,JR 北陸地區周遊券,JP,partial,current,1003,0,0,,IR 石川／愛之風富山／Hapi-Line 指定通過條件；指定北陸巴士／富山地鐵市內電車,https://www.westjr.co.jp/travel-information/en/tickets-passes/jrwest-rail-pass/hokuriku/,2026-10-10,jr-west-hokuriku.json
+jr-west-all,JR 西日本全地區周遊券,JP,partial,current,18414,0,0,,合作鐵道通過條件與指定 JR 巴士；京都 49／快速 205 的其他方向與未完整匹配巴士班次；快速 205 只限 JR 營運便；IR 石川／愛之風富山／Hapi-Line 指定通過條件,https://www.westjr.co.jp/travel-information/en/tickets-passes/jrwest-rail-pass/all/,2026-10-10,jr-west-all.json
+jr-setouchi,JR 瀨戶內地區周遊券,JP,partial,current,7046,0,0,,指定瀨戶內渡輪／巴士；非全部航線；大阪／奈良／關西機場指定 JR 市區路線；OSM 指定區間不連通：茶屋町 → 伊予大洲,https://www.westjr.co.jp/travel-information/en/tickets-passes/other/setouchi/,2026-10-10,jr-setouchi.json
+jr-ssnk,JR 山陽・山陰・北九州周遊券,JP,partial,current,20956,0,0,,京都 49／快速 205 的其他方向與未完整匹配巴士班次；快速 205 只限 JR 營運便；BRT 彥星線與暫停營運區段；OSM 指定區間不連通：熊本 → 大分,https://www.westjr.co.jp/travel-information/en/tickets-passes/other/ssnk/,2026-10-10,jr-ssnk.json
+jr-hokuriku-arch-pass,JR 北陸拱型鐵路周遊券,JP,partial,current,2729,0,0,,東京／大阪市區指定支線；合作北陸鐵道指定通過條件,https://www.westjr.co.jp/travel-information/en/tickets-passes/other/hokuriku-arch-pass/,2026-10-10,jr-hokuriku-arch-pass.json
+jr-central-takayama_hokuriku,JR 高山・北陸地區周遊券,JP,partial,current,2946,0,0,,大阪／關西機場指定區段；白川鄉／五箇山指定巴士,https://touristpass.jp/en/takayama_hokuriku/,2026-10-10,jr-central-takayama_hokuriku.json
+jr-central-alpine,JR 立山黑部・高山・松本周遊券,JP,partial,current,1857,0,0,,立山黑部阿爾卑斯指定巴士、纜車、空中纜車及富山地鐵,https://touristpass.jp/en/alpine/,2026-10-10,jr-central-alpine.json
+jr-central-ise_kumano,JR 伊勢・熊野・和歌山周遊券,JP,partial,current,3931,0,0,,指定熊野／伊勢巴士,https://touristpass.jp/en/ise_kumano/,2026-10-10,jr-central-ise_kumano.json
+jr-central-fuji_shizuoka,JR 富士山・靜岡地區周遊券 Mini,JP,partial,current,1027,0,0,,指定巴士與清水港遊船；不含岳南電車,https://touristpass.jp/en/fuji_shizuoka/,2026-10-10,jr-central-fuji_shizuoka.json
+jr-hokkaido-noboribetsu,JR 札幌・登別地區周遊券,JP,network,current,568,0,0,,,https://www.jrhokkaido.co.jp/global/english/ticket/railpass/index.html#noboribetsu,2026-10-10,jr-hokkaido-noboribetsu.json
+jr-hokkaido-furano,JR 札幌・富良野地區周遊券,JP,network,current,820,0,0,,,https://www.jrhokkaido.co.jp/global/english/ticket/railpass/index.html#furano,2026-10-10,jr-hokkaido-furano.json
+jr-hokkaido-hrp,JR 北海道鐵路周遊券,JP,partial,current,3426,0,0,,指定 JR 北海道巴士,https://www.jrhokkaido.co.jp/global/english/ticket/railpass/index.html#hrp,2026-10-10,jr-hokkaido-hrp.json
+jr-kyushu-all,JR 全九州鐵路周遊券,JP,network,current,7287,0,0,,,https://www.jrkyushu.co.jp/english/railpass/railpass.html#anchor-all,2026-10-10,jr-kyushu-all.json
+jr-kyushu-northern,JR 北九州鐵路周遊券,JP,partial,current,4462,0,0,,BRT 彥星線與暫停營運區段；OSM 指定區間不連通：熊本 → 大分,https://www.jrkyushu.co.jp/english/railpass/railpass.html#anchor-northern,2026-10-10,jr-kyushu-northern.json
+jr-kyushu-southern,JR 南九州鐵路周遊券,JP,partial,current,1119,0,0,,肥薩線等營運中斷區段需依官方代行公告；OSM 指定區間不連通：大分 → 鹿児島；OSM 指定區間不連通：八代 → 隼人；OSM 指定區間不連通：熊本 → 大分,https://www.jrkyushu.co.jp/english/railpass/railpass.html#anchor-southern,2026-10-10,jr-kyushu-southern.json
+jr-shikoku,四國鐵路周遊券,JP,partial,current,3206,0,0,,阿佐海岸 DMV／小豆島指定船與巴士項目；依 2026/10 新版方案,https://shikoku-railwaytrip.com/pass-information/,2026-10-10,jr-shikoku.json
+jr-east-eastpass,JR 東日本鐵路周遊券（新版）,JP,partial,current,22010,0,0,,JR 地方巴士／BRT；JR 東日本境界處的他社共用軌道需逐段核對,https://www.jreast.co.jp/en/multi/pass/eastpass.html,2026-10-10,jr-east-eastpass.json
+jr-east-tokyowidepass,JR 東京廣域周遊券,JP,partial,current,9693,0,0,,東武 JR 直通特急的列車限制；GALA 湯澤支線為季節營運,https://www.jreast.co.jp/en/multi/pass/tokyowidepass.html,2026-10-10,jr-east-tokyowidepass.json
+jr-east-easthokkaido,JR 東日本・南北海道周遊券,JP,partial,current,9611,0,0,,JR 東日本其他指定地方／市區支線；上越妙高、上毛高原及東京近郊指定區段；JR BRT,https://www.jreast.co.jp/en/multi/pass/easthokkaido.html,2026-10-10,jr-east-easthokkaido.json
+jr-east-tohokuhokkaido,JR 東北・南北海道周遊券,JP,partial,current,9437,0,0,,JR 東北 BRT 與暫停營運路段；未完整匹配的城市支線；OSM 指定區間不連通：会津若松 → 只見；OSM 指定區間不連通：米沢 → 小国,https://www.jreast.co.jp/en/multi/pass/tohokuhokkaido.html,2026-10-10,jr-east-tohokuhokkaido.json
+jr-east-tokyo_free,東京一日自由乘車券,JP,partial,current,3182,0,0,,都營巴士,https://www.jreast.co.jp/en/multi/pass/tokyo_free.html,2026-10-10,jr-east-tokyo_free.json
+jr-east-tokunai_pass,JR 東京市區周遊券,JP,network,current,2290,0,0,,,https://www.jreast.co.jp/en/multi/pass/tokunai_pass.html,2026-10-10,jr-east-tokunai_pass.json
+jr-east-nonbiri_pass,悠閒假日 Suica 周遊券,JP,network,current,6111,0,0,,,https://www.jreast.co.jp/en/multi/pass/nonbiri_pass.html,2026-10-10,jr-east-nonbiri_pass.json
+sendai-area,仙台地區周遊券,JP,partial,current,763,0,0,,仙台市營／宮城交通／秋保等指定巴士,https://sendaitravelpass.jp/en/,2026-10-10,sendai-area.json
+sendai-marugoto,仙台丸通周遊券,JP,partial,current,763,0,0,,仙台市營／宮城交通／秋保等指定巴士,https://sendaitravelpass.jp/en/,2026-10-10,sendai-marugoto.json
+kintetsu-1day,近鐵 1 日周遊券,JP,partial,current,422,0,0,,奈良公園／西之京／法隆寺指定奈良交通巴士,https://www.kintetsu.co.jp/foreign/english/ticket/krp_1day.html,2026-10-10,kintetsu-1day.json
+kintetsu-2day,近鐵 2 日周遊券,JP,partial,current,1196,0,0,,奈良／飛鳥／室生／山之邊道指定巴士,https://www.kintetsu.co.jp/foreign/english/ticket/krp_2day.html,2026-10-10,kintetsu-2day.json
+kintetsu-5day,近鐵 5 日周遊券,JP,network,current,2454,0,0,,,https://www.kintetsu.co.jp/foreign/english/ticket/krp_5day.html,2026-10-10,kintetsu-5day.json
+kintetsu-5dayplus,近鐵 5 日周遊券 Plus,JP,partial,current,2454,0,0,,奈良交通／三重交通／鳥羽指定巴士,https://www.kintetsu.co.jp/foreign/english/ticket/krp_5dayplus.html,2026-10-10,kintetsu-5dayplus.json
+odakyu-hakone-freepass,箱根周遊券,JP,partial,current,696,0,0,,其他箱根指定巴士及尚未匯入路段；出發站至小田原一次往返依版本,https://odakyu-global.com/passes/hakone-freepass/,2026-10-10,odakyu-hakone-freepass.json
+odakyu-hakone-kamakura-pass,箱根・鎌倉周遊券,JP,partial,current,1460,0,0,,箱根指定巴士／船交通；其他箱根指定巴士及尚未匯入路段；出發站至小田原一次往返依版本,https://odakyu-global.com/passes/hakone-kamakura-pass/,2026-10-10,odakyu-hakone-kamakura-pass.json
+odakyu-fuji-hakone-pass,富士・箱根周遊券,JP,partial,current,800,0,0,,富士五湖指定巴士；小田急／高速巴士往返依版本；其他箱根指定巴士及尚未匯入路段；出發站至小田原一次往返依版本,https://odakyu-global.com/passes/fuji-hakone-pass/,2026-10-10,odakyu-fuji-hakone-pass.json
+odakyu-hakoneticket_plus,箱根周遊券 Hako Ticket Plus,JP,partial,current,696,0,0,,Hako Ticket Plus 指定觀光設施與版本；其他箱根指定巴士及尚未匯入路段；出發站至小田原一次往返依版本,https://odakyu-global.com/passes/hakoneticket_plus/,2026-10-10,odakyu-hakoneticket_plus.json
+odakyu-limousine-hakone-freepass,機場巴士＋箱根周遊券,JP,partial,current,696,0,0,,羽田機場至箱根桃源台指定機場巴士；其他箱根指定巴士及尚未匯入路段；出發站至小田原一次往返依版本,https://odakyu-global.com/passes/limousine-hakone-freepass/,2026-10-10,odakyu-limousine-hakone-freepass.json
+odakyu-enoshima-kamakura-freepass,江之島・鎌倉周遊券,JP,partial,current,82,0,0,,出發站至藤澤一次往返依版本,https://odakyu-global.com/passes/enoshima-kamakura-freepass/,2026-10-10,odakyu-enoshima-kamakura-freepass.json
+odakyu-enoden_noriorikun,江之電一日券 NORIORIKUN,JP,network,current,54,0,0,,,https://odakyu-global.com/passes/enoden_noriorikun/,2026-10-10,odakyu-enoden_noriorikun.json
+odakyu-enoden-bus-1-day-pass-ticket-noritabi-kippu,江之電巴士一日券,JP,partial,current,1553,0,0,,羽田機場線除外；尚未匯入的巴士路段,https://odakyu-global.com/passes/enoden-bus-1-day-pass-ticket-noritabi-kippu/,2026-10-10,odakyu-enoden-bus-1-day-pass-ticket-noritabi-kippu.json
+odakyu-tanzawa-oyama,丹澤・大山周遊券,JP,partial,current,73,0,0,,神奈川中央交通指定巴士；出發站往返；B 版不含大山纜車,https://odakyu-global.com/passes/tanzawa-oyama/,2026-10-10,odakyu-tanzawa-oyama.json
+odakyu-tokaibus-ito-kankou-freepass,東海巴士伊東・伊豆高原 2 日券,JP,partial,current,78,0,0,,伊東／伊豆高原其餘指定路線尚未匯入,https://odakyu-global.com/passes/tokaibus-ito-kankou-freepass/,2026-10-10,odakyu-tokaibus-ito-kankou-freepass.json
+odakyu-tokaibus-zensen-freepass,東海巴士全線周遊券,JP,partial,current,2457,0,0,,排除高速／特殊路線及未匯入巴士區段,https://odakyu-global.com/passes/tokaibus-zensen-freepass/,2026-10-10,odakyu-tokaibus-zensen-freepass.json
+odakyu-greater-tokyo-pass,大東京周遊券,JP,partial,current,6984,0,0,,指定聯盟的例外區間與都營巴士；3／5 日版本不同,https://odakyu-global.com/passes/greater-tokyo-pass/,2026-10-10,odakyu-greater-tokyo-pass.json
+kansai-railway-lite,關西鐵路周遊券 LITE,JP,partial,current,4846,0,0,,近鐵指定區段與其他合作鐵路,https://www.surutto.com/kansai_rwpl/en/krp.html,2026-10-10,kansai-railway-lite.json
+keihan-kyoto-osaka-day,京阪京都・大阪觀光一日券,JP,network,current,667,0,0,,,https://www.keihan.co.jp/travel/en/trains/passes-for-visitors-to-japan/pass-comparison.html,2026-10-10,keihan-kyoto-osaka-day.json
+keihan-kyoto-osaka-24h,京阪京都・大阪觀光 24 小時券,JP,network,current,667,0,0,,,https://www.keihan.co.jp/travel/en/trains/passes-for-visitors-to-japan/pass-comparison.html,2026-10-10,keihan-kyoto-osaka-24h.json
+keihan-kyoto-day,京阪京都觀光一日券,JP,network,current,228,0,0,,,https://www.keihan.co.jp/travel/en/trains/passes-for-visitors-to-japan/pass-comparison.html,2026-10-10,keihan-kyoto-day.json
+keihan-kyoto-24h,京阪京都觀光 24 小時券,JP,network,current,228,0,0,,,https://www.keihan.co.jp/travel/en/trains/passes-for-visitors-to-japan/pass-comparison.html,2026-10-10,keihan-kyoto-24h.json
+keihan-metro,京阪京都・大阪＋大阪地鐵券,JP,partial,current,952,0,0,,大阪市營巴士,https://www.keihan.co.jp/travel/en/trains/passes-for-visitors-to-japan/pass-comparison.html,2026-10-10,keihan-metro.json
+keihan-kurama,京阪京都・大阪＋鞍馬貴船券,JP,network,current,796,0,0,,,https://www.keihan.co.jp/travel/en/trains/passes-for-visitors-to-japan/pass-comparison.html,2026-10-10,keihan-kurama.json
+keihan-hirakata,京阪京都・大阪＋枚方公園券,JP,network,current,667,0,0,,,https://www.keihan.co.jp/travel/en/trains/passes-for-visitors-to-japan/pass-comparison.html,2026-10-10,keihan-hirakata.json
+keihan-otsu,京阪大津觀光券,JP,network,current,106,0,0,,,https://www.keihan.co.jp/travel/en/trains/passes-for-visitors-to-japan/pass-comparison.html,2026-10-10,keihan-otsu.json
+hankyu-day,阪急全線一日券,JP,network,current,1396,0,0,,,https://www.hankyu.co.jp/en/area_info/lp/hankyu1daypass.html,2026-10-10,hankyu-day.json
+nankai-koyasan,南海高野山世界遺產票,JP,partial,current,422,0,0,,高野山指定巴士；丹生都比賣線／立里線例外,https://www.nankai.co.jp/en_railway/ticket/koyasan,2026-10-10,nankai-koyasan.json
+tobu-all,日光全地區周遊券,JP,partial,current,1197,0,0,,淺草接入段一次往返；日光指定巴士／季節交通,https://www.tobu.co.jp/en/ticket/nikko/all.html,2026-10-10,tobu-all.json
+tobu-city,日光世界遺產區域周遊券,JP,partial,current,222,0,0,,淺草接入段一次往返；世界遺產區域其他指定短巴士區間,https://www.tobu.co.jp/en/ticket/nikko/city.html,2026-10-10,tobu-city.json
+tobu-premium,東武川越優惠券 Premium,JP,partial,current,171,0,0,,川越指定區域巴士,https://www.tobu.co.jp/en/ticket/kawagoe/premium.html,2026-10-10,tobu-premium.json
+tobu-ryomo,東武兩毛周遊券,JP,partial,current,237,0,0,,購票出發站至茂林寺前一次往返；兩毛地區指定市營巴士,https://www.tobu.co.jp/en/ticket/ryomo/,2026-10-10,tobu-ryomo.json
+tobu-aizu,東武悠閒會津周遊券,JP,partial,current,190,0,0,會津田島版；蘆之牧溫泉版；喜多方版,購票出發站至下今市一次往返；出發站版本需另選,https://www.tobu.co.jp/en/ticket/aizu.html,2026-10-10,tobu-aizu.json
+tobu-taito-sumida,東武台東・墨田下町周遊券,JP,partial,expired,69,0,0,,台東／墨田循環巴士；官網目前列出的有效日期截止 2023；現售方案尚未確認,https://www.tobu.co.jp/en/ticket/taito-sumida.html,2026-10-10,tobu-taito-sumida.json
+seibu-seibu1daypass,西武 1 日周遊券,JP,network,current,791,0,0,,,https://www.seiburailway.jp/en/ticket/seibu1daypass/,2026-10-10,seibu-seibu1daypass.json
+seibu-seibukawagoepass,西武川越周遊券,JP,network,current,279,0,0,,,https://www.seiburailway.jp/en/ticket/seibukawagoepass/,2026-10-10,seibu-seibukawagoepass.json
+seibu-chichibufreeticket,西武秩父自由乘車券,JP,partial,current,137,0,0,,依購票出發站的西武一次往返接入路線,https://www.seiburailway.jp/en/ticket/chichibufreeticket/,2026-10-10,seibu-chichibufreeticket.json
+seibu-chichibumanyuticket,西武秩父漫遊券,JP,partial,current,184,0,0,,出發站一次往返；漫遊優惠券六選一的巴士／溫泉等項目,https://www.seiburailway.jp/en/ticket/chichibumanyuticket/,2026-10-10,seibu-chichibumanyuticket.json
+seibu-mvpticket_travelpass,西武姆明谷樂園交通套票,JP,partial,current,791,0,0,,飯能北口至 metsä 一次往返巴士；姆明谷樂園入園定位,https://www.seiburailway.jp/en/ticket/mvpticket_travelpass/,2026-10-10,seibu-mvpticket_travelpass.json
+taiwan-hsr,Taiwan PASS 高鐵版,TW,partial,current,596,0,0,,捷運任選一／景區接駁任選一，請另外選取對應票券,https://twpass.tw/?lang=zh_TW,2026-10-10,taiwan-hsr.json
+taiwan-tra,Taiwan PASS 台鐵版,TW,partial,current,2630,0,0,,捷運任選一／景區接駁任選一，請另外選取對應票券,https://twpass.tw/?lang=zh_TW,2026-10-10,taiwan-tra.json
+tw-tra-three-day,台鐵 3 日周遊券,TW,network,current,2630,0,0,,,https://twpass.funpass.app/product/info/GEwA,2026-10-10,tw-tra-three-day.json
+tw-taipei-transport,北北基好玩卡・交通暢遊版,TW,partial,current,321,0,0,,,https://twpass.funpass.app/product/info/ZwnM,2026-10-10,tw-taipei-transport.json
+tw-taoyuan-airport-return,桃園機場捷運來回票,TW,network,current,76,0,0,,,https://twpass.funpass.app/product/info/7Rme,2026-10-10,tw-taoyuan-airport-return.json
+tw-taichung-metro,台中捷運 48 小時旅遊票,TW,network,current,21,0,0,,,https://twpass.funpass.app/product/info/WR1Z,2026-10-10,tw-taichung-metro.json
+tw-kaohsiung-metro,高雄捷運＋輕軌 2 日券,TW,network,current,725,0,0,,,https://twpass.funpass.app/product/info/V1Kj,2026-10-10,tw-kaohsiung-metro.json
+tw-yilan-pass,宜蘭好行 3 日券,TW,partial,current,4930,0,0,,官方指定公車清單內尚未匯入的路線,https://twpass.funpass.app/product/info/z7WP,2026-10-10,tw-yilan-pass.json
+tw-yilan-funtour,宜蘭 FunTOUR 巴士票,TW,partial,current,0,0,4,,指定 FunTOUR 班次道路尚未取得；停靠時間依當日行程,https://twpass.funpass.app/product/info/zakz,2026-10-10,tw-yilan-funtour.json
+tw-taichung-go,台中 Go 暢遊 48 小時套票,TW,partial,current,21,0,0,,"尚未匯入的台中市區公車；缺少路線：{'routeType': 'bus', 'network': '臺中|台中|Taichung'}",https://twpass.funpass.app/product/info/1XQG,2026-10-10,tw-taichung-go.json
+tw-qingjing-shuttle,台灣好行清境線來回票,TW,partial,current,0,0,2,,台中高鐵至埔里／觀山牧區的班次與換票限制；沒有匹配的 OSM 路線,https://twpass.funpass.app/product/info/z8RP,2026-10-10,tw-qingjing-shuttle.json
+tw-sun-moon-lake-shuttle,台灣好行日月潭線來回票,TW,partial,current,352,0,0,,指定班次及來回票兌換限制,https://twpass.funpass.app/product/info/vdpO,2026-10-10,tw-sun-moon-lake-shuttle.json
+tw-sun-moon-lake-funtour,日月潭 FunTOUR 巴士票,TW,partial,current,0,0,5,,指定 FunTOUR 班次道路尚未取得；停靠時間依當日行程,https://twpass.funpass.app/product/info/dLJE,2026-10-10,tw-sun-moon-lake-funtour.json
+tw-alishan-shuttle,台灣好行阿里山線來回票,TW,partial,current,910,0,0,,來回各兩次上下車及指定班次限制,https://twpass.funpass.app/product/info/Zm6M,2026-10-10,tw-alishan-shuttle.json
+tw-alishan-main-out,阿里山林鐵嘉義至阿里山套票,TW,partial,current,0,1,2,,林鐵本線多林隧道重建路徑尚未完整對應；目前只標兩端站；指定班次及預約席位；OSM 指定區間不連通：嘉義 → 阿里山,https://twpass.funpass.app/TR?lang=zh_TW,2026-10-10,tw-alishan-main-out.json
+tw-alishan-main-return,阿里山林鐵阿里山至嘉義票,TW,partial,current,0,0,2,,林鐵本線多林隧道重建路徑尚未完整對應；目前只標兩端站；指定班次及預約席位；OSM 指定區間不連通：嘉義 → 阿里山,https://twpass.funpass.app/TR?lang=zh_TW,2026-10-10,tw-alishan-main-return.json
+tw-alishan-branch-day,阿里山林鐵支線一日券,TW,network,current,14,0,0,,,https://twpass.funpass.app/product/info/Vevj,2026-10-10,tw-alishan-branch-day.json
+tw-kaohsiung-mengo,高雄 MeN Go 48 小時旅遊票,TW,partial,current,725,0,0,,高雄指定市區公車及輪渡等未完整匯入,https://twpass.funpass.app/product/info/O898,2026-10-10,tw-kaohsiung-mengo.json
+tw-kenting-shuttle,台灣好行墾丁快線來回票,TW,partial,current,504,0,0,,來回票指定班次／兌換限制,https://twpass.funpass.app/product/info/EKzL,2026-10-10,tw-kenting-shuttle.json
+taipei-unlimited,北北基好玩卡・無限暢遊版,TW,partial,current,321,23,0,,,https://taipei.funpass.app/?lang=en_US,2026-10-10,taipei-unlimited.json
+jr-kyushu-mobile,JR 九州福岡廣域數位周遊券,JP,partial,current,1612,0,0,,福岡廣域官方圖其他指定短區間,https://www.jrkyushu.co.jp/english/railpass/mobilepass.html,2026-10-10,jr-kyushu-mobile.json
+fukuoka-subway-day,福岡地鐵一日券,JP,network,current,18,0,0,,,https://subway.city.fukuoka.lg.jp/fare/card/oneday.php,2026-10-10,fukuoka-subway-day.json
+okinawa-yui,沖繩 Yui Rail 24／48 小時券,JP,network,current,12,0,0,,,https://www.yui-rail.co.jp/ticketinfo-ticket/ticketinfo/1day-pass/,2026-10-10,okinawa-yui.json
+korail-pass,韓國鐵路周遊券,KR,partial,current,12241,0,0,,排除市區通勤／地鐵及 SRT 專用路段；KORAIL 適用列車需逐線核對,https://www.korail.com/global/eng/passengerGuide/ticketTypes/korailpass,2026-10-10,korail-pass.json
+korail-plus,韓國鐵路周遊券 Plus,KR,partial,current,12241,0,0,,排除市區通勤／地鐵及 SRT 專用路段；KORAIL 適用列車需逐線核對,https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=1563646,2026-10-10,korail-plus.json
+tmoney-travel,Tmoney 韓國旅行卡,KR,stored-value,current,0,0,0,,,https://tmoney.co.kr/aeb/biz/bridge/foreignTravel.dev,2026-10-10,
+tmoney-travel-plus,Tmoney 韓國旅行卡 Plus,KR,stored-value,current,0,0,0,,,https://tmoney.co.kr/aeb/biz/bridge/foreignTravel.dev,2026-10-10,
+wowpass,WOWPASS 韓國旅遊支付卡,KR,stored-value,current,0,0,0,,,https://www.wowpass.io/,2026-10-10,
+namane,NAMANE 韓國自訂旅遊卡,KR,stored-value,current,0,0,0,,,https://en.namanepay.com/,2026-10-10,
+seoul-climate,首爾氣候同行卡・短期券,KR,partial,current,1193,0,0,,首爾市許可公車；官方查詢清單的新增站點與未匹配路段,https://world.seoul.go.kr/seoul-policy-archive/climate-card/,2026-10-10,seoul-climate.json
+k-tour-1,K-Tour Pass 1,KR,partial,current,0,28,0,,,https://english.visitkorea.or.kr/svc/contents/contentsView.do?menuSn=654&vcontsId=1593470,2026-10-10,k-tour-1.json
+k-tour-2,K-Tour Pass 2,KR,partial,current,0,28,0,,,https://english.visitkorea.or.kr/svc/contents/contentsView.do?menuSn=654&vcontsId=1593470,2026-10-10,k-tour-2.json

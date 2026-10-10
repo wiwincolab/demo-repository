@@ -1,0 +1,10 @@
+# Optional dedicated static map-data Pod; no upstream API calls at request time.
+FROM nginx:1.30.4-alpine
+COPY map-data.nginx.conf /etc/nginx/conf.d/default.conf
+COPY public/poi/index.json /usr/share/nginx/html/poi/index.json
+COPY public/poi/LICENSE.txt /usr/share/nginx/html/poi/LICENSE.txt
+COPY public/poi/regions/ /usr/share/nginx/html/poi/regions/
+COPY public/poi/exports/ /usr/share/nginx/html/poi/exports/
+COPY public/transit/ /usr/share/nginx/html/transit/
+COPY public/pass-coverage/ /usr/share/nginx/html/pass-coverage/
+EXPOSE 8080

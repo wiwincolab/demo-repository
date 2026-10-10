@@ -1,0 +1,58 @@
+{{- if .Values.mapData.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: map-data
+  labels:
+    {{- include "chictrip.labels" . | nindent 4 }}
+spec:
+  selector:
+    app: map-data
+  ports:
+    - port: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: map-data
+  labels:
+    {{- include "chictrip.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: map-data
+  template:
+    metadata:
+      labels:
+        app: map-data
+    spec:
+      containers:
+        - name: map-data
+          image: "{{ .Values.mapData.image }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 8080
+          resources:
+            {{- toYaml .Values.mapData.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /poi/index.json
+              port: 8080
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: map-data-routing
+data:
+  routes.conf: |
+    location /pass-coverage/ { proxy_pass http://map-data:8080; }
+    location /transit/ { proxy_pass http://map-data:8080; }
+    location ~ ^/poi/(index\.json|regions/[^/]+\.json|exports/[^/]+)$ {
+        proxy_pass http://map-data:8080;
+    }
+{{- end }}

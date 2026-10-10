@@ -1,0 +1,4 @@
+cache/
+.import-lock
+*.tmp
+regions/*.tmp

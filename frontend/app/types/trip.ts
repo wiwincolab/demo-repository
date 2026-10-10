@@ -9,6 +9,8 @@ export interface Member {
 }
 export interface Stop {
     id: number;
+    poiId?: string;
+    poiCountry?: 'JP' | 'KR' | 'TW';
     day: number;
     name: string;
     short: string;

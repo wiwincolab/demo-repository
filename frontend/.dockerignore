@@ -6,3 +6,6 @@ references
 tests
 .env
 *.log
+public/poi/cache
+public/poi/.import-lock
+scripts/poi/.cache

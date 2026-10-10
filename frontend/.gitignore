@@ -10,3 +10,10 @@ coverage/
 
 # Local dependency recovery copy
 /node_modules 2
+
+# Local Python caches and POI import scratch files
+__pycache__/
+*.py[cod]
+/public/poi/cache/
+/public/poi/.import-lock
+/public/poi/regions/* [0-9].json

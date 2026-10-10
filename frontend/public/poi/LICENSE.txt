@@ -1,0 +1,16 @@
+chicTrip Japan / Korea / Taiwan POI data
+
+Scope: 74 curated travel-area bounding boxes, not a complete national inventory, ranking, or precise administrative boundary dataset. Overlapping region records are intentional; national exports deduplicate by OSM ID. See index.json and exports/report.json for observed counts and collection times.
+
+POI geographic data: copyright OpenStreetMap contributors. Open Database License (ODbL) 1.0.
+https://www.openstreetmap.org/copyright
+https://opendatacommons.org/licenses/odbl/1-0/
+
+Wikidata labels and descriptions: CC0.
+https://www.wikidata.org/wiki/Wikidata:Licensing
+
+Photos: Wikimedia Commons links; each photo has its own author credit, source page and license in the record. Retain those credits and comply with that license when reusing images. Original photos are not included in this package. Null photo means no verified usable image was matched; imageStatus distinguishes unavailable and pending. Missing source attributes remain null.
+
+GeoJSON coordinates are [longitude, latitude], WGS84. CSV is UTF-8 with BOM; formula-like values are prefixed with an apostrophe for safe opening in spreadsheet applications.
+
+Local map: http://127.0.0.1:8782/places

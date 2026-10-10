@@ -35,6 +35,10 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             {{- include "chictrip.appEnv" . | nindent 12 }}
+            {{- if .Values.poi.enabled }}
+            - name: POI_DATA_DIR
+              value: /data/poi
+            {{- end }}
           envFrom:
             {{- include "chictrip.aiEnvFrom" . | nindent 12 }}
           ports:
@@ -48,7 +52,17 @@ spec:
           volumeMounts:
             - name: media
               mountPath: /data/media
+            {{- if .Values.poi.enabled }}
+            - name: poi
+              mountPath: /data/poi
+              readOnly: true
+            {{- end }}
       volumes:
         - name: media
           persistentVolumeClaim:
             claimName: media
+        {{- if .Values.poi.enabled }}
+        - name: poi
+          persistentVolumeClaim:
+            claimName: poi
+        {{- end }}

@@ -1,7 +1,8 @@
 import { plannerKeywords, validPlannerKeywords } from '../data/planner-preferences.ts';
 import type { Stop } from '../types/trip';
 
-export interface Recommendation extends Stop { outside: boolean; reason: string; travelMinutes: number; rainPlan: string }
+export type RainAlternative = Pick<Stop, 'id' | 'name' | 'at' | 'photo'>;
+export interface Recommendation extends Stop { outside: boolean; reason: string; travelMinutes: number; rainPlan: string; rainAlternative?: RainAlternative | null }
 // Explicit place edits are separate from preference matching: mentioning a category
 // must not silently promote all gray markers into the selected set.
 export function refineSelection(places: Stop[], ids: number[], text: string) {
@@ -22,15 +23,19 @@ export function refineSelection(places: Stop[], ids: number[], text: string) {
 }
 
 const isIndoor = (p: Stop) => /博物館|美術館|水族館|咖啡|商場|室內/.test(p.name);
-export function rainPlanFor(place: Stop, places: Stop[]): string {
-  if (isIndoor(place)) return `保留${place.name}，以室內活動為主；出發前確認開放時間與交通。`;
+const excludedKeywords = (text: string) => plannerKeywords.filter(k => text.split(/[，。；、\n]/).some(part => /不要|不想|不去|不喜歡|避開|不考慮/.test(part) && k.input.test(part)));
+export function rainPlanDetailsFor(place: Stop, places: Stop[], text = ''): { rainPlan: string; rainAlternative: RainAlternative | null } {
+  const snapshot = (p: Stop): RainAlternative => ({ id: p.id, name: p.name, at: [...p.at], photo: { ...p.photo } });
+  if (isIndoor(place)) return { rainPlan: `保留${place.name}，以室內活動為主；出發前確認開放時間與交通。`, rainAlternative: snapshot(place) };
   const distance = (p: Stop) => Math.hypot((p.at[0]! - place.at[0]!) * 90, (p.at[1]! - place.at[1]!) * 111);
-  const backup = places.filter(p => p.id !== place.id && isIndoor(p) && distance(p) <= 25)
-    .sort((a, b) => distance(a) - distance(b))[0];
+  const excluded = excludedKeywords(text);
+  const backup = places.filter(p => p.id !== place.id && isIndoor(p) && distance(p) <= 25 && !excluded.some(k => k.place.test(p.name)))
+    .sort((a, b) => Number(!!b.photo.src) - Number(!!a.photo.src) || distance(a) - distance(b))[0];
   return backup
-    ? `可改去${backup.name}（室內替代候選）；若已安排該站，可延長停留。距離、營業與預約需確認，替換後需重排交通與時間。`
-    : '改為住宿處室內休息，暫緩戶外活動；目前資料沒有可確認的室內替代景點，待補充後再安排。';
+    ? { rainPlan: `可改去${backup.name}（室內替代候選）；若已安排該站，可延長停留。距離、營業與預約需確認，替換後需重排交通與時間。`, rainAlternative: snapshot(backup) }
+    : { rainPlan: '改為住宿處室內休息，暫緩戶外活動；目前資料沒有可確認的室內替代景點，待補充後再安排。', rainAlternative: null };
 }
+export function rainPlanFor(place: Stop, places: Stop[]): string { return rainPlanDetailsFor(place, places).rainPlan; }
 
 export function recommendPlaces(places: Stop[], ids: number[], text: string, limit: number, extension: number, keywordIds: string[] = [], selectedOnly = false) {
   const numerals: Record<string, number> = { 一: 1, 二: 2, 兩: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9 };
@@ -43,25 +48,27 @@ export function recommendPlaces(places: Stop[], ids: number[], text: string, lim
   const available = hours ? Math.min(540, number(hours[1]!) * 60) : 540;
   const extra = text.match(/(?:多搭|多走|圈外|額外)[^，。\n\d一二兩三四五六七八九十]{0,12}(\d+|[一二兩三四五六七八九十]+)\s*分鐘/);
   const outsideLimit = /(?:不要|不想|不接受|不去|不考慮)圈外|只[在去逛].*圈內/.test(text) ? 0 : extra ? number(extra[1]!) : extension;
-  const excluded = plannerKeywords.filter(k => text.split(/[，。；、\n]/).some(part => /不要|不想|不去|不喜歡|避開|不考慮/.test(part) && k.input.test(part)));
+  const excluded = excludedKeywords(text);
   const allowed = plannerKeywords.filter(k => !excluded.some(e => e.id === k.id));
   const interests = allowed.filter(k => k.input.test(text));
   const requestedProfile = plannerKeywords.filter(k => validPlannerKeywords(keywordIds).includes(k.id));
   const profile = allowed.filter(k => requestedProfile.some(p => p.id === k.id));
   const indoor = /雨天|下雨|室內/.test(text);
   const anchors = places.filter(p => ids.includes(p.id));
+  const selectedIds = new Set(ids);
   const travel = (a: Stop, b: Stop) => {
     const km = Math.hypot((a.at[0]! - b.at[0]!) * 90, (a.at[1]! - b.at[1]!) * 111);
     return km < 0.05 ? 0 : Math.ceil((km < 1.3 ? km / 0.065 : km / 18 * 60 + 12) / 5) * 5;
   };
   const matches = (p: Stop) => interests.filter(i => i.place.test(p.name)).map(i => i.id === 'food' ? '美食與甜點' : i.title);
   if (!anchors.length) return { stops: [], notes: ['請先圈選主要遊玩範圍'] };
-  const candidates = places.filter(p => !excluded.some(k => k.place.test(p.name))).filter(p => !indoor || /博物館|美術館|咖啡|晴空塔|商場|室內/.test(p.name + p.note)).map(p => ({
+  const candidates = places.filter(p => !selectedOnly || selectedIds.has(p.id)).filter(p => !excluded.some(k => k.place.test(p.name))).filter(p => !indoor || /博物館|美術館|咖啡|晴空塔|商場|室內/.test(p.name + p.note)).map(p => ({
     place: p, outside: !ids.includes(p.id), matched: matches(p), profileMatches: profile.filter(k => k.place.test(p.name)).map(k => k.title),
-    nearby: anchors.length ? Math.min(...anchors.map(a => travel(a, p))) : Infinity,
+    nearby: selectedIds.has(p.id) ? 0 : anchors.length ? Math.min(...anchors.map(a => travel(a, p))) : Infinity,
   })).filter(p => !p.outside || (!selectedOnly && outsideLimit > 0 && p.nearby <= outsideLimit && (p.matched.length > 0 || p.profileMatches.length > 0)))
     .sort((a,b) => (b.matched.length * 6 + b.profileMatches.length * 2 - Number(b.outside)) - (a.matched.length * 6 + a.profileMatches.length * 2 - Number(a.outside)) || a.nearby - b.nearby);
   const stops: Recommendation[] = [];
+  const rainCandidates = places.filter(q => !excluded.some(k => k.place.test(q.name)));
   let elapsed = 0;
   const start = /下午|不想早起/.test(text) ? 13 * 60 : 10 * 60;
   for (const candidate of candidates) {
@@ -76,7 +83,7 @@ export function recommendPlaces(places: Stop[], ids: number[], text: string, lim
     elapsed += transit;
     const reason = `${candidate.outside ? `圈外推薦：距圈內景點交通約 ${candidate.nearby} 分鐘（示範估算）。` : '已選取景點。'}${candidate.matched.length ? `符合你的${candidate.matched.join('、')}偏好。` : '依照你選取的景點安排。'}${candidate.profileMatches.length ? `參考你選用的偏好關鍵字：${candidate.profileMatches.join('、')}。` : ''}`;
     const clock = start + elapsed;
-    stops.push({ ...p, time: `${String(Math.floor(clock / 60)).padStart(2, '0')}:${String(clock % 60).padStart(2, '0')}`, outside: candidate.outside, reason, travelMinutes: transit, rainPlan: rainPlanFor(p, places.filter(q => !excluded.some(k => k.place.test(q.name)))) });
+    stops.push({ ...p, time: `${String(Math.floor(clock / 60)).padStart(2, '0')}:${String(clock % 60).padStart(2, '0')}`, outside: candidate.outside, reason, travelMinutes: transit, ...rainPlanDetailsFor(p, rainCandidates) });
     elapsed += minutes;
   }
   const budget = text.match(/(?:預算|最多花|花費)[^，。\n]{0,8}?([\d,]+)\s*(元|日圓|日幣|円)?/);

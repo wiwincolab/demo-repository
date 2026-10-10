@@ -37,7 +37,38 @@ worker:
       cpu: "1"
       memory: 512Mi
 
+# Snapshot publication has its own short-lived Pod. Live requests only read JSON.
+# Network refreshes use an explicit Job with poi.mode=import; no recurring public API crawl.
+poi:
+  enabled: true
+  mode: publish
+  runId: ""
+  storage: 2Gi
+  activeDeadlineSeconds: 10800
+  overpassUrl: https://overpass-api.de/api/interpreter
+  regions: ""
+  stage: all
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+
 # 程式參數：改這裡、commit、推 main 就會部署生效（跟 MEDDEMO 一樣）。
+mapData:
+  # Opt-in only; build Dockerfile.map-data with the same immutable image tag.
+  enabled: false
+  image: ghcr.io/wiwincolab/chictrip-map-data
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+
 # 這裡寫什麼鍵，ConfigMap 就產生同名的環境變數（server/utils/config.ts 讀），留空＝用程式裡的預設值。
 # 金鑰不放這裡，放 GitHub Secrets（見下面的 secrets）
 config:

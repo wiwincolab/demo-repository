@@ -15,9 +15,9 @@
     "JP": {
       "file": "jp.json",
       "counts": {
-        "high-speed": 11856,
-        "light-rail": 838,
-        "metro": 2201
+        "high-speed": 11728,
+        "light-rail": 787,
+        "metro": 2016
       },
       "osmTimestamps": [
         "2026-10-10T04:50:31Z",
@@ -27,9 +27,9 @@
     "KR": {
       "file": "kr.json",
       "counts": {
-        "high-speed": 4665,
-        "metro": 726,
-        "light-rail": 119
+        "high-speed": 4390,
+        "metro": 593,
+        "light-rail": 96
       },
       "osmTimestamps": [
         "2026-10-10T04:46:34Z"
@@ -38,13 +38,23 @@
     "TW": {
       "file": "tw.json",
       "counts": {
-        "high-speed": 609,
-        "metro": 623,
-        "light-rail": 288
+        "high-speed": 597,
+        "metro": 506,
+        "light-rail": 253
       },
       "osmTimestamps": [
         "2026-10-10T04:47:35Z"
       ]
     }
+  },
+  "colours": {
+    "source": "OSM way/route colour tags; exact line-name propagation for untagged segments; Tokyo and Taipei canonical lines use their dominant tagged colour and own symbol, avoiding through-service colours",
+    "unknown": "gray, labelled colour not verified",
+    "officialReferences": [
+      "https://www.tokyometro.jp/en/subwaymap/index.html",
+      "https://subway.osakametro.co.jp/guide/routemap.php",
+      "https://english.seoul.go.kr/redesign-of-the-seoul-metro-subway-line-maps-for-the-first-time-in-40-years/",
+      "https://web.metro.taipei/QRCode/TaipeiMetroGuides/TaipeiMetroGuide_Chinese.pdf"
+    ]
   }
 }

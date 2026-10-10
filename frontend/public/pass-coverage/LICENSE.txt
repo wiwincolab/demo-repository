@@ -1,0 +1,7 @@
+Track geometries: © OpenStreetMap contributors, ODbL-1.0.
+https://www.openstreetmap.org/copyright
+Cooperative venue locations: official product catalogs linked by metadata.officialUrl
+and frontend/app/data/pass-benefits.json; product benefit conditions remain with operators.
+Contours are derived planning aids (700 m beside verified urban tracks, 120 m around
+venue coordinates), not official entitlement/property boundaries. Polygon holes and
+separate destinations are retained. Unverified products have no invented polygons.

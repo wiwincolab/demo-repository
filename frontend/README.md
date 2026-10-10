@@ -1,8 +1,94 @@
 # chicTrip Nuxt 前端
 
-以團隊 repo 的東京手機版 Demo 為基礎重建，保留原本品牌、行程資料和圖片；新程式全部放在 `frontend/`。不依賴後端，AI、付款及社群發文均為可操作的模擬。
+## 官方 eSIM 商城（2026-10-10）
+
+`/esim` 現在預設開啟商城，未選行程也可直接瀏覽。依去趣公開商城三頁清單收錄 61 項商品、32 個國家／跨國區域；包含每日流量、吃到飽及馬爾地夫總量型。商品圖片使用官方原圖，61 張均保存於 `public/assets/esim/`，原始 URL 見同目錄 `sources.json`。
+
+支援目的地與電信商搜尋、目的地／流量類型篩選、價格排序、每頁 12 項及商品詳情。所有商品頁的規格、電信商與天數保存於 `app/data/esim-store-specs.json`，商品名稱／起價／原價在 `esim-store.ts`。圖片完整顯示，不裁掉原圖中的文字。
+
+商城的價格是整個商品的最低起價，不是任意天數／流量組合的價格。詳情列出官網的全部選項，但不宣稱能任意組合；「前往官網選規格」開啟該商品的正式選擇與購買流程。沒有串接官方訂單或付款。日本行程保留「本趟推薦」分頁及既有顧問／示範結帳；其他目的地可直接使用商城。
+
+`scripts/esim/read-public-pages.mjs` 使用 Vue HTML parser 讀取已下載的公開商品 HTML，核對商品名稱、圖片 ID、起價及規格後產生資料快照，不保存或使用 API 憑證。公開 HTML 存在系統暫存檔，不是執行網站的依賴。
+
+驗證：12 項商城資料／eSIM 回歸測試通過；320px、390px、1280px 瀏覽檢查涵蓋圖片、篩選、空結果、排序、六頁分頁、商品詳情、Escape 與本趟推薦。截圖在工作區 `outputs/esim-store-2026-10-10/`。獨立輸出目錄的正式版 client／server 編譯通過（以 `nitro.noPublicDir` 跳過全專案素材複製）。完整型別檢查受既有 `pass-coverage.ts` 的 null 名稱資料錯誤阻擋；全量靜態建置已編譯及預渲染，但素材複製長時間未完成，已停止，不能當成可發布成品。可用既有本機開發服務 `http://127.0.0.1:8782/esim` 預覽。
+
+## 日韓台景點資料與地圖（2026-10-10）
+
+`/places` 是獨立的景點探索地圖，排行程頁提供入口，不必先選示範旅程。資料由 OpenStreetMap 的有名稱觀光景點、博物館、美術館、觀景台、動物園、水族館、主題樂園、城堡與遺跡組成，另含有 Wikidata 識別碼的公園、庭園、宗教建築、地標塔、燈塔、山岳、海灘與溫泉；不是餐廳、旅館或全國所有 POI 的完整名錄。
+
+`scripts/poi/regions.mjs` 明列日本 35、韓國 17、台灣 22 個旅遊範圍的座標框。它們是旅遊區域及鄰近範圍，不是精確行政邊界、熱門排名或政府景點認證。區域可重疊，目錄總數以 OSM ID 去重，每區再以 Wikidata ID／名稱及座標合併重複點。
+
+`public/poi/index.json` 是目錄與實際筆數；`regions/*.json` 保存景點完整欄位，包括經緯度、中文／當地名稱、分類、地址、描述、官網、電話、開放時間、收費／無障礙標記、OSM／Wikidata ID、資料來源及抓取時間。來源未提供的值保留 `null`，不推算評分、價格或即時營業狀態。`exports/` 提供各國 CSV、GeoJSON 及總表 `report.json`，包含照片 URL、作者與授權。
+
+照片先用景點的 OSM `wikimedia_commons`／Wikidata P18 連結；沒有 Wikidata ID 時，僅從 OSM 已連結的 Wikipedia 文章取得 ID，不模糊比對名稱。再向 Commons `imageinfo` 取得縮圖及授權，僅發布可確認許可的影像。未配對、無圖片及待重試分別保留狀態，不拿鄰近景點照片補位。照片仍由 Wikimedia 提供；資料交付的是照片連結和來源，未批次下載原始照片。詳情顯示作者、授權及來源連結；影像失效時顯示載入失敗。
+
+地圖依區域載入準備好的 JSON，MapLibre 顯示底圖，使用 [Supercluster](https://github.com/mapbox/supercluster) 依縮放與可見範圍聚合點位；清單每次顯示 36 個景點，照片延後載入。搜尋及分類使用本機資料。`/api/poi/catalog`、`/api/poi/regions/:id` 只讀 PVC 上的快照，不對使用者請求即時爬取；沒有後端快照時，前端改讀靜態檔，GitHub Pages 也可用。
+
+`/places` 預設顯示全部景點（包含照片待補者），已取得的照片會顯示在獨立景點圓點上；「只看有照片」由使用者選擇。`/planner` 共用這些快照，可選日本 35、韓國 17、台灣 22 個現有旅遊區域，依地圖可見範圍或票券範圍載入，每批最多 3 區。匯入景點使用穩定的負數 OSM 衍生 ID，可圈選、點選、產生與儲存草案，並保留照片作者及授權。資料新增時不重設地圖視角；大量選取仍聚合點位。API 的單區資料缺失時也可退回靜態快照，支援網站子路徑。
+
+```sh
+# 首次抓取：單一行程逐區執行，有快取、超時、重試及單一寫入鎖。
+node scripts/poi/import.mjs
+# 只更新圖片，或指定部分區域：
+POI_STAGE=images POI_REGIONS=jp-tokyo,kr-seoul,tw-taipei node scripts/poi/import.mjs
+# 輸出各國可攜資料：
+node scripts/poi/export.mjs
+# 讓本機 API 直接讀這批資料：
+POI_DATA_DIR="$PWD/public/poi" npx nuxt dev --host 127.0.0.1 --port 8782
+```
+
+外部 API 需網路連線。Overpass 公開服務適用一次性小規模擷取；大量或定期更新應設定 `POI_OVERPASS_URL` 使用自建／授權服務，或改用地區 OSM extracts。程式不自動排定公開 API 爬取。`POI_DATA_DIR` 可改資料目錄；OSM 快取預設 7 天，Wikimedia 快取 30 天。快取與寫入鎖不進 Git 或 Docker 映像。
+
+Helm `poi.enabled=true` 預設新增獨立、短期的 `poi-import` Job Pod，將映像內已有資料發布至 2Gi PVC；API 唯讀掛載。Job 設定 CPU 100m／128Mi 請求、1 CPU／512Mi 上限、單一處理程序，與照片／每日卡片 worker 分開。每次 main 部署等待發布完成；`poi.enabled=false` 可停用。這輪只備好設定，未建立正式環境 Pod。
+
+需要在已部署映像上明確更新時，使用現有叢集連線、已部署 SHA 及唯一 runId 渲染單獨 Job，再檢查其 log；不要用 `latest` 覆蓋現有版本：
+
+```sh
+helm template chictrip ../deploy/helm/chictrip --namespace chictrip \
+  --show-only templates/poi.yaml --set image.tag=DEPLOYED_SHA \
+  --set poi.mode=import --set poi.runId=refresh-20261010 \
+  --set poi.regions=jp-tokyo --set poi.stage=all > /tmp/chictrip-poi-refresh.yaml
+kubectl -n chictrip apply -f /tmp/chictrip-poi-refresh.yaml
+kubectl -n chictrip logs -f job/poi-import-refresh-20261010
+```
+
+OSM 衍生資料依 ODbL 使用，保留 © OpenStreetMap contributors；Wikidata 名稱／描述為 CC0，照片依各檔案授權。未確認涵蓋或照片的缺口以 `exports/report.json` 與每筆 `imageStatus` 為準，不宣稱所有景點都有照片。
+
+## 周遊券路線與沿線輪廓（2026-10-10）
+
+`/planner` 的 109 張票券中，105 張已有實際路線、合作景點或停靠點；含 26 張已完成路網對照、77 張仍有巴士／版本等缺口、2 張合作景點卡。4 張儲值卡沒有免費地域邊界，1 張過期商品保留歷史資料並停用。來源與逐券缺口提供在 `public/pass-coverage/report.csv`／`report.json`，商品目錄在 `catalog.json`。
+
+新增 JR 區域券、私鐵指定終點、纜車、來源中可對應的指定巴士／渡輪路徑與台灣接駁。地圖輪廓由實際路線生成，保留孔洞及分離區域；沿線 700 公尺緩衝、景點／停靠點 120 公尺定位圈只用於遊玩規劃，不能當作官方免費地域邊界。沒有來源的區段不畫推測道路，介面列出缺口及官方範圍。
+
+限次往返／單程、限定直通、只可下車採不同虛線圖例。Taiwan PASS 增加都會交通與景區接駁各任選一欄位，地圖只合併所選項目。完整路網可淡化券外交通，部分路網只強調已核對路線。票券 GeoJSON 選用時才載入，快取最多 5 張，GPU 畫路線；`/places` 的 74 個旅遊區域有 33,482 個去重景點，其中 10,241 個已取得可確認授權的照片連結。
+
+會津券新增會津田島／蘆之牧溫泉／喜多方版本切換，各版路線與輪廓獨立。補齊 JR 指定宮島渡輪、京都高雄／京北及若江線巴士、智頭急行、伊豆箱根與伊勢鐵道／和歌山電鐵；宜蘭券加入指定台鐵區段及平溪／深澳支線。下載資料共有 105 份預設幾何加 2 份會津替代版本，目錄仍為 109 張；未取得的巴士或購票出發站區段繼續列在缺口中。
+
+獨立靜態資料 Pod 設定在 `../deploy/helm/chictrip/templates/map-data.yaml`，預設 `mapData.enabled=false`。它提供 POI、交通和票券資料，啟用 gzip，請求 100m CPU／128Mi 記憶體，上限 1 CPU／512Mi；前端 Nginx 同來源代理這些路徑。部署前需用相同不可變版本建好並發布資料映像，本輪只做本機驗證，未推送映像或套用叢集設定：
+
+```sh
+# 在 frontend/ 建置與本機檢查；不會部署。
+docker build -f Dockerfile.map-data -t chictrip-map-data:local-20261010 .
+docker run --rm chictrip-map-data:local-20261010 nginx -t
+# 後續正式部署時，映像需先以與 web/api 相同的 SHA 發布。
+# 再於原 Helm 部署加入 --set mapData.enabled=true。
+```
+
+抓取、幾何規則、來源授權與重現方法見 `scripts/transit/README.md`。全國券資料量較大，未把爬取工作放在使用者開圖請求中。
+
+以團隊 repo 的東京手機版 Demo 為基礎重建，保留原本品牌、行程資料和圖片；新程式全部放在 `frontend/`。AI、付款及社群發文均為可操作的模擬。
 
 ## 回憶製造所功能調整（2026-10-10）
+
+### 自己說的記憶偏好（2026-10-10）
+
+`/wardrobe?view=preferences` 把記憶 map 放在最前面，「跟我說，你喜歡什麼？」以膠囊對話窗嵌在 map 底部。一次可說多個喜好，送出後直接分類並加入，無需確認分類；明確的個人喜好未匹配既有分類時放入「其他喜好」，問題、假設及別人的喜好不會存入。美食、自然、文化、玩樂、購物之外，旅行方式分支收納步調、交通、住宿、人潮等條件。「不喜歡」保存為避開偏好，不會自動開啟該類別的排行程興趣。
+
+拖曳空白處可平移 map，滾輪／雙指或右上角按鈕可縮放與置中。拉動節點或中央吉祥物時，連線與鄰近節點會跟著牽動；放開後平滑回到原本排列，不受拖曳時間限制。吉祥物平時呼吸與眨眼，被拖起時會輕晃並依方向傾斜，放開後回彈、輕晃與閃星；偏好減少動態效果時停用裝飾動畫並直接復位。
+
+`POST /api/preferences/classify` 沿用伺服器的文字模型與 `GEMINI_API_KEY`，以 JSON schema 抽取標籤、分類、喜歡／避開及原話證據。輸入上限 500 字、單次最多 8 筆、模型逾時 12 秒；證據不在原話中或資料格式不符會拒絕。有後端但未設金鑰、模型失敗或純靜態站，改用相同的本機關鍵字整理，畫面明示結果來源。此 API 不依賴照片資料庫，不在伺服器保存偏好，也不將原話寫入 log。
+
+最多保存 40 個個人喜好，沿用 `chictrip-preference-graph-v1` localStorage，舊改名與隱藏節點會保留。管理清單預設收合，支援重複項目去重、改分類、長按／右鍵／F2 改名與刪除、查看原話、復原這次加入及刷新保留；儲存失敗會提示僅本次頁面保留。明確的正向偏好同步開啟既有五類排行程關鍵字；個別標籤、避開偏好、旅行方式與其他喜好目前保存於 map，排行程仍使用既有類別規則，不宣稱已套用全部細部限制。
 
 移除 `/memory` 的圖片／貼紙製作按鈕及本機合成、儲存新作品流程。作品庫、收集冊與重遊入口改為瀏覽照片及風格範例；既有作品的查看、交換、分享與下載保留。以下創作錄影流程為歷史紀錄，不再代表目前可用功能。
 

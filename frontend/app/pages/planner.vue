@@ -2,20 +2,71 @@
 import ChictripMotion from '~/components/ChictripMotion.vue';
 import {tripItineraries,plannerStorageKey} from '~/data/trips';
 import type { Stop } from '~/types/trip';
+import type { PoiCountry } from '~/types/poi';
+import { mergePlannerPlaces, poiRegionsInBounds } from '~/utils/planner-poi';
 import type { Point } from '~/utils/map';
 import { withinPlanningAreas, validPlanningBoundary } from '~/utils/planner-map';
 import { travelPasses, filterTravelPasses, findTravelPass, passCountries, passKindLabels, travelPassRegions, type TravelPass, type TravelPassCountry } from '~/data/travel-passes';
-import { benefitsForPass, benefitLocationFrame } from '~/data/pass-benefits';
+import { benefitsForPass } from '~/data/pass-benefits';
+import { passCoverageIndex, withinPassCoverage, coverageStatus, displayCoverageGap, isTaiwanBundle, taiwanBundleOptions, mergeBundleCoverage, type PassCoverage } from '~/utils/pass-coverage';
 import { plannerKeywords } from '~/data/planner-preferences';
-import { recommendPlaces, refineSelection, rainPlanFor, type Recommendation } from '~/utils/planner';
+import { recommendPlaces, refineSelection, rainPlanDetailsFor, type Recommendation } from '~/utils/planner';
 const asset = useAsset();
 const { notify } = useDemo();
 const {activeId,activeTrip,tripHref}=useTripContext();
-const places = computed<Stop[]>(()=>{
+const itineraryPlaces = computed<Stop[]>(()=>{
   if(!activeId.value)return [];
   const trip=tripItineraries[activeId.value];
   return trip.flatMap(d=>d.stops).filter((s,i,all)=>all.findIndex(p=>p.name===s.name)===i);
 });
+const { catalog: poiCatalog, snapshots: poiSnapshots, loading: poiLoading, error: poiError, loadCatalog, loadRegions } = usePlannerPois();
+const poiCountry = ref<PoiCountry>('JP'), poiRegionId = ref(''), mapBounds = shallowRef<number[] | null>(null);
+const viewport = shallowRef<number[]>([]), savedPoiStops = ref<Stop[]>([]), inspectedId = ref<number | null>(null);
+const inspectedPhotoFailed = ref(false);
+watch(inspectedId,()=>{inspectedPhotoFailed.value=false;});
+const pendingSavedIds = new Set<number>();
+const itineraryCountry = computed<PoiCountry>(() => activeTrip.value?.country === 'korea' ? 'KR' : activeTrip.value?.country === 'taiwan' ? 'TW' : 'JP');
+const poiCountries = [{id:'JP',name:'日本'},{id:'KR',name:'韓國'},{id:'TW',name:'台灣'}];
+const poiRegions = computed(() => poiCatalog.value?.regions.filter(r => r.country === poiCountry.value && r.file) || []);
+const loadedPois = computed(() => [...new Map(poiSnapshots.value.filter(s => s.region.country === poiCountry.value).flatMap(s => s.pois).map(p => [p.id,p])).values()]);
+const places = computed(() => mergePlannerPlaces(poiCountry.value === itineraryCountry.value ? itineraryPlaces.value : [], loadedPois.value, savedPoiStops.value.filter(p => p.poiCountry === poiCountry.value)));
+const viewportPlaces = computed(() => viewport.value.length === 4 ? places.value.filter(p=>p.at[0]!>=viewport.value[0]! && p.at[0]!<=viewport.value[2]! && p.at[1]!>=viewport.value[1]! && p.at[1]!<=viewport.value[3]!) : places.value);
+const inspectedPlace = computed(() => places.value.find(p => p.id === inspectedId.value) || null);
+const inspectedPoi = computed(() => loadedPois.value.find(p => p.id === inspectedPlace.value?.poiId) || null);
+async function loadVisiblePois(bounds = viewport.value, zoom = 10) {
+  if (!poiCatalog.value || zoom < 7) return;
+  await loadRegions(poiRegionsInBounds(poiRegions.value, bounds));
+}
+function onViewport(bounds: number[], zoom: number) { viewport.value = bounds; void loadVisiblePois(bounds, zoom); }
+function choosePoiRegion(reset = true) {
+  const region = poiRegions.value.find(r => r.id === poiRegionId.value);
+  if (!region) return;
+  if (reset) { selectRange([]); hasRange.value = false; selectionBoundary.value = []; draft.value = []; inspectedId.value = null; }
+  mapBounds.value = [...region.bbox];
+  void loadRegions([region]);
+}
+function choosePoiCountry() { poiRegionId.value = poiRegions.value[0]?.id || ''; choosePoiRegion(); }
+function initializePoiDestination() {
+  if (!poiCatalog.value || !activeId.value) return;
+  if (selectedPass.value && passCoverage.value) { void loadPassPois(passCoverage.value, selectedPass.value.country); return; }
+  let stored: {poiCountry?: PoiCountry; poiRegionId?: string} | null = null;
+  try { stored = JSON.parse(localStorage.getItem(plannerStorageKey(activeId.value)) || 'null'); } catch {}
+  poiCountry.value = stored?.poiCountry && poiCountries.some(c => c.id === stored!.poiCountry) ? stored.poiCountry : itineraryCountry.value;
+  const first = itineraryPlaces.value[0]?.at;
+  const initial = poiRegions.value.find(r => r.id === stored?.poiRegionId) || (first && poiRegions.value.find(r => first[0]! >= r.bbox[0]! && first[0]! <= r.bbox[2]! && first[1]! >= r.bbox[1]! && first[1]! <= r.bbox[3]!)) || poiRegions.value[0];
+  if (initial) { poiRegionId.value = initial.id; choosePoiRegion(false); }
+}
+watch(poiCatalog, initializePoiDestination);
+onMounted(() => { void loadCatalog(); });
+async function loadPassPois(coverage: PassCoverage | null, country: PoiCountry) {
+  poiCountry.value = country;
+  const extent = coverage?.features.flatMap(f => f.geometry.type === 'Point' ? [f.geometry.coordinates] : f.geometry.type === 'LineString' ? f.geometry.coordinates : f.geometry.type === 'Polygon' ? f.geometry.coordinates.flat() : f.geometry.coordinates.flat(2)) || [];
+  if (!extent.length) return;
+  const bounds = extent.reduce((b,p)=>[Math.min(b[0]!,p[0]!),Math.min(b[1]!,p[1]!),Math.max(b[2]!,p[0]!),Math.max(b[3]!,p[1]!)],[Infinity,Infinity,-Infinity,-Infinity]);
+  const regions = poiRegionsInBounds(poiRegions.value, bounds);
+  poiRegionId.value = regions[0]?.id || '';
+  await loadRegions(regions);
+}
 const { keywordIds, enabled: useKeywords } = useTravelPreferences();
 const appliedKeywords = computed(() => useKeywords.value ? keywordIds.value : []);
 const appliedTitles = computed(() => plannerKeywords.filter(k => appliedKeywords.value.includes(k.id)).map(k => k.title));
@@ -23,24 +74,65 @@ const ids = ref<number[]>([]), drawing = ref(false), preferences = ref(''), pace
 const selectionBoundary = ref<Point[]>([]);
 const rangeIds = ref<number[]>([]), hasRange = ref(false), mapRevision = ref(0), refinement = ref(''), refinementStatus = ref('');
 const selectedPassId = ref('');
+const passVariant = ref('');
+const passVariants = computed(() => passCoverageIndex[selectedPassId.value]?.variants || []);
+const bundleCity = ref(''), bundleShuttle = ref('');
+const bundleChoices = computed(() => ({city:taiwanBundleOptions.city.map(findTravelPass).filter((p):p is TravelPass=>!!p),shuttle:taiwanBundleOptions.shuttle.map(findTravelPass).filter((p):p is TravelPass=>!!p)}));
 const passCountry = ref<TravelPassCountry | ''>(''), passRegion = ref(''), passQuery = ref('');
 const availablePasses = computed(() => filterTravelPasses({ country: passCountry.value, region: passRegion.value, query: passQuery.value }));
 const availableRegions = computed(() => travelPassRegions(passCountry.value));
 watch(passCountry, () => { passRegion.value = ''; });
 const selectedPass = computed(() => findTravelPass(selectedPassId.value));
 const selectedBenefits = computed(() => benefitsForPass(selectedPassId.value));
-function planningAreas(pass: TravelPass) {
-  return [...pass.areas, ...benefitsForPass(pass.id).filter(p => !withinPlanningAreas(p.at, pass.areas)).map(p => benefitLocationFrame(p.at))];
+const passCoverage = shallowRef<PassCoverage | null>(null), coverageLoading = ref(false), coverageError = ref('');
+const coverageMetadata = computed(() => passCoverage.value?.metadata || passCoverageIndex[selectedPassId.value]);
+const coverageCache = new Map<string, Promise<PassCoverage | null>>();
+function loadCoverage(id:string,variant='') {
+  const metadata=passCoverageIndex[id];
+  const file=metadata?.variants?.find(v=>v.id===variant)?.file || metadata?.file;
+  const key=file || id;
+  if (!coverageCache.has(key)) {
+    const request = file ? $fetch<PassCoverage>(asset('pass-coverage/' + file)) : Promise.resolve(null);
+    coverageCache.set(key, request.catch(error => { coverageCache.delete(key); throw error; }));
+    if (coverageCache.size > 5) coverageCache.delete(coverageCache.keys().next().value!);
+  }
+  return coverageCache.get(key)!;
 }
-const selectionAreas = computed(() => selectedPass.value ? planningAreas(selectedPass.value) : []);
+let coverageRevision = 0;
+watch(selectedPassId, id => { bundleCity.value='';bundleShuttle.value='';passVariant.value=passCoverageIndex[id]?.variants?.[0]?.id || ''; },{flush:'sync'});
+watch([selectedPassId,bundleCity,bundleShuttle,passVariant], async ([id,city,shuttle,variant]) => {
+  const revision = ++coverageRevision;
+  passCoverage.value = null; coverageError.value = ''; coverageLoading.value = !!id;
+  if (!id) { coverageLoading.value = false; return; }
+  try {
+    let coverage = await loadCoverage(id,variant);
+    if (coverage && isTaiwanBundle(id)) {
+      const options=await Promise.all([city ? loadCoverage(city) : null,shuttle ? loadCoverage(shuttle) : null]);
+      coverage=mergeBundleCoverage(coverage,options[0],options[1]);
+    }
+    if (revision !== coverageRevision) return;
+    passCoverage.value = coverage;
+    await loadPassPois(coverage, selectedPass.value?.country || poiCountry.value);
+    if (revision !== coverageRevision) return;
+    rangeIds.value = places.value.filter(p => withinPassCoverage(p.at, coverage)).map(p => p.id);
+    ids.value = ids.value.filter(id => rangeIds.value.includes(id));
+  } catch { if (revision === coverageRevision) coverageError.value = '票券路網暫時無法載入，請查看官方範圍或自己圈選。'; }
+  finally { if (revision === coverageRevision) coverageLoading.value = false; }
+});
 const extension = ref(0), planNotes = ref<string[]>([]);
 const panel = ref<'passes' | 'preferences' | 'saved' | null>(null);
 const dirty = ref(false), error = ref('');
 const routeIds = computed(() => !dirty.value ? draft.value.map(s => s.id) : []);
 const busy = ref(false), draft = ref<Recommendation[]>([]);
 let generationTimer: ReturnType<typeof setTimeout> | undefined;
-watch(activeId,()=>{clearTimeout(generationTimer);ids.value=[];rangeIds.value=[];selectionBoundary.value=[];selectedPassId.value='';hasRange.value=false;drawing.value=false;mapRevision.value++;refinement.value='';refinementStatus.value='';draft.value=[];preferences.value='';extension.value=0;dirty.value=false;error.value='';planNotes.value=[];panel.value=null;busy.value=false;});
-watch([ids, preferences, pace, extension, selectedPassId, () => appliedKeywords.value.join(',')], () => {
+watch(activeId,()=>{clearTimeout(generationTimer);ids.value=[];rangeIds.value=[];selectionBoundary.value=[];selectedPassId.value='';hasRange.value=false;drawing.value=false;mapRevision.value++;refinement.value='';refinementStatus.value='';draft.value=[];preferences.value='';extension.value=0;dirty.value=false;error.value='';planNotes.value=[];panel.value=null;busy.value=false;savedPoiStops.value=[];inspectedId.value=null;pendingSavedIds.clear();initializePoiDestination();});
+watch(places, () => {
+  if (!hasRange.value) return;
+  rangeIds.value = places.value.filter(p => selectedPassId.value ? withinPassCoverage(p.at, passCoverage.value) : withinPlanningAreas(p.at, [selectionBoundary.value])).map(p => p.id);
+  const restored=places.value.filter(p=>pendingSavedIds.has(p.id)).map(p=>p.id);
+  if(restored.length){const wasDirty=dirty.value;restored.forEach(id=>pendingSavedIds.delete(id));ids.value=[...new Set([...ids.value,...restored])];dirty.value=wasDirty;}
+});
+watch([ids, preferences, pace, extension, selectedPassId, bundleCity, bundleShuttle, passVariant, () => appliedKeywords.value.join(',')], () => {
   clearTimeout(generationTimer);
   busy.value = false;
   dirty.value = !!draft.value.length;
@@ -51,34 +143,52 @@ watch(activeId, id => {
   try {
     const stored = JSON.parse(localStorage.getItem(plannerStorageKey(id)) || 'null');
     if (stored?.saved?.stops?.length) {
+      savedPoiStops.value = stored.saved.stops.filter((s: Stop) => s.poiId && s.id < 0 && s.at?.length === 2 && s.at.every(Number.isFinite));
+      for(const id of stored.ids || [])if(Number.isSafeInteger(id) && id<0)pendingSavedIds.add(id);
+      if (['JP','KR','TW'].includes(stored.poiCountry)) poiCountry.value = stored.poiCountry;
       ids.value = (stored.ids || stored.saved.stops.filter((s: Recommendation) => !s.outside).map((s: Recommendation) => s.id)).filter((id: number) => places.value.some(p => p.id === id));
       rangeIds.value = (stored.rangeIds || ids.value).filter((id: number) => places.value.some(p => p.id === id));
       ids.value = [...new Set([...ids.value, ...stored.saved.stops.map((s: Recommendation) => s.id)])].filter(id => places.value.some(p => p.id === id));
       selectionBoundary.value = validPlanningBoundary(stored.boundary);
-      selectedPassId.value = findTravelPass(stored.passId)?.id || '';
+      const savedPass = findTravelPass(stored.passId);
+      selectedPassId.value = savedPass && passCoverageIndex[savedPass.id]?.availability !== 'expired' ? savedPass.id : '';
+      if(passVariants.value.some(v=>v.id===stored.passVariant))passVariant.value=stored.passVariant;
+      bundleCity.value = taiwanBundleOptions.city.includes(stored.bundleCity) ? stored.bundleCity : '';
+      bundleShuttle.value = taiwanBundleOptions.shuttle.includes(stored.bundleShuttle) ? stored.bundleShuttle : '';
       hasRange.value = true;
       drawing.value = false;
       preferences.value = stored.saved.preference || '';
       extension.value = stored.extension ?? 0;
       pace.value = stored.pace ?? 3;
-      draft.value = stored.saved.stops.filter((s: Recommendation) => places.value.some(p => p.id === s.id)).map((s: Recommendation) => ({ ...s, rainPlan: s.rainPlan || rainPlanFor(s, places.value) }));
+      draft.value = stored.saved.stops.filter((s: Recommendation) => places.value.some(p => p.id === s.id)).map((s: Recommendation) => s.rainAlternative !== undefined ? s : ({ ...s, ...rainPlanDetailsFor(s, places.value, preferences.value) }));
       planNotes.value = stored.saved.notes || [];
       dirty.value = JSON.stringify(stored.saved.keywordIds || []) !== JSON.stringify(appliedKeywords.value);
     }
   } catch { /* A fresh draft remains available when saved data cannot be read. */ }
 }, { immediate: true });
-function select(value: number[]) { ids.value = value; }
+function select(value: number[]) { pendingSavedIds.clear(); ids.value = value; }
 function selectRange(value: number[], boundary: Point[] = []) {
+  pendingSavedIds.clear();
   selectedPassId.value = '';
   rangeIds.value = [...value]; ids.value = [...value]; hasRange.value = true;
   drawing.value = false; refinementStatus.value = ''; refinement.value = '';
   selectionBoundary.value = boundary;
 }
-function selectPass(pass: TravelPass) {
+async function selectPass(pass: TravelPass) {
   if (!findTravelPass(pass.id)) return;
-  const value = places.value.filter(p => withinPlanningAreas(p.at, planningAreas(pass))).map(p => p.id);
-  selectRange(value);
+  if (passCoverageIndex[pass.id]?.availability === 'expired') return;
+  selectRange([]);
   selectedPassId.value = pass.id; panel.value = null;
+  try {
+    const variant=passVariant.value;
+    const coverage = await loadCoverage(pass.id,variant);
+    if (selectedPassId.value !== pass.id || passVariant.value !== variant) return;
+    await loadPassPois(coverage, pass.country);
+    if (selectedPassId.value !== pass.id) return;
+    if (passVariant.value !== variant) return;
+    const value = places.value.filter(p => withinPassCoverage(p.at, coverage)).map(p => p.id);
+    rangeIds.value = value; ids.value = [...value];
+  } catch { /* The loading watcher displays the recovery message. */ }
 }
 function beginDrawing() {
   if (drawing.value) { drawing.value = false; return; }
@@ -117,7 +227,7 @@ function generate() {
 function save() {
     if(!activeId.value || dirty.value || !draft.value.length)return;
     try {
-        localStorage.setItem(plannerStorageKey(activeId.value), JSON.stringify({ trip:activeId.value, ids: ids.value, rangeIds: rangeIds.value, boundary: selectionBoundary.value, passId: selectedPassId.value, extension: extension.value, pace: pace.value, saved: { stops: draft.value, preference: preferences.value, keywordIds: [...appliedKeywords.value], notes: planNotes.value } }));
+        localStorage.setItem(plannerStorageKey(activeId.value), JSON.stringify({ trip:activeId.value, poiCountry:poiCountry.value, poiRegionId:poiRegionId.value, ids: ids.value, rangeIds: rangeIds.value, boundary: selectionBoundary.value, passId: selectedPassId.value, passVariant:passVariant.value, bundleCity:bundleCity.value,bundleShuttle:bundleShuttle.value, extension: extension.value, pace: pace.value, saved: { stops: draft.value, preference: preferences.value, keywordIds: [...appliedKeywords.value], notes: planNotes.value } }));
     }
     catch {
         notify('瀏覽器無法儲存，請保留這份預覽。');
@@ -134,23 +244,43 @@ onBeforeUnmount(() => clearTimeout(generationTimer));
       <span class="eyebrow">{{ activeTrip.english }} / DAY PLANNER</span>
       <h1>圈出今天想玩的地方。</h1>
       <p>自己畫範圍，或用手上的票券選區。放大地圖就能看景點。</p>
+      <NuxtLink to="/places">探索日韓台更多景點與照片 →</NuxtLink>
     </div><PageMascot /></div>
+    <div class="planner-destinations">
+      <label>景點國家<select v-model="poiCountry" @change="choosePoiCountry"><option v-for="country in poiCountries" :key="country.id" :value="country.id">{{ country.name }}</option></select></label>
+      <label>景點地區<select v-model="poiRegionId" @change="choosePoiRegion()"><option v-for="region in poiRegions" :key="region.id" :value="region.id">{{ region.name }}</option></select></label>
+    </div>
+    <p class="small-note planner-poi-status" role="status">{{ poiLoading ? '正在載入附近景點與照片…' : `目前範圍 ${viewportPlaces.length.toLocaleString()} 個景點 · ${viewportPlaces.filter(p=>p.photo.src).length.toLocaleString()} 個有照片` }}<template v-if="poiError"> · {{ poiError }} <button @click="loadCatalog().then(()=>loadVisiblePois())">重試</button></template></p>
     <div class="range-choices" aria-label="選擇遊玩範圍的方式">
       <button :class="{ active: drawing }" :aria-pressed="drawing" @click="beginDrawing"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 4c5 3 5 13-2 15C8 22 1 17 3 10c1-4 5-7 9-6M14 8l6-6 2 2-6 6-3 1 1-3Z"/></svg>{{ drawing ? '取消圈選' : hasRange ? '自己重畫範圍' : '自己圈選' }}</button>
       <button :class="{ active: selectedPass }" @click="panel = 'passes'"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v5a2 2 0 0 0 0 4v3H3v-3a2 2 0 0 0 0-4V6Zm12 0v3m0 3v3m0 1v2"/></svg>{{ selectedPass ? '更換票券範圍' : '用票券範圍' }}</button>
     </div>
     <div v-if="selectedPass" class="selected-pass" aria-label="目前使用的票券範圍">
       <TravelPassArtwork :pass="selectedPass" />
-      <span><b>{{ selectedPass.name }}</b><small>{{ selectedPass.region }} · {{ selectedPass.kind === 'stored-value' ? '服務區域示意・需儲值' : '規劃範圍示意' }}</small></span>
+      <span><b>{{ selectedPass.name }}</b><small>{{ selectedPass.region }} · {{ selectedPass.kind === 'stored-value' ? '合作服務・需儲值' : '路線／合作景點' }}</small></span>
       <a :href="selectedPass.coverageUrl" target="_blank" rel="noopener">官方適用範圍 ↗</a>
     </div>
-    <CircleMap :key="activeId || ''" :places="places" :selected="ids" :drawing="drawing" :has-range="hasRange" :range-ids="rangeIds" :boundary="selectionBoundary" :areas="selectionAreas" :benefits="selectedBenefits" :reset-key="mapRevision" :route="routeIds" @select="select" @range="selectRange" @cancel="drawing = false" />
-    <p v-if="selectedPass" class="pass-range-note">{{ selectedPass.exclusions }} <template v-if="selectedBenefits.length">已標示 {{ selectedBenefits.length }} 個有確認座標的合作設施；黃框為位置示意，完整名單與方案限制見官網。</template></p>
+    <p v-if="selectedPass" class="small-note" role="status">{{ coverageLoading ? '正在載入票券路網輪廓…' : coverageError || coverageMetadata?.note }} 輪廓內的景點門票與交通優惠仍依票券條件。</p>
+    <div v-if="passVariants.length" class="bundle-choices">
+      <label>票券版本・依持有票券選擇<select v-model="passVariant"><option v-for="variant in passVariants" :key="variant.id" :value="variant.id">{{ variant.label }}</option></select></label>
+    </div>
+    <div v-if="isTaiwanBundle(selectedPassId)" class="bundle-choices">
+      <label>都會交通・任選一<select v-model="bundleCity"><option value="">選擇已兌換項目</option><option v-for="choice in bundleChoices.city" :key="choice.id" :value="choice.id">{{ choice.name }}</option></select></label>
+      <label>景區接駁・任選一<select v-model="bundleShuttle"><option value="">選擇已兌換項目</option><option v-for="choice in bundleChoices.shuttle" :key="choice.id" :value="choice.id">{{ choice.name }}</option></select></label>
+    </div>
+    <details v-if="coverageMetadata?.missingComponents?.length" class="coverage-gaps">
+      <summary>{{ coverageStatus(coverageMetadata) }} · 查看尚未繪製／需核對的項目（{{ coverageMetadata.missingComponents.length }}）</summary>
+      <ul><li v-for="gap in coverageMetadata.missingComponents" :key="gap">{{ displayCoverageGap(gap) }}</li></ul>
+      <a :href="coverageMetadata.officialUrl" target="_blank" rel="noopener">核對官方區段與方案 ↗</a>
+    </details>
+    <CircleMap :key="activeId || ''" :places="places" :selected="ids" :drawing="drawing" :has-range="hasRange" :range-ids="rangeIds" :boundary="selectionBoundary" :coverage="passCoverage" :benefits="selectedBenefits" :reset-key="mapRevision" :route="routeIds" :bounds="mapBounds" @viewport="onViewport" @inspect="inspectedId=$event" @select="select" @range="selectRange" @cancel="drawing = false" />
+    <p class="small-note">點選數字展開景點，放大可看名稱與照片。尚未圈選時，點選景點可查看詳情。<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">景點 © OpenStreetMap contributors（ODbL）</a> · 照片來源與授權見景點詳情。</p>
+    <p v-if="selectedPass" class="pass-range-note">{{ selectedPass.exclusions }} <template v-if="selectedBenefits.length">已標示 {{ selectedBenefits.length }} 個有確認座標的合作設施；黃色標記與定位圈協助找景點，完整名單與方案限制見官網。</template></p>
     <div class="planning-next">
       <span>{{ hasRange ? ids.length + ' 個景點已加入' : '先選一個想逛的範圍' }}</span>
       <button class="primary" :disabled="!hasRange || !ids.length || drawing" @click="openPreferences">{{ draft.length ? '重新安排這一天' : '產生行程' }} <span aria-hidden="true">→</span></button>
     </div>
-    <p v-if="hasRange && !ids.length" class="small-note empty-selection">{{ selectedPass && !rangeIds.length ? '這張票券未涵蓋目前「' + activeTrip.title + '」行程的景點。可切換到對應旅程，或自己重畫範圍。' : '這裡目前沒有選到景點。可以重畫範圍，或放大地圖點選想去的地方。' }}</p>
+    <p v-if="hasRange && !ids.length" class="small-note empty-selection">{{ poiLoading ? '正在找這個範圍內的景點…' : '這裡目前沒有選到景點。可以重畫範圍，或放大地圖點選想去的地方。' }}</p>
     <details v-if="hasRange" class="text-refinement">
       <summary>也可以用文字調整景點</summary>
       <form @submit.prevent="applyRefinement"><label for="refinement" class="sr-only">用文字調整景點</label><textarea id="refinement" v-model="refinement" maxlength="300" :placeholder="'例如：加入' + (places[0]?.name || '景點名稱') + '，移除另一個景點'" /><button class="secondary" :disabled="!refinement.trim()">套用</button></form>
@@ -161,11 +291,21 @@ onBeforeUnmount(() => clearTimeout(generationTimer));
       <p v-if="dirty" class="planner-error" role="status">需求已變更，重新安排後就能儲存。</p>
       <details class="plan-notes"><summary>時間與安排</summary><p v-for="note in planNotes" :key="note" class="small-note">{{ note }}</p></details>
       <article v-for="s in draft" :key="s.id" class="planner-card">
-        <time>{{ s.time }}</time><span><h3>{{ s.name }}</h3><small>{{ s.stay }}</small><p>{{ s.reason }}</p><details class="rain-plan"><summary>雨天備案</summary><p>{{ s.rainPlan }}</p></details><small v-if="s.travelMinutes">前一站交通約 {{ s.travelMinutes }} 分鐘 · 示範估算</small></span>
-        <img :src="asset(s.photo.src)" :alt="s.photo.alt" width="48" height="48" style="object-fit:cover;border-radius:8px">
+        <time>{{ s.time }}</time><div><h3>{{ s.name }}</h3><small>{{ s.stay }}</small><p>{{ s.reason }}</p><RainPlanCard :text="s.rainPlan" :alternative="s.rainAlternative" /><small v-if="s.travelMinutes">前一站交通約 {{ s.travelMinutes }} 分鐘 · 示範估算</small></div>
+        <img v-if="s.photo.src" :src="asset(s.photo.src)" :alt="s.photo.alt" width="48" height="48" style="object-fit:cover;border-radius:8px">
       </article>
       <button class="primary" :disabled="dirty || busy" @click="save">儲存這份行程</button>
     </section>
+    <AppSheet :model-value="!!inspectedPlace" :title="inspectedPlace?.name || '景點詳情'" @update:model-value="inspectedId=null">
+      <template v-if="inspectedPlace">
+        <img v-if="inspectedPlace.photo.src && !inspectedPhotoFailed" class="planner-inspected-photo" :src="asset(inspectedPlace.photo.src)" :alt="inspectedPlace.photo.alt" @error="inspectedPhotoFailed=true">
+        <p v-else class="small-note">{{ inspectedPhotoFailed ? '照片暫時無法載入。' : '這個景點尚未取得可確認授權的照片。' }}</p>
+        <p>{{ inspectedPlace.note }}</p>
+        <p v-if="inspectedPlace.photo.src" class="small-note">照片：{{ inspectedPlace.photo.credit }} · <a v-if="inspectedPlace.photo.licenseUrl" :href="inspectedPlace.photo.licenseUrl" target="_blank" rel="noopener">{{ inspectedPlace.photo.license }}</a><template v-else>{{ inspectedPlace.photo.license }}</template> · <a v-if="inspectedPlace.photo.source" :href="inspectedPlace.photo.source" target="_blank" rel="noopener">原始來源 ↗</a></p>
+        <a v-if="inspectedPoi" :href="inspectedPoi.source.url" target="_blank" rel="noopener">OpenStreetMap 景點來源 ↗</a>
+        <a v-if="inspectedPoi?.website" :href="inspectedPoi.website" target="_blank" rel="noopener">景點官網 ↗</a>
+      </template>
+    </AppSheet>
     <AppSheet :model-value="!!panel" :title="panel === 'passes' ? '用票券選一個遊玩範圍' : panel === 'preferences' ? '這一天，想怎麼玩？' : '行程已儲存'" @update:model-value="panel = null">
       <template v-if="panel === 'passes'">
         <p class="pass-intro">日本、韓國、台灣都能選，不受目前旅程限制。相同範圍的不同天數合併在同一張卡。</p>
@@ -176,12 +316,12 @@ onBeforeUnmount(() => clearTimeout(generationTimer));
         </div>
         <p class="pass-count" role="status" aria-live="polite">{{ availablePasses.length }} / {{ travelPasses.length }} 張票券與旅遊卡</p>
         <article v-for="pass in availablePasses" :key="pass.id" class="pass-option">
-          <button class="pass-choice" :aria-pressed="selectedPassId === pass.id" @click="selectPass(pass)"><TravelPassArtwork :pass="pass" /><span><em class="pass-kind" :class="{ prepaid: pass.kind === 'stored-value' }">{{ passKindLabels[pass.kind] }}{{ pass.kind === 'stored-value' ? '・需儲值' : '' }}</em><b>{{ pass.name }}</b><small>{{ pass.english }}</small><em>{{ pass.region }}</em><strong>{{ selectedPassId === pass.id ? '目前使用的範圍 ✓' : '套用範圍 →' }}</strong></span></button>
+          <button class="pass-choice" :disabled="passCoverageIndex[pass.id]?.availability === 'expired'" :aria-pressed="selectedPassId === pass.id" @click="selectPass(pass)"><TravelPassArtwork :pass="pass" /><span><em class="pass-kind" :class="{ prepaid: pass.kind === 'stored-value' }">{{ passKindLabels[pass.kind] }}{{ pass.kind === 'stored-value' ? '・需儲值' : '' }}</em><b>{{ pass.name }}</b><small>{{ pass.english }}</small><em>{{ pass.region }}</em><em class="coverage-status">{{ coverageStatus(passCoverageIndex[pass.id]) }}</em><strong>{{ passCoverageIndex[pass.id]?.availability === 'expired' ? '官方有效日期已截止' : selectedPassId === pass.id ? '目前使用的範圍 ✓' : '套用範圍 →' }}</strong></span></button>
           <p class="pass-coverage">{{ pass.coverage }}</p>
           <details class="pass-conditions"><summary>使用限制與官方範圍</summary><p class="pass-exclusions">{{ pass.exclusions }}</p><a :href="pass.coverageUrl" target="_blank" rel="noopener">查看官方路線／合作景點 ↗</a><small class="pass-credit">圖片：{{ pass.credit }} · 資料查核 {{ pass.checkedAt }}</small></details>
         </article>
         <p v-if="!availablePasses.length" class="pass-empty">沒有符合的票券，試試其他名稱或地區。</p>
-        <p class="small-note">地圖輪廓為規劃示意；實際優惠依票券方案、合作景點與指定路線。也可回到地圖自己重畫範圍。</p>
+        <p class="small-note">交通券沿實際路線顯示，景點卡標示合作設施；沿線輪廓是步行規劃輔助。尚未核對的路線不畫推測邊界，可查看官方路網或自己圈選。</p>
       </template>
       <template v-else-if="panel === 'preferences'">
         <label class="planner-input-label" for="day-preferences">還有什麼想法？（選填）</label>
@@ -197,5 +337,8 @@ onBeforeUnmount(() => clearTimeout(generationTimer));
   </section>
 </template>
 <style scoped>
+.planner-destinations{display:grid;grid-template-columns:1fr 1.5fr;gap:10px;margin:18px 0 8px}.planner-destinations label{display:flex;flex-direction:column;gap:6px;color:#476d7b;font-size:12px}.planner-destinations select{width:100%;min-width:0;min-height:44px;padding:10px;border:1px solid #cfe4e9;border-radius:10px;background:#fff;color:#315869}.planner-poi-status{margin:8px 0}.planner-inspected-photo{width:100%;max-height:340px;object-fit:cover;border-radius:12px}
+.bundle-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:14px;color:#476d7b;font-size:12px}.bundle-choices select{display:block;width:100%;margin-top:6px;padding:10px;border:1px solid #cfe4e9;border-radius:10px;background:#fff;color:#315869}
+.coverage-gaps{font-size:12px;color:#476d7b;background:#f5fafb;border-radius:10px;padding:12px;margin:0 0 12px;line-height:1.8}.coverage-gaps summary{cursor:pointer}.coverage-gaps ul{padding-left:20px;margin:8px 0}.coverage-gaps a{color:#0085a6}.coverage-status{margin-top:8px;color:#0085a6}.pass-choice:disabled{opacity:.6;cursor:default}
 .planner-screen{max-width:1000px;margin:auto}.page-heading h1{font-size:clamp(24px,4vw,34px);line-height:1.4}.page-heading p{max-width:560px;line-height:1.7}.range-choices{display:flex;gap:10px;margin:18px 0 14px}.range-choices button{display:flex;align-items:center;justify-content:center;gap:9px;padding:13px 17px;border:1px solid #cfe4e9;border-radius:13px;background:#fff;color:#38768c;font-size:13px;cursor:pointer;flex:1;min-height:48px}.range-choices button.active{background:#eafaff;border-color:#009fc5;color:#0084a5}.range-choices svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}.selected-pass{display:flex;align-items:center;gap:12px;background:#f3fbff;border:1px solid #d4edf3;border-radius:13px;margin-bottom:12px;padding:10px 12px}.selected-pass :deep(.pass-artwork){width:75px;flex:none}.selected-pass span b{font-size:13px;color:#21647b}.selected-pass small{display:block;font-size:10px;color:#7192a0;margin-top:4px}.selected-pass a{margin-left:auto;font-size:10px;color:#1382a1;text-decoration:none;text-align:right}.pass-range-note{font-size:10px;line-height:1.7;color:#8099a3;margin:9px 3px 0}.planning-next{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:18px 0}.planning-next>span{font-size:12px;color:#708e9a}.planning-next .primary{width:auto;margin:0;min-width:152px;border-radius:13px;background:#009fc5;padding:13px 17px}.planning-next .primary:disabled{background:#edf3f5;color:#93a8b1;box-shadow:none;cursor:default}.empty-selection{margin:0 0 15px}.text-refinement,.plan-notes{font-size:12px;color:#688897;border-top:1px solid #e5edef;padding:13px 0;margin:0 0 12px}.text-refinement summary,.plan-notes summary,.rain-plan summary{cursor:pointer}.text-refinement form{display:flex;align-items:stretch;gap:8px;margin-top:12px}.text-refinement textarea{flex:1;min-height:80px;margin:0;resize:vertical}.text-refinement .secondary{width:auto;padding:10px 15px;margin:0}.text-refinement p{font-size:11px}.planner-results{margin-top:24px}.planner-results h2{font-size:21px}.planner-card h3{margin-top:3px}.rain-plan{margin:10px 0;padding:9px 11px;border-radius:9px;background:#f0f9fb;color:#45798b;font-size:11px}.rain-plan p{font-size:11px;line-height:1.7}.planner-input-label{font-size:13px;font-weight:600;display:block;margin:10px 0 12px}.memory-choice{display:flex;align-items:center;gap:6px;color:#668692;font-size:12px;margin:8px 0}.memory-choice input{accent-color:#009fc5}.pass-filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:15px 0 8px;position:sticky;top:0;background:#fff;padding:8px 0;z-index:1}.pass-search{grid-column:1/-1}.pass-filters input,.pass-filters select{width:100%;min-height:42px;border:1px solid #d4e9ed;border-radius:11px;background:#f8fcfd;color:#38768c;font-size:12px;padding:10px 12px;margin:0}.pass-filters input:focus,.pass-filters select:focus{outline:2px solid #009fc5;outline-offset:1px}.pass-count{font-size:11px;color:#7794a0;margin:8px 0}.pass-conditions{color:#74909c;font-size:11px;padding:5px 3px}.pass-conditions summary{cursor:pointer}.pass-conditions .pass-exclusions{margin-top:10px}.pass-choice .pass-kind{display:inline-block;padding:3px 7px;background:#e9f7fc;color:#0089ac;font-size:9px;border-radius:6px;margin-bottom:7px}.pass-choice .pass-kind.prepaid{color:#7a6500;background:#fff4c4}.pass-empty{font-size:13px;text-align:center;color:#73939f;padding:28px 12px}.pass-intro{font-size:13px;color:#638290;line-height:1.7}.pass-option{padding:16px 0;border-bottom:1px solid #e1ecef}.pass-choice{width:100%;display:grid;grid-template-columns:135px 1fr;align-items:center;gap:15px;padding:13px;text-align:left;border:1px solid #d4e9ed;border-radius:16px;background:#f8fdff;color:#276b83;cursor:pointer}.pass-choice[aria-pressed=true]{border-color:#009fc5;background:#effaff}.pass-choice span b{font-size:16px;display:block}.pass-choice small{font-size:10px;display:block;margin:4px 0 9px;color:#809ca7}.pass-choice em{font-size:11px;display:block;font-style:normal}.pass-choice strong{display:block;font-size:11px;color:#0092b5;margin-top:13px}.pass-option p{font-size:12px;line-height:1.8;color:#4d7383;margin:13px 3px 7px}.pass-option p.pass-exclusions{font-size:11px;color:#7b919b;margin-top:0}.pass-option a{font-size:11px;color:#0092b5;display:inline-block;padding:4px 3px;text-decoration:none}.pass-credit{display:block;margin:7px 3px;color:#94a5ad;font-size:9px;line-height:1.7}.range-choices button:focus-visible,.pass-choice:focus-visible{outline:3px solid #ffc500;outline-offset:3px}@media(max-width:600px){.planner-screen{padding-bottom:16px}.range-choices{gap:8px}.range-choices button{font-size:12px;padding:12px 8px}.pass-choice{grid-template-columns:105px 1fr;gap:11px}.selected-pass{gap:9px}.selected-pass a{font-size:9px}.planning-next .primary{min-width:145px;font-size:13px}.planning-next>span{font-size:11px}}
 </style>

@@ -157,7 +157,7 @@ jobs:
             --dry-run=client -o yaml | $KC apply -f -
           # --wait：所有 pod 就緒才算成功。第一次部署要下載 Postgres 映像，上限放寬到 10 分鐘
           helm upgrade --install chictrip deploy/helm/chictrip --namespace chictrip \
-            --set image.tag="$GITHUB_SHA" --wait --timeout 10m
+            --set image.tag="$GITHUB_SHA" --wait --wait-for-jobs --timeout 10m
           # 手動觸發多半是換了金鑰；Secret 改了 pod 不會自己重讀，要重啟才生效
           if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
             $KC rollout restart deployment/api deployment/worker

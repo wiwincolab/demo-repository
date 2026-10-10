@@ -23,13 +23,14 @@ const help = ref(false);
 const switcher = ref(false);
 const asset = useAsset();
 const path = computed(() => route.path.replace(/\/$/, '') || '/');
-const isScoped = computed(() => /^\/(trip|esim|planner|memory|collection)(\/|$)/.test(path.value));
+const isScoped = computed(() => /^\/(trip|planner|memory|collection)(\/|$)/.test(path.value));
 const isTripList = computed(() => path.value === '/trips');
 const isRevisit = computed(() => path.value === '/atlas' && route.query.view === 'cities');
 const isAtlasPlaza = computed(() => path.value === '/atlas' && !['cities', 'journey'].includes(String(route.query.view)) && !route.query.journey && !route.query.scope);
 const tabs = [{ to: '/trip', name: '行程', icon: 'trip' }, { to: '/esim', name: 'eSIM', icon: 'sim' }, { to: '/memory', name: 'AI 創作', icon: 'memory' }, { to: '/atlas', name: '回憶地圖', icon: 'atlas' }];
 function tabLink(to: string) {
   if (to === '/atlas') return to;
+  if (to === '/esim' && !activeId.value) return to;
   return activeId.value ? tripHref(to) : { path: '/trips', query: { next: to } };
 }
 async function changeTrip(id: TripId) {
@@ -46,7 +47,7 @@ async function changeTrip(id: TripId) {
       <MascotBadge />
       <button class="icon-button" aria-label="查看原型說明" @click="help = true">?</button>
     </header>
-    <div v-if="isScoped && ready && activeTrip" class="trip-context">
+    <div v-if="(isScoped || path === '/esim') && ready && activeTrip" class="trip-context">
       <NuxtLink to="/trips" class="trip-context-back" aria-label="返回我的行程">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg>
       </NuxtLink>

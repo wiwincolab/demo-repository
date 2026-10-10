@@ -38,3 +38,15 @@ spec:
               path: /trips/
               port: 80
             periodSeconds: 5
+          {{- if .Values.mapData.enabled }}
+          volumeMounts:
+            - name: map-data-routing
+              mountPath: /etc/nginx/map-data-locations
+              readOnly: true
+          {{- end }}
+      {{- if .Values.mapData.enabled }}
+      volumes:
+        - name: map-data-routing
+          configMap:
+            name: map-data-routing
+      {{- end }}

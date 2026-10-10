@@ -20,6 +20,8 @@ FROM node:24.21.0-alpine AS api
 WORKDIR /srv
 ENV NODE_ENV=production PORT=3000
 COPY --from=build /app/.output/server ./server
+COPY scripts/poi/ ./poi/
+COPY public/poi/ ./poi-seed/
 USER node
 EXPOSE 3000
 CMD ["node", "server/index.mjs"]

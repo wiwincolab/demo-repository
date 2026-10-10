@@ -29,7 +29,7 @@ export function validPlanningBoundary(value: unknown): Point[] {
 // Photos should appear as the map zooms in, without covering adjacent places.
 export function visibleMapDetails<T extends { stop: { id: number }; point: Point }>(points: T[], selected: number[], width: number, height: number, level: ReturnType<typeof mapDetailLevel>) {
   if (level === 'dots') return [];
-  const cardWidth = level === 'photos' ? 150 : 112, cardHeight = level === 'photos' ? 171 : 36;
+  const cardWidth = level === 'photos' ? 150 : 140, cardHeight = level === 'photos' ? 171 : 44;
   const accepted: T[] = [];
   const boxes: number[][] = [];
   const ordered = [...points].sort((a, b) => Number(selected.includes(b.stop.id)) - Number(selected.includes(a.stop.id)));

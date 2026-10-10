@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import PointsMarket from '~/components/PointsMarket.vue';
+import SuccessCheck from '~/components/SuccessCheck.vue';
 import { esimPlan, esimQuote, rewardPreview, stopEstimates, usageOptions } from '~/utils/esim';
 import { esimPriceSource } from '~/data/esim-catalog';
 import type { Usage } from '~/types/trip';
@@ -11,6 +12,10 @@ const { usage, eligible, members, group, days, esim, notify, addMember, buy } = 
 // 有後端（GCP 版）：旅伴用真的邀請連結加入、在自己的手機上購買；Pages 版維持「示範加入／示範購買」
 const { available: live } = useApi();
 const { activeId, activeTrip, tripHref } = useTripContext();
+const route = useRoute();
+const view = ref<'store' | 'recommend'>(route.query.view === 'recommend' ? 'recommend' : 'store');
+const hasRecommendation = computed(() => !!activeTrip.value && (!activeTrip.value.country || activeTrip.value.country === 'japan'));
+watch(hasRecommendation, (available) => { if (!available) view.value = 'store'; });
 const asset = useAsset();
 const { selectedId: myMascotId } = useMascot();
 const crewMembers = computed(() => members.value.map((member, i) => i === 0 ? { ...member, mascotId: myMascotId.value } : member));
@@ -50,11 +55,16 @@ function install() { esim.value = {...esim.value, installed:true}; panel.value =
 function claim() { if(!canClaim.value)return; esim.value = {...esim.value,claimed:true}; notify('已加入 '+reward.points+' 點回饋示範紀錄'); }
 function friendPurchase(index: number) { if(index === 0) open('checkout'); else buy(index); }
 watch(activeId, () => { panel.value = null; dayIndex.value = 0; compatible.value = false; advised.value = false; });
-useHead({title:'旅行上網 · eSIM · 去趣'});
+useHead({title:'eSIM 商城 · 旅行上網 · 去趣'});
 </script>
 
 <template>
-  <section v-if="activeTrip && (!activeTrip.country || activeTrip.country==='japan')" ref="page" class="esim-page" aria-labelledby="esim-title">
+  <div v-if="hasRecommendation" class="esim-view-tabs" aria-label="eSIM 頁面">
+    <button :aria-pressed="view==='store'" @click="view='store';panel=null">eSIM 商城</button>
+    <button :aria-pressed="view==='recommend'" @click="view='recommend'">本趟推薦</button>
+  </div>
+  <EsimStore v-if="view==='store' || !hasRecommendation"/>
+  <section v-else-if="activeTrip && hasRecommendation" ref="page" class="esim-page" aria-labelledby="esim-title">
     <div class="mascot-perch"><header class="esim-heading">
       <div><h1 id="esim-title">旅行上網</h1><p>{{ locationName }} · {{ activeTrip.dayCount }} 天</p></div>
       <button class="esim-info" aria-label="方案與展示說明" @click="open('help')"><EsimIcon name="info" :size="20"/></button>
@@ -125,7 +135,7 @@ useHead({title:'旅行上網 · eSIM · 去趣'});
         <button class="esim-cta esim-full" :disabled="!compatible || eligible" @click="purchase">完成選購 · Demo 不扣款</button>
       </template>
       <template v-else-if="panel==='success'">
-        <div class="esim-success"><span><EsimIcon name="check" :size="34"/></span><h3>方案已備妥</h3><p>{{ card.name }} · {{ card.days }} 天</p><small>示範訂單已儲存</small></div><button class="esim-cta esim-full" @click="open(completed?'points':'install')">{{ completed?'查看旅後回饋':'安裝 eSIM' }}<EsimIcon name="arrow" :size="18"/></button><button class="esim-text-button" @click="panel=null">返回方案</button>
+        <div class="esim-success" role="status"><SuccessCheck/><h3>方案已備妥</h3><p>{{ card.name }} · {{ card.days }} 天</p><small>示範訂單已儲存</small></div><button class="esim-cta esim-full" @click="open(completed?'points':'install')">{{ completed?'查看旅後回饋':'安裝 eSIM' }}<EsimIcon name="arrow" :size="18"/></button><button class="esim-text-button" @click="panel=null">返回方案</button>
       </template>
       <template v-else-if="panel==='gift'">
         <GiftPanel :days="activeTrip.dayCount" />
@@ -139,5 +149,4 @@ useHead({title:'旅行上網 · eSIM · 去趣'});
       </template>
     </AppSheet>
   </section>
-  <section v-if="activeTrip?.country && activeTrip.country!=='japan'" class="trip-selection-gate"><PageMascot /><h1>{{ activeTrip.location }}上網方案</h1><p>目前展示日本 eSIM 方案，這個目的地的方案尚未加入。</p><NuxtLink class="primary" :to="tripHref('/trip')">返回行程</NuxtLink></section>
 </template>

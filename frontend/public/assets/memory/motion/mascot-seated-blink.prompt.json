@@ -1,0 +1,7 @@
+{
+  "tool": "built-in image_gen",
+  "source": "mascot-seated.png",
+  "output": "mascot-seated-blink.png",
+  "generated_source": "/Users/jamessu/.codex/generated_images/01a123ab-76ef-7293-bbf2-341c8567aa00/exec-3dd59fe0-e3dd-4c4d-b10f-448b2af608d5.png",
+  "prompt": "Use case: precise-object-edit. Asset type: a single closed-eyes blink animation frame for the supplied seated ChicTrip felt mascot PNG. Input image is the EDIT TARGET. Change ONLY the black pupils within the two existing large white oval felt eyes: replace each round black pupil with a short curved black felt/embroidered closed eyelid line, resembling a relaxed natural blink. Keep the two white oval eye pads exactly the same shape, size, texture and positions. Preserve every other pixel as closely as possible: the same framing, scale, pose, red cap, triangular yellow face, blue left side, denim overalls, arms, seated legs, shoes, lighting, felt fibers and transparent background. The entire subject must remain in the exact same image coordinates, no zoom, no translation, no redesign, no extra expression, no mouth. Return one square transparent PNG, same canvas composition as the reference. No text, shadows, background or additional elements."
+}

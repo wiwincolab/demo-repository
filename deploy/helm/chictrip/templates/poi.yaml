@@ -1,0 +1,69 @@
+{{- if .Values.poi.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: poi
+  labels:
+    {{- include "chictrip.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/resource-policy: keep
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: {{ .Values.poi.storage }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: poi-import-{{ .Values.poi.runId | default .Values.image.tag | trunc 30 | lower | replace "." "-" | replace "_" "-" }}
+  labels:
+    {{- include "chictrip.labels" . | nindent 4 }}
+spec:
+  # No automatic retry against upstream APIs. Check failures and explicitly resume.
+  backoffLimit: 0
+  activeDeadlineSeconds: {{ .Values.poi.activeDeadlineSeconds }}
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app: poi-import
+    spec:
+      restartPolicy: Never
+      # RWO storage can be shared by multiple Pods only on the same node.
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: api
+              topologyKey: kubernetes.io/hostname
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: poi-import
+          image: "{{ .Values.image.api }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["node", "poi/{{ if eq .Values.poi.mode "import" }}import{{ else }}publish{{ end }}.mjs"]
+          resources:
+            {{- toYaml .Values.poi.resources | nindent 12 }}
+          env:
+            - name: POI_DATA_DIR
+              value: /data/poi
+            - name: POI_OVERPASS_URL
+              value: {{ .Values.poi.overpassUrl | quote }}
+            - name: POI_REGIONS
+              value: {{ .Values.poi.regions | quote }}
+            - name: POI_STAGE
+              value: {{ .Values.poi.stage | quote }}
+          volumeMounts:
+            - name: poi
+              mountPath: /data/poi
+      volumes:
+        - name: poi
+          persistentVolumeClaim:
+            claimName: poi
+{{- end }}
