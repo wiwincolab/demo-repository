@@ -26,6 +26,14 @@ export function validPlanningBoundary(value: unknown): Point[] {
   if (!value.every(p => Array.isArray(p) && p.length === 2 && p.every(Number.isFinite) && Math.abs(p[0]) <= 180 && Math.abs(p[1]) <= 90)) return [];
   return value.map(p => [...p]);
 }
+// Keep entire touch targets inside the map, with space for rounded corners.
+export function visibleMapTarget(point: Point, width: number, height: number, radius=22, inset=8) {
+  return point[0]!>=radius+inset && point[0]!<=width-radius-inset && point[1]!>=radius+inset && point[1]!<=height-radius-inset;
+}
+export function sampleMapStroke(points: Point[], limit=256) {
+  if (points.length<=limit)return points.map(p=>[...p]);
+  return Array.from({length:limit},(_,i)=>[...points[Math.round(i*(points.length-1)/(limit-1))]!]);
+}
 // Photos should appear as the map zooms in, without covering adjacent places.
 export function visibleMapDetails<T extends { stop: { id: number }; point: Point }>(points: T[], selected: number[], width: number, height: number, level: ReturnType<typeof mapDetailLevel>) {
   if (level === 'dots') return [];

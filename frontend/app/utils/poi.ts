@@ -8,6 +8,6 @@ export function filterPois(pois: Poi[], text: string, category: string, photosOn
 export function poiFeatures(pois: Poi[]) {
   return {type:'FeatureCollection' as const,features:pois.map(p=>({type:'Feature' as const,geometry:{type:'Point' as const,coordinates:p.at},properties:{id:p.id,name:p.name,photo:!!p.photo}}))};
 }
-export function poiClusterIndex(pois: Poi[]) {
-  return new Supercluster<{id:string;name:string;photo:boolean},{photoCount:number}>({radius:45,maxZoom:17,map:p=>({photoCount:Number(p.photo)}),reduce:(total,p)=>{total.photoCount+=p.photoCount;}}).load(poiFeatures(pois).features);
+export function poiClusterIndex(pois: Poi[], radius=45) {
+  return new Supercluster<{id:string;name:string;photo:boolean},{photoCount:number}>({radius,maxZoom:17,map:p=>({photoCount:Number(p.photo)}),reduce:(total,p)=>{total.photoCount+=p.photoCount;}}).load(poiFeatures(pois).features);
 }

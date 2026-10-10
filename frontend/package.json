@@ -3,8 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "node scripts/transit/compact-pass-coverage.mjs",
     "dev": "nuxt dev --host 127.0.0.1 --port 8780",
+    "prebuild": "node scripts/transit/compact-pass-coverage.mjs",
     "build": "nuxt build --prerender",
+    "pregenerate": "node scripts/transit/compact-pass-coverage.mjs",
     "generate": "nuxt generate",
     "preview": "nuxt preview --host 127.0.0.1 --port 8780",
     "postinstall": "nuxt prepare",

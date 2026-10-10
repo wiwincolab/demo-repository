@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { Stop } from '~/types/trip';
 import { paintBase, projection, type BaseMap, type Point } from '~/utils/map';
-import { plannerMarkerState, mapDetailLevel, visibleMapDetails, withinPlanningAreas, isUsableMapStroke } from '~/utils/planner-map';
+import { mapDetailLevel, visibleMapDetails, withinPlanningAreas, isUsableMapStroke, visibleMapTarget, sampleMapStroke } from '~/utils/planner-map';
+import { indexRing } from '~/utils/polygon-index';
 import { plannerStopClusters, individualSelectionLimit } from '~/utils/planner-poi';
 import { loadScript } from '~/utils/loadScript';
 import { attachTransitMap, preparePlannerBasemap, type TransitLegendLine } from '~/utils/transit-map';
@@ -17,11 +18,16 @@ useHead({ link: [{ rel: 'stylesheet', href: asset('vendor/maplibre-gl.css') }] }
 const box = ref<HTMLElement>(), geography = ref<HTMLElement>(), canvas = ref<HTMLCanvasElement>(), gesture = ref<SVGSVGElement>();
 const size = reactive({ width: 720, height: 480 });
 const points = ref<{ stop: Stop; point: Point }[]>([]), stroke = ref<Point[]>([]);
+const selectedSet = computed(() => new Set(props.selected)), rangeSet = computed(() => new Set(props.rangeIds));
 const groupedPoints = ref<{id:number;count:number;at:Point;point:Point;outside:boolean;selected:boolean}[]>([]), failedPhotos = ref<string[]>([]);
 let clusterIndex = plannerStopClusters([]), stopById = new Map<number,Stop>();
 const polygons = ref<Point[][]>([]), routePoints = ref<Point[]>([]);
 const coveragePaths = ref<string[]>([]), coverageTracks = ref<{points:Point[];access:PassAccess}[]>([]);
 const tourStops = ref<{name:string;point:Point;source?:string}[]>([]), focusedStop = ref('');
+const fallbackNetworks=computed(()=> (props.coverage?.features || []).filter(f=>f.properties.role==='network').flatMap(f=>{
+  const lines:Point[][]=f.geometry.type==='MultiLineString' ? f.geometry.coordinates : f.geometry.type==='LineString' ? [f.geometry.coordinates] : [];
+  return lines.map(coordinates=>({coordinates,access:f.properties.access || 'unlimited' as PassAccess,bbox:coordinates.reduce((b,p)=>[Math.min(b[0]!,p[0]!),Math.min(b[1]!,p[1]!),Math.max(b[2]!,p[0]!),Math.max(b[3]!,p[1]!)],[Infinity,Infinity,-Infinity,-Infinity])}));
+}));
 const accessTypes = computed(() => coverageAccess(props.coverage));
 const accessColours:Record<PassAccess,string> = {unlimited:'#ffc500','round-trip':'#e78529','one-way':'#e78529','through-service':'#8663c9','exit-only':'#d64783','scheduled-tour':'#287caf'};
 const benefitPoints = ref<{ place: PassBenefitPlace; point: Point; frame: Point[] }[]>([]);
@@ -33,10 +39,11 @@ const details = computed(() => visibleMapDetails([...points.value].sort((a,b)=>N
 const geographicAreas = computed(() => props.coverage ? coverageExtent(props.coverage) : props.areas?.length ? props.areas : props.boundary?.length ? [props.boundary] : []);
 const benefitDetails = computed(() => {
   const occupied = details.value.map(p => p.point), result: typeof benefitPoints.value = [];
-  const width = detailLevel.value === 'photos' ? 185 : 135, height = detailLevel.value === 'photos' ? 156 : 48;
   for (const p of [...benefitPoints.value].sort((a,b) => Number(b.place.id === focusedBenefit.value) - Number(a.place.id === focusedBenefit.value))) {
     if (detailLevel.value === 'dots' && p.place.id !== focusedBenefit.value) continue;
-    if (p.point[0]! < width / 2 || p.point[0]! > size.width - width / 2 || p.point[1]! < height || p.point[1]! > size.height - 15) continue;
+    const expanded=detailLevel.value==='photos' || p.place.id===focusedBenefit.value;
+    const width=expanded ? 185 : 135,height=expanded ? 180 : 48;
+    if (p.point[0]! < width / 2 + 8 || p.point[0]! > size.width - width / 2 - 8 || p.point[1]! < height || p.point[1]! > size.height - 15) continue;
     if (p.place.id !== focusedBenefit.value && occupied.some(at => Math.abs(at[0]! - p.point[0]!) < width && Math.abs(at[1]! - p.point[1]!) < height)) continue;
     occupied.push(p.point); result.push(p);
   }
@@ -50,8 +57,9 @@ let cachedExtent: Point[] | Stop[] | undefined, cachedWidth = 0, cachedHeight = 
 const camera = { scale: 1, x: 0, y: 0 };
 const fallbackExtent = ref<Point[]>([]);
 const pointers = new Map<number, Point>();
-let pinch = 0;
-function state(id: number) { return plannerMarkerState(id, props.selected, props.rangeIds, props.hasRange); }
+let pinch = 0, strokeFrame = 0, clusterFrame = 0;
+let strokeBuffer: Point[] = [];
+function state(id: number) { return selectedSet.value.has(id) ? 'selected' : props.hasRange && !rangeSet.value.has(id) ? 'outside' : 'candidate'; }
 function beginMapClick(event:PointerEvent) { clickStart=[event.clientX,event.clientY]; }
 function chooseMapClick(event:MouseEvent) {
   if(props.drawing || !box.value || (event.target as Element).closest('button,summary,a'))return;
@@ -67,6 +75,7 @@ function chooseMapClick(event:MouseEvent) {
 }
 function photoFailed(src:string) { if (!failedPhotos.value.includes(src)) failedPhotos.value.push(src); }
 function rebuildClusters() { stopById = new Map(props.places.map(p=>[p.id,p])); clusterIndex = plannerStopClusters(props.places,props.selected,props.rangeIds,props.hasRange,(box.value?.clientWidth || size.width) <= 600 ? 60 : 44); refresh(); }
+function scheduleClusters() { if (clusterFrame) return; clusterFrame=requestAnimationFrame(()=>{clusterFrame=0;rebuildClusters();}); }
 function currentBounds() {
   if (!fallback.value && map) { const b=map.getBounds(); return [b.getWest(),b.getSouth(),b.getEast(),b.getNorth()]; }
   const [w,n]=invert([0,0]), [e,s]=invert([size.width,size.height]);
@@ -116,15 +125,15 @@ function refresh() {
   zoom.value = !fallback.value && map ? map.getZoom() : 10 + Math.log2(camera.scale);
   const bounds=currentBounds();
   const features=clusterIndex.getClusters(bounds as [number,number,number,number], Math.max(0,Math.floor(zoom.value)));
-  groupedPoints.value=features.flatMap(f=>'cluster' in f.properties ? [{id:f.properties.cluster_id,count:f.properties.point_count,at:f.geometry.coordinates,point:project(f.geometry.coordinates),outside:props.hasRange && !f.properties.inRange,selected:f.properties.selectedCount>0}] : []);
+  groupedPoints.value=features.flatMap(f=>'cluster' in f.properties ? [{id:f.properties.cluster_id,count:f.properties.point_count,at:f.geometry.coordinates,point:project(f.geometry.coordinates),outside:props.hasRange && !f.properties.inRange,selected:f.properties.selectedCount>0}] : []).filter(p=>visibleMapTarget(p.point,size.width,size.height));
   const visibleIds=new Set(features.flatMap(f=>'cluster' in f.properties ? [] : [f.properties.id]));
   if(props.selected.length<=individualSelectionLimit)for(const id of props.selected) { const p=stopById.get(id);if(p && p.at[0]!>=bounds[0]! && p.at[0]!<=bounds[2]! && p.at[1]!>=bounds[1]! && p.at[1]!<=bounds[3]!)visibleIds.add(id); }
-  points.value=[...visibleIds].flatMap(id=>{const stop=stopById.get(id);return stop ? [{stop,point:project(stop.at)}] : [];});
+  points.value=[...visibleIds].flatMap(id=>{const stop=stopById.get(id);const point=stop ? project(stop.at) : [];return stop && visibleMapTarget(point,size.width,size.height) ? [{stop,point}] : [];});
   polygons.value = props.coverage ? [] : geographicAreas.value.map(area => area.map(project));
   coveragePaths.value = fallback.value ? coveragePolygons(props.coverage).map(rings => rings.map(ring => ring.map((at,i) => `${i ? 'L' : 'M'}${project(at).join(',')}`).join(' ') + ' Z').join(' ')) : [];
-  coverageTracks.value = fallback.value ? (props.coverage?.features || []).filter(f => f.properties.role === 'network' && f.geometry.type === 'LineString').map(f => ({points:f.geometry.coordinates.map(project),access:f.properties.access || 'unlimited'})) : [];
-  tourStops.value = (props.coverage?.features || []).filter(f => f.properties.role === 'stop' && f.geometry.type === 'Point').map(f => ({name:f.properties.name || '停靠點',point:project(f.geometry.coordinates),source:f.properties.source})).filter(p=>p.point[0]!>0 && p.point[0]!<size.width && p.point[1]!>0 && p.point[1]!<size.height);
-  benefitPoints.value = (props.benefits || []).map(place => ({ place, point: project(place.at), frame: benefitLocationFrame(place.at).map(project) })).filter(p => p.point[0]! > -200 && p.point[0]! < size.width + 200 && p.point[1]! > -200 && p.point[1]! < size.height + 200);
+  coverageTracks.value = fallback.value ? fallbackNetworks.value.filter(line=>line.bbox[2]!>=bounds[0]! && line.bbox[0]!<=bounds[2]! && line.bbox[3]!>=bounds[1]! && line.bbox[1]!<=bounds[3]!).slice(0,1000).map(line=>({points:line.coordinates.map(project),access:line.access})) : [];
+  tourStops.value = (props.coverage?.features || []).filter(f => f.properties.role === 'stop' && f.geometry.type === 'Point').map(f => ({name:f.properties.name || '停靠點',point:project(f.geometry.coordinates),source:f.properties.source})).filter(p=>visibleMapTarget(p.point,size.width,size.height));
+  benefitPoints.value = (props.benefits || []).map(place => ({ place, point: project(place.at), frame: benefitLocationFrame(place.at).map(project) })).filter(p=>visibleMapTarget(p.point,size.width,size.height));
   routePoints.value = (props.route || []).flatMap(id => { const stop=stopById.get(id);return stop ? [project(stop.at)] : []; });
   if (!fallback.value && map) { zoom.value = map.getZoom(); return; }
   zoom.value = 10 + Math.log2(camera.scale);
@@ -144,7 +153,7 @@ function refresh() {
 }
 function updateCoverage() {
   if (!map || !basemapReady) return;
-  const data = props.coverage || { type: 'FeatureCollection', features: [] };
+  const data = props.coverage ? {type:'FeatureCollection',features:props.coverage.features} : { type: 'FeatureCollection', features: [] };
   disposeTransit?.setCoverage(coveredTransitWays());
   if (map.getSource('travel-pass-coverage')) { map.getSource('travel-pass-coverage').setData(data); return; }
   map.addSource('travel-pass-coverage', { type: 'geojson', data, attribution: 'Pass routes © OpenStreetMap contributors (ODbL)' });
@@ -154,7 +163,7 @@ function updateCoverage() {
   map.addLayer({ id:'travel-pass-limited',type:'line',source:'travel-pass-coverage',filter:['all',['==',['get','role'],'network'],['!=',['get','access'],'unlimited']],layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':['match',['get','access'],'exit-only','#d64783','through-service','#8663c9','#e78529'],'line-width':5,'line-opacity':.8,'line-dasharray':[2,2]} });
 }
 function coveredTransitWays() {
-  return props.coverage?.metadata.mode === 'network' ? props.coverage.features.filter(f=>f.properties.role==='network' && Number.isInteger(f.properties.osmId)).map(f=>f.properties.osmId!) : null;
+  return props.coverage?.metadata.mode === 'network' ? props.coverage.features.filter(f=>f.properties.role==='network').flatMap(f=>f.properties.osmIds || (Number.isInteger(f.properties.osmId) ? [f.properties.osmId!] : [])) : null;
 }
 function scheduleRefresh() { cancelAnimationFrame(frame); frame = requestAnimationFrame(refresh); }
 function fit(areas = false) {
@@ -166,7 +175,7 @@ function fit(areas = false) {
   map.fitBounds(bounds, { padding: { top: 65, bottom: 45, left: 45, right: 45 }, maxZoom: 12, duration: 0 });
   refresh();
 }
-function cancelStroke() { stroke.value = []; activePointer = undefined; pointers.clear(); pinch = 0; }
+function cancelStroke() { cancelAnimationFrame(strokeFrame); strokeFrame=0; strokeBuffer=[]; stroke.value = []; activePointer = undefined; pointers.clear(); pinch = 0; }
 function drawingMode() {
   cancelStroke();
   if (props.drawing) gesture.value?.focus({ preventScroll: true });
@@ -179,8 +188,8 @@ function start(e: PointerEvent) {
   if (e.button !== 0 || (!props.drawing && !fallback.value)) return;
   const p = coordinate(e); pointers.set(e.pointerId, p);
   (e.currentTarget as Element).setPointerCapture(e.pointerId);
-  if (pointers.size > 1) { activePointer = undefined; stroke.value = []; return; }
-  if (props.drawing) { activePointer = e.pointerId; stroke.value = [p]; }
+  if (pointers.size > 1) { activePointer = undefined; cancelAnimationFrame(strokeFrame); strokeFrame=0; strokeBuffer=[]; stroke.value=[]; return; }
+  if (props.drawing) { activePointer = e.pointerId; strokeBuffer=[p]; stroke.value = [p]; }
 }
 function move(e: PointerEvent) {
   const previous = pointers.get(e.pointerId); if (!previous) return;
@@ -191,20 +200,24 @@ function move(e: PointerEvent) {
     pinch = distance; return;
   }
   if (props.drawing && activePointer === e.pointerId) {
-    const last = stroke.value.at(-1)!;
-    if (Math.hypot(p[0]! - last[0]!, p[1]! - last[1]!) >= 3 && stroke.value.length < 4000) stroke.value.push(p);
+    const last = strokeBuffer.at(-1)!;
+    if (Math.hypot(p[0]! - last[0]!, p[1]! - last[1]!) >= 3 && strokeBuffer.length < 4000) {
+      strokeBuffer.push(p);
+      if (!strokeFrame) strokeFrame=requestAnimationFrame(()=>{strokeFrame=0;stroke.value=sampleMapStroke(strokeBuffer);});
+    }
   } else if (!props.drawing && fallback.value && pointers.size === 1) {
-    camera.x += p[0]! - previous[0]!; camera.y += p[1]! - previous[1]!; refresh();
+    camera.x += p[0]! - previous[0]!; camera.y += p[1]! - previous[1]!; scheduleRefresh();
   }
 }
 function finish(e: PointerEvent) {
   if (e.pointerId === activePointer) {
     activePointer = undefined;
-    if (e.type !== 'pointercancel' && isUsableMapStroke(stroke.value)) {
-      const boundary = stroke.value.map(invert);
-      emit('range', props.places.filter(s => withinPlanningAreas(s.at, [boundary])).map(s => s.id), boundary);
+    const sampled=sampleMapStroke(strokeBuffer);
+    if (e.type !== 'pointercancel' && isUsableMapStroke(sampled)) {
+      const boundary = sampled.map(invert), contains=indexRing(boundary);
+      emit('range', props.places.filter(s => contains(s.at)).map(s => s.id), boundary);
     }
-    stroke.value = [];
+    cancelStroke();
   }
   pointers.delete(e.pointerId); pinch = 0;
   const target = e.currentTarget as Element;
@@ -238,16 +251,16 @@ function toggle(id: number) {
 }
 watch(() => props.drawing, drawingMode, { flush: 'post' });
 watch(() => props.boundary, () => { cancelStroke(); refresh(); }, { deep: true });
-watch(() => [props.areas, props.coverage], () => { cancelStroke(); updateCoverage(); if (props.coverage || props.areas?.length) fit(true); else refresh(); }, { deep: true });
+watch(() => [props.areas, props.coverage], () => { cancelStroke(); updateCoverage(); if (props.coverage || props.areas?.length) fit(true); else refresh(); });
 watch(() => props.route, scheduleRefresh, { deep: true });
 watch(() => props.benefits, () => { focusedBenefit.value = ''; scheduleRefresh(); });
 watch(() => props.resetKey, () => { cancelStroke(); fit(); });
-watch(() => props.places, rebuildClusters);
-watch(() => [props.selected,props.rangeIds,props.hasRange], rebuildClusters);
-watch(() => props.bounds, () => { cancelStroke(); fit(!!props.coverage); });
+watch(() => props.places, scheduleClusters);
+watch(() => [props.selected,props.rangeIds,props.hasRange], scheduleClusters);
+watch(() => props.bounds, () => { cancelStroke(); fit(); });
 onMounted(async () => {
   rebuildClusters();
-  observer = new ResizeObserver(() => { map?.resize(); rebuildClusters(); }); observer.observe(box.value!); refresh();
+  observer = new ResizeObserver(() => { map?.resize(); scheduleClusters(); }); observer.observe(box.value!); refresh();
   if (isTokyo.value) $fetch<BaseMap>(asset('assets/tokyo-map.json')).then(value => { if (!disposed) { base = value; refresh(); } }).catch(() => {});
   try {
     await loadScript(asset('vendor/maplibre-gl.js')); if (disposed) return;
@@ -264,9 +277,16 @@ onMounted(async () => {
     });
   } catch { fallback.value = true; loading.value = false; refresh(); }
 });
-onBeforeUnmount(() => { disposed = true; cancelAnimationFrame(frame); observer?.disconnect(); pointers.clear(); disposeTransit?.(); map?.remove(); });
+onBeforeUnmount(() => { disposed = true; cancelAnimationFrame(frame); cancelAnimationFrame(clusterFrame); cancelAnimationFrame(strokeFrame); observer?.disconnect(); pointers.clear(); disposeTransit?.(); map?.remove(); });
 </script>
 <template>
+  <div class="planner-map-panel">
+    <div class="planner-map-actions" aria-label="地圖操作" @pointerdown.stop @wheel.stop>
+      <button type="button" class="planner-select-view" :disabled="!places.length" @click="selectVisibleArea()">選這一區</button>
+      <button type="button" aria-label="重新置中地圖" :disabled="drawing" @click="fit(!!geographicAreas.length)">置中</button>
+      <button type="button" aria-label="放大地圖" :disabled="drawing || zoom >= 18" @click="zoomBy(1)">＋</button>
+      <button type="button" aria-label="縮小地圖" :disabled="drawing || zoom <= 2" @click="zoomBy(-1)">−</button>
+    </div>
   <div ref="box" class="route-map planner-map" :class="{ drawing }" @keydown="keyboard" @wheel="wheel" @pointerdown.capture="beginMapClick" @click.capture="chooseMapClick">
     <div ref="geography" v-show="!fallback" class="planner-geography" aria-label="排行程地圖，可拖曳平移、滾輪或雙指縮放查看景點詳情" />
     <canvas v-show="fallback" ref="canvas" aria-hidden="true" />
@@ -277,38 +297,33 @@ onBeforeUnmount(() => { disposed = true; cancelAnimationFrame(frame); observer?.
       <polyline v-if="routePoints.length > 1" :points="routePoints.map(p => p.join(',')).join(' ')" fill="none" stroke="#009fc5" stroke-width="3" stroke-dasharray="6 5" />
       <template v-if="detailLevel !== 'dots'"><polygon v-for="p in benefitPoints" :key="p.place.id" :points="p.frame.map(at => at.join(',')).join(' ')" fill="#ffc50016" stroke="#e1ad00" stroke-width="1.5" /></template>
     </svg>
-    <button v-for="group in groupedPoints" :key="`cluster-${group.id}`" class="planner-poi-cluster" :data-cluster-id="group.id" :class="{outside:group.outside,selected:group.selected}" :style="{left:group.point[0]+'px',top:group.point[1]+'px'}" :aria-label="group.count+' 個景點，點選放大'" :disabled="drawing" @click="expandCluster(group)">{{ group.count }}</button>
-    <button v-for="p in points" :key="p.stop.id" class="planner-location" :data-stop-id="p.stop.id" :class="state(p.stop.id)" :style="{ left: p.point[0] + 'px', top: p.point[1] + 'px' }" :aria-label="p.stop.name + (selected.includes(p.stop.id) ? '，已加入，再點移除' : hasRange ? '，點選加入行程' : '，查看景點照片')" :disabled="drawing" :aria-pressed="selected.includes(p.stop.id)" @click="toggle(p.stop.id)"><img v-if="p.stop.photo.src && !failedPhotos.includes(p.stop.photo.src)" :src="asset(p.stop.photo.src)" :alt="p.stop.photo.alt" loading="lazy" @error="photoFailed(p.stop.photo.src)"><i v-else class="planner-poi-dot" aria-hidden="true"/><span v-if="route?.includes(p.stop.id)">{{ route.indexOf(p.stop.id) + 1 }}</span></button>
-    <button v-for="p in details" :key="`detail-${p.stop.id}`" class="planner-place-detail" :data-stop-id="p.stop.id" :class="[state(p.stop.id), { photo: detailLevel === 'photos' }]" :style="{ left: p.point[0] + 'px', top: (p.point[1]! - 18) + 'px' }" :disabled="drawing" :aria-pressed="selected.includes(p.stop.id)" :aria-label="`${p.stop.name}，${p.stop.stay}${hasRange ? selected.includes(p.stop.id) ? '，點選移除' : '，點選加入' : '，查看景點照片'}`" @click="toggle(p.stop.id)">
+    <button v-for="group in drawing ? [] : groupedPoints" :key="`cluster-${group.id}`" class="planner-poi-cluster" :data-cluster-id="group.id" :class="{outside:group.outside,selected:group.selected}" :style="{left:group.point[0]+'px',top:group.point[1]+'px'}" :aria-label="group.count+' 個景點，點選放大'" :disabled="drawing" @click="expandCluster(group)">{{ group.count }}</button>
+    <button v-for="p in drawing ? [] : points" :key="p.stop.id" class="planner-location" :data-stop-id="p.stop.id" :class="state(p.stop.id)" :style="{ left: p.point[0] + 'px', top: p.point[1] + 'px' }" :aria-label="p.stop.name + (selectedSet.has(p.stop.id) ? '，已加入，再點移除' : hasRange ? '，點選加入行程' : '，查看景點照片')" :disabled="drawing" :aria-pressed="selectedSet.has(p.stop.id)" @click="toggle(p.stop.id)"><img v-if="p.stop.photo.src && !failedPhotos.includes(p.stop.photo.src)" :src="asset(p.stop.photo.src)" :alt="p.stop.photo.alt" loading="lazy" @error="photoFailed(p.stop.photo.src)"><i v-else class="planner-poi-dot" aria-hidden="true"/><span v-if="route?.includes(p.stop.id)">{{ route.indexOf(p.stop.id) + 1 }}</span></button>
+    <button v-for="p in drawing ? [] : details" :key="`detail-${p.stop.id}`" class="planner-place-detail" :data-stop-id="p.stop.id" :class="[state(p.stop.id), { photo: detailLevel === 'photos' }]" :style="{ left: p.point[0] + 'px', top: (p.point[1]! - 18) + 'px' }" :disabled="drawing" :aria-pressed="selectedSet.has(p.stop.id)" :aria-label="`${p.stop.name}，${p.stop.stay}${hasRange ? selectedSet.has(p.stop.id) ? '，點選移除' : '，點選加入' : '，查看景點照片'}`" @click="toggle(p.stop.id)">
       <img v-if="p.stop.photo.src && !failedPhotos.includes(p.stop.photo.src)" :src="asset(p.stop.photo.src)" :alt="p.stop.photo.alt" loading="lazy" @error="photoFailed(p.stop.photo.src)">
       <small v-else-if="detailLevel === 'photos'" class="planner-photo-placeholder">{{ p.stop.photo.src ? '照片暫時無法載入' : '景點照片待補' }}</small>
       <span><b>{{ p.stop.name }}</b><small v-if="detailLevel === 'photos'">{{ p.stop.stay }}</small><p v-if="detailLevel === 'photos'">{{ p.stop.note }}</p></span>
-      <i v-if="selected.includes(p.stop.id)" aria-hidden="true">✓</i>
+      <i v-if="selectedSet.has(p.stop.id)" aria-hidden="true">✓</i>
     </button>
-    <button v-for="p in benefitPoints" :key="`benefit-${p.place.id}`" class="planner-benefit-point" :style="{left:p.point[0]+'px',top:p.point[1]+'px'}" :aria-label="p.place.name+'，'+benefitLabels[p.place.benefit]+(p.place.status === 'temporarily-closed' ? '，暫停開放' : '')" :disabled="drawing" @click="focusedBenefit = focusedBenefit === p.place.id ? '' : p.place.id"><span>{{ p.place.status === 'temporarily-closed' ? '×' : p.place.benefit === 'discount' ? '%' : '✓' }}</span></button>
-    <template v-for="p in tourStops" :key="p.name">
+    <button v-for="p in drawing ? [] : benefitPoints" :key="`benefit-${p.place.id}`" class="planner-benefit-point" :style="{left:p.point[0]+'px',top:p.point[1]+'px'}" :aria-label="p.place.name+'，'+benefitLabels[p.place.benefit]+(p.place.status === 'temporarily-closed' ? '，暫停開放' : '')" :disabled="drawing" @click="focusedBenefit = focusedBenefit === p.place.id ? '' : p.place.id"><span>{{ p.place.status === 'temporarily-closed' ? '×' : p.place.benefit === 'discount' ? '%' : '✓' }}</span></button>
+    <template v-for="p in drawing ? [] : tourStops" :key="p.name">
       <button class="planner-tour-stop" :style="{left:p.point[0]+'px',top:p.point[1]+'px'}" :aria-label="p.name+'，指定停靠點'" :disabled="drawing" @click="focusedStop = focusedStop === p.name ? '' : p.name">●</button>
-      <article v-if="focusedStop === p.name" class="planner-tour-label" :style="{left:p.point[0]+'px',top:(p.point[1]! - 22)+'px'}"><b>{{ p.name }}</b><small>指定停靠點</small><a v-if="p.source" :href="p.source" target="_blank" rel="noopener">官方行程 ↗</a></article>
+      <article v-if="focusedStop === p.name" class="planner-tour-label" :style="{left:Math.max(108,Math.min(size.width-108,p.point[0]!))+'px',top:Math.max(110,p.point[1]! - 22)+'px'}"><b>{{ p.name }}</b><small>指定停靠點</small><a v-if="p.source" :href="p.source" target="_blank" rel="noopener">官方行程 ↗</a></article>
     </template>
-    <article v-for="p in benefitDetails" :key="`benefit-detail-${p.place.id}`" class="planner-benefit-detail" :class="{expanded:detailLevel === 'photos' || focusedBenefit === p.place.id}" :style="{left:p.point[0]+'px',top:(p.point[1]! - 20)+'px'}">
+    <article v-for="p in drawing ? [] : benefitDetails" :key="`benefit-detail-${p.place.id}`" class="planner-benefit-detail" :class="{expanded:detailLevel === 'photos' || focusedBenefit === p.place.id}" :style="{left:p.point[0]+'px',top:(p.point[1]! - 20)+'px'}">
       <b>{{ p.place.name }}</b><small>{{ p.place.status === 'temporarily-closed' ? '暫停開放 · ' : '' }}{{ benefitLabels[p.place.benefit] }}</small>
       <template v-if="detailLevel === 'photos' || focusedBenefit === p.place.id"><p>{{ p.place.note }}</p><a :href="p.place.source" target="_blank" rel="noopener">官方使用條件 ↗</a></template>
     </article>
     <svg v-if="drawing || fallback" ref="gesture" class="planner-gesture" :viewBox="`0 0 ${size.width} ${size.height}`" tabindex="0" role="group" :aria-label="drawing ? '拖曳畫出範圍；Enter 選取目前可見區域，Escape 取消圈選' : '地圖可拖曳平移，加減鍵、滾輪或雙指縮放'" @pointerdown="start" @pointermove="move" @pointerup="finish" @pointercancel="finish">
       <polygon v-if="stroke.length > 2" :points="stroke.map(p => p.join(',')).join(' ')" fill="#009fc51a" stroke="#009fc5" stroke-width="2" stroke-dasharray="5 4" />
     </svg>
-    <div class="planner-map-actions" aria-label="地圖操作" @pointerdown.stop @wheel.stop>
-      <button type="button" class="planner-select-view" :disabled="!places.length" @click="selectVisibleArea()">選這一區</button>
-      <button type="button" aria-label="重新置中地圖" :disabled="drawing" @click="fit(!!geographicAreas.length)">置中</button>
-      <button type="button" aria-label="放大地圖" :disabled="drawing || zoom >= 18" @click="zoomBy(1)">＋</button>
-      <button type="button" aria-label="縮小地圖" :disabled="drawing || zoom <= 2" @click="zoomBy(-1)">−</button>
-    </div>
     <span v-if="drawing" class="planner-map-hint">畫出範圍，放開即完成；也可按「選這一區」</span>
-    <span v-if="!drawing" class="planner-map-legend"><span v-for="access in accessTypes" :key="access"><i :style="{background:accessColours[access],borderTopColor:accessColours[access]}" :class="{limited:access !== 'unlimited'}" />{{ passAccessLabels[access] }}</span><span v-if="coverage"><i class="contour" />沿線／景點規劃輪廓</span><span v-if="benefits?.length"><i class="venue" />合作景點定位圈</span><template v-if="!fallback"><span><i class="line-colours" />地鐵依路線標色</span><span><i class="high-speed" />新幹線／高鐵</span></template></span>
-    <details v-if="!drawing && !fallback && transitLines.length" class="planner-transit-legend" @wheel.stop @keydown.stop><summary>地鐵路線顏色 · {{ transitLines.length }} 條</summary><ul><li v-for="line in transitLines" :key="line.key" :class="{ excluded: line.covered === false }"><i :style="{ background: line.colour }" /><b v-if="line.ref">{{ line.ref }}</b>{{ line.name }}<small v-if="line.covered !== undefined">{{ line.covered ? '券內適用' : '未包含' }}{{ line.colour === '#778896' ? '・色彩待查核' : '' }}</small><small v-else-if="line.colour === '#778896'">色彩待查核</small></li></ul></details>
     <span v-if="loading && fallback" class="planner-map-credit">正在載入道路地圖…</span>
     <a v-else-if="fallback && isTokyo" class="planner-map-credit" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>
     <span v-else-if="fallback" class="planner-map-credit">景點位置示意</span>
+  </div>
+    <span v-if="!drawing" class="planner-map-legend"><span v-for="access in accessTypes" :key="access"><i :style="{background:accessColours[access],borderTopColor:accessColours[access]}" :class="{limited:access !== 'unlimited'}" />{{ passAccessLabels[access] }}</span><span v-if="coverage"><i class="contour" />沿線／景點規劃輪廓</span><span v-if="benefits?.length"><i class="venue" />合作景點定位圈</span><template v-if="!fallback"><span><i class="line-colours" />地鐵依路線標色</span><span><i class="high-speed" />新幹線／高鐵</span></template></span>
+    <details v-if="!drawing && !fallback && transitLines.length" class="planner-transit-legend" @wheel.stop @keydown.stop><summary>地鐵路線顏色 · {{ transitLines.length }} 條</summary><ul><li v-for="line in transitLines" :key="line.key" :class="{ excluded: line.covered === false }"><i :style="{ background: line.colour }" /><b v-if="line.ref">{{ line.ref }}</b>{{ line.name }}<small v-if="line.covered !== undefined">{{ line.covered ? '券內適用' : '未包含' }}{{ line.colour === '#778896' ? '・色彩待查核' : '' }}</small><small v-else-if="line.colour === '#778896'">色彩待查核</small></li></ul></details>
   </div>
 </template>
 <style scoped>
@@ -343,4 +358,19 @@ onBeforeUnmount(() => { disposed = true; cancelAnimationFrame(frame); observer?.
 .planner-transit-legend summary{min-height:44px;display:flex;align-items:center}
 .planner-poi-cluster{width:44px;height:44px}
 @media(max-width:600px){.planner-map{height:50svh;min-height:320px;max-height:440px}.planner-map-legend{bottom:28px;left:8px;right:8px;font-size:9px;padding:5px 7px;gap:5px 9px}.planner-transit-legend summary{padding:8px 10px}.planner-map :deep(.maplibregl-ctrl-attrib){max-width:calc(100% - 16px);font-size:9px}.planner-place-detail.photo{width:132px}.planner-place-detail.photo p{display:none}}
+</style>
+
+<style scoped>
+.planner-map-panel{min-width:0;box-sizing:border-box}
+.planner-map-actions{position:static;display:grid;grid-template-columns:minmax(0,1fr) auto 44px 44px;gap:8px;margin-bottom:10px;pointer-events:auto}
+.planner-map-actions .planner-select-view{margin-right:0}
+.planner-map-hint{top:12px}
+.planner-map-legend{position:static;margin:10px 0 0;max-width:100%;box-sizing:border-box;background:#f4f9fa;font-size:10px}
+.planner-transit-legend{position:static;margin-top:8px;max-width:100%;width:100%;box-sizing:border-box;box-shadow:none}
+.planner-map{contain:layout paint}
+@media(max-width:600px){.planner-map-panel{padding-inline:12px}.planner-map-actions button{font-size:14px}.planner-map-legend{font-size:10px}.planner-transit-legend summary{font-size:12px}}
+</style>
+
+<style scoped>
+.planner-benefit-point,.planner-tour-stop{width:44px;height:44px}.planner-benefit-detail.expanded{max-height:160px;overflow:auto}.planner-tour-label{max-height:100px;overflow:auto}
 </style>

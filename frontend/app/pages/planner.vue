@@ -8,7 +8,7 @@ import type { Point } from '~/utils/map';
 import { withinPlanningAreas, validPlanningBoundary } from '~/utils/planner-map';
 import { travelPasses, filterTravelPasses, findTravelPass, passCountries, passKindLabels, travelPassRegions, type TravelPass, type TravelPassCountry } from '~/data/travel-passes';
 import { benefitsForPass } from '~/data/pass-benefits';
-import { passCoverageIndex, withinPassCoverage, coverageStatus, displayCoverageGap, isTaiwanBundle, taiwanBundleOptions, mergeBundleCoverage, type PassCoverage } from '~/utils/pass-coverage';
+import { passCoverageIndex, coverageExtent, withinPassCoverage, coverageStatus, displayCoverageGap, isTaiwanBundle, taiwanBundleOptions, mergeBundleCoverage, type PassCoverage } from '~/utils/pass-coverage';
 import { plannerKeywords } from '~/data/planner-preferences';
 import { recommendPlaces, refineSelection, rainPlanDetailsFor, type Recommendation } from '~/utils/planner';
 const asset = useAsset();
@@ -21,7 +21,7 @@ const itineraryPlaces = computed<Stop[]>(()=>{
 });
 const { catalog: poiCatalog, snapshots: poiSnapshots, loading: poiLoading, error: poiError, loadCatalog, loadRegions } = usePlannerPois();
 const poiCountry = ref<PoiCountry>('JP'), poiRegionId = ref(''), mapBounds = shallowRef<number[] | null>(null);
-const viewport = shallowRef<number[]>([]), savedPoiStops = ref<Stop[]>([]), inspectedId = ref<number | null>(null);
+const viewport = shallowRef<number[]>([]), savedPoiStops = ref<Stop[]>([]), pickedPoiStops = shallowRef<Stop[]>([]), inspectedId = ref<number | null>(null);
 const placeListOpen = ref(false), placeQuery = ref(''), placeListLimit = ref(30), failedListPhotos = ref<string[]>([]);
 const placeList = ref<HTMLDetailsElement>();
 const inspectedPhotoFailed = ref(false);
@@ -31,15 +31,20 @@ const itineraryCountry = computed<PoiCountry>(() => activeTrip.value?.country ==
 const poiCountries = [{id:'JP',name:'日本'},{id:'KR',name:'韓國'},{id:'TW',name:'台灣'}];
 const poiRegions = computed(() => poiCatalog.value?.regions.filter(r => r.country === poiCountry.value && r.file) || []);
 const loadedPois = computed(() => [...new Map(poiSnapshots.value.filter(s => s.region.country === poiCountry.value).flatMap(s => s.pois).map(p => [p.id,p])).values()]);
-const places = computed(() => mergePlannerPlaces(poiCountry.value === itineraryCountry.value ? itineraryPlaces.value : [], loadedPois.value, savedPoiStops.value.filter(p => p.poiCountry === poiCountry.value)));
+const places = computed(() => mergePlannerPlaces(poiCountry.value === itineraryCountry.value ? itineraryPlaces.value : [], loadedPois.value, [...savedPoiStops.value,...pickedPoiStops.value].filter(p => p.poiCountry === poiCountry.value)));
 const viewportPlaces = computed(() => viewport.value.length === 4 ? places.value.filter(p=>p.at[0]!>=viewport.value[0]! && p.at[0]!<=viewport.value[2]! && p.at[1]!>=viewport.value[1]! && p.at[1]!<=viewport.value[3]!) : places.value);
 const inspectedPlace = computed(() => places.value.find(p => p.id === inspectedId.value) || null);
 const inspectedPoi = computed(() => loadedPois.value.find(p => p.id === inspectedPlace.value?.poiId) || null);
 async function loadVisiblePois(bounds = viewport.value, zoom = 10) {
-  if (!poiCatalog.value || zoom < 7) return;
-  await loadRegions(poiRegionsInBounds(poiRegions.value, bounds));
+  if (!poiCatalog.value) return;
+  const candidates=poiRegionsInBounds(poiRegions.value,bounds);
+  const centre=[(bounds[0]!+bounds[2]!)/2,(bounds[1]!+bounds[3]!)/2];
+  const nearest=[...candidates].sort((a,b)=>Math.hypot((a.bbox[0]!+a.bbox[2]!)/2-centre[0]!, (a.bbox[1]!+a.bbox[3]!)/2-centre[1]!)-Math.hypot((b.bbox[0]!+b.bbox[2]!)/2-centre[0]!, (b.bbox[1]!+b.bbox[3]!)/2-centre[1]!));
+  const preferred=candidates.find(r=>r.id===poiRegionId.value);
+  await loadRegions(zoom<7 ? (preferred ? [preferred] : nearest.slice(0,1)) : nearest.slice(0,3));
 }
-function onViewport(bounds: number[], zoom: number) { viewport.value = bounds; void loadVisiblePois(bounds, zoom); }
+let viewportTimer: ReturnType<typeof setTimeout> | undefined;
+function onViewport(bounds: number[], zoom: number) { viewport.value = bounds; clearTimeout(viewportTimer); viewportTimer=setTimeout(()=>void loadVisiblePois(bounds,zoom),120); }
 function choosePoiRegion(reset = true) {
   const region = poiRegions.value.find(r => r.id === poiRegionId.value);
   if (!region) return;
@@ -62,12 +67,15 @@ watch(poiCatalog, initializePoiDestination);
 onMounted(() => { void loadCatalog(); });
 async function loadPassPois(coverage: PassCoverage | null, country: PoiCountry) {
   poiCountry.value = country;
-  const extent = coverage?.features.flatMap(f => f.geometry.type === 'Point' ? [f.geometry.coordinates] : f.geometry.type === 'LineString' ? f.geometry.coordinates : f.geometry.type === 'Polygon' ? f.geometry.coordinates.flat() : f.geometry.coordinates.flat(2)) || [];
+  const extent = coverageExtent(coverage).flat();
   if (!extent.length) return;
   const bounds = extent.reduce((b,p)=>[Math.min(b[0]!,p[0]!),Math.min(b[1]!,p[1]!),Math.max(b[2]!,p[0]!),Math.max(b[3]!,p[1]!)],[Infinity,Infinity,-Infinity,-Infinity]);
   const regions = poiRegionsInBounds(poiRegions.value, bounds);
-  poiRegionId.value = regions[0]?.id || '';
-  await loadRegions(regions);
+  const initial=regions.find(r=>r.id===poiRegionId.value) || regions[0];
+  poiRegionId.value=initial?.id || '';
+  // The viewport loader fetches nearby regions after the map moves. A national
+  // ticket must not download and recluster the entire country.
+  if(initial)await loadRegions([initial]);
 }
 const { keywordIds, enabled: useKeywords } = useTravelPreferences();
 const appliedKeywords = computed(() => useKeywords.value ? keywordIds.value : []);
@@ -97,28 +105,30 @@ const selectedPass = computed(() => findTravelPass(selectedPassId.value));
 const selectedBenefits = computed(() => benefitsForPass(selectedPassId.value));
 const passCoverage = shallowRef<PassCoverage | null>(null), coverageLoading = ref(false), coverageError = ref('');
 const coverageMetadata = computed(() => passCoverage.value?.metadata || passCoverageIndex[selectedPassId.value]);
-const coverageCache = new Map<string, Promise<PassCoverage | null>>();
-function loadCoverage(id:string,variant='') {
+const coverageCache = new Map<string, PassCoverage | null>();
+let coverageController: AbortController | undefined;
+async function loadCoverage(id:string,variant='',signal?:AbortSignal) {
   const metadata=passCoverageIndex[id];
   const file=metadata?.variants?.find(v=>v.id===variant)?.file || metadata?.file;
   const key=file || id;
-  if (!coverageCache.has(key)) {
-    const request = file ? $fetch<PassCoverage>(asset('pass-coverage/' + file)) : Promise.resolve(null);
-    coverageCache.set(key, request.catch(error => { coverageCache.delete(key); throw error; }));
-    if (coverageCache.size > 5) coverageCache.delete(coverageCache.keys().next().value!);
-  }
-  return coverageCache.get(key)!;
+  if(coverageCache.has(key))return coverageCache.get(key)!;
+  const coverage=file ? await $fetch<PassCoverage>(asset('pass-coverage/compact/'+file),{signal}).catch(error=>{if(signal?.aborted)throw error;return $fetch<PassCoverage>(asset('pass-coverage/'+file),{signal});}) : null;
+  if(signal?.aborted)throw signal.reason;
+  coverageCache.set(key,coverage);
+  if(coverageCache.size>3)coverageCache.delete(coverageCache.keys().next().value!);
+  return coverage;
 }
-let coverageRevision = 0;
+let coverageRevision = 0, selectAllForPass = false;
 watch(selectedPassId, id => { bundleCity.value='';bundleShuttle.value='';passVariant.value=passCoverageIndex[id]?.variants?.[0]?.id || ''; },{flush:'sync'});
 watch([selectedPassId,bundleCity,bundleShuttle,passVariant], async ([id,city,shuttle,variant]) => {
   const revision = ++coverageRevision;
+  coverageController?.abort();coverageController=new AbortController();const signal=coverageController.signal;
   passCoverage.value = null; coverageError.value = ''; coverageLoading.value = !!id;
   if (!id) { coverageLoading.value = false; return; }
   try {
-    let coverage = await loadCoverage(id,variant);
+    let coverage = await loadCoverage(id,variant,signal);
     if (coverage && isTaiwanBundle(id)) {
-      const options=await Promise.all([city ? loadCoverage(city) : null,shuttle ? loadCoverage(shuttle) : null]);
+      const options=await Promise.all([city ? loadCoverage(city,'',signal) : null,shuttle ? loadCoverage(shuttle,'',signal) : null]);
       coverage=mergeBundleCoverage(coverage,options[0],options[1]);
     }
     if (revision !== coverageRevision) return;
@@ -126,7 +136,8 @@ watch([selectedPassId,bundleCity,bundleShuttle,passVariant], async ([id,city,shu
     await loadPassPois(coverage, selectedPass.value?.country || poiCountry.value);
     if (revision !== coverageRevision) return;
     rangeIds.value = places.value.filter(p => withinPassCoverage(p.at, coverage)).map(p => p.id);
-    ids.value = ids.value.filter(id => rangeIds.value.includes(id));
+    const allowed=new Set(rangeIds.value);
+    ids.value = selectAllForPass ? [...rangeIds.value] : ids.value.filter(id => allowed.has(id));
   } catch { if (revision === coverageRevision) coverageError.value = '票券路網暫時無法載入，請查看官方範圍或自己圈選。'; }
   finally { if (revision === coverageRevision) coverageLoading.value = false; }
 });
@@ -136,10 +147,11 @@ const dirty = ref(false), error = ref('');
 const routeIds = computed(() => !dirty.value ? draft.value.map(s => s.id) : []);
 const busy = ref(false), draft = ref<Recommendation[]>([]);
 let generationTimer: ReturnType<typeof setTimeout> | undefined;
-watch(activeId,()=>{clearTimeout(generationTimer);ids.value=[];rangeIds.value=[];selectionBoundary.value=[];selectedPassId.value='';hasRange.value=false;drawing.value=false;mapRevision.value++;refinement.value='';refinementStatus.value='';draft.value=[];preferences.value='';extension.value=0;dirty.value=false;error.value='';planNotes.value=[];panel.value=null;busy.value=false;savedPoiStops.value=[];inspectedId.value=null;pendingSavedIds.clear();initializePoiDestination();});
+watch(activeId,()=>{selectAllForPass=false;clearTimeout(generationTimer);ids.value=[];rangeIds.value=[];selectionBoundary.value=[];selectedPassId.value='';hasRange.value=false;drawing.value=false;mapRevision.value++;refinement.value='';refinementStatus.value='';draft.value=[];preferences.value='';extension.value=0;dirty.value=false;error.value='';planNotes.value=[];panel.value=null;busy.value=false;savedPoiStops.value=[];pickedPoiStops.value=[];inspectedId.value=null;pendingSavedIds.clear();initializePoiDestination();});
 watch(places, () => {
   if (!hasRange.value) return;
   rangeIds.value = places.value.filter(p => selectedPassId.value ? withinPassCoverage(p.at, passCoverage.value) : withinPlanningAreas(p.at, [selectionBoundary.value])).map(p => p.id);
+  if(selectedPassId.value && selectAllForPass)ids.value=[...rangeIds.value];
   const restored=places.value.filter(p=>pendingSavedIds.has(p.id)).map(p=>p.id);
   if(restored.length){const wasDirty=dirty.value;restored.forEach(id=>pendingSavedIds.delete(id));ids.value=[...new Set([...ids.value,...restored])];dirty.value=wasDirty;}
 });
@@ -177,7 +189,7 @@ watch(activeId, id => {
     }
   } catch { /* A fresh draft remains available when saved data cannot be read. */ }
 }, { immediate: true });
-function select(value: number[]) { pendingSavedIds.clear(); ids.value = value; }
+function select(value: number[]) { selectAllForPass=false; pendingSavedIds.clear(); const chosen=new Set(value); pickedPoiStops.value=places.value.filter(p=>p.poiId && chosen.has(p.id)); ids.value = value; }
 function toggleListPlace(place: Stop) {
   if (drawing.value) return;
   if (!hasRange.value) {
@@ -190,7 +202,8 @@ function toggleListPlace(place: Stop) {
   select(ids.value.includes(place.id) ? ids.value.filter(id => id !== place.id) : [...ids.value,place.id]);
 }
 function selectRange(value: number[], boundary: Point[] = [], selectAll = true) {
-  pendingSavedIds.clear();
+  const chosen=new Set(selectAll ? value : []); pickedPoiStops.value=places.value.filter(p=>p.poiId && chosen.has(p.id));
+  pendingSavedIds.clear(); selectAllForPass=false;
   selectedPassId.value = '';
   rangeIds.value = [...value]; ids.value = selectAll ? [...value] : []; hasRange.value = true;
   if (!selectAll) {
@@ -200,21 +213,11 @@ function selectRange(value: number[], boundary: Point[] = [], selectAll = true) 
   drawing.value = false; refinementStatus.value = ''; refinement.value = '';
   selectionBoundary.value = boundary;
 }
-async function selectPass(pass: TravelPass) {
-  if (!findTravelPass(pass.id)) return;
-  if (passCoverageIndex[pass.id]?.availability === 'expired') return;
+function selectPass(pass: TravelPass) {
+  if (!findTravelPass(pass.id) || passCoverageIndex[pass.id]?.availability === 'expired') return;
   selectRange([]);
+  selectAllForPass=true;
   selectedPassId.value = pass.id; panel.value = null;
-  try {
-    const variant=passVariant.value;
-    const coverage = await loadCoverage(pass.id,variant);
-    if (selectedPassId.value !== pass.id || passVariant.value !== variant) return;
-    await loadPassPois(coverage, pass.country);
-    if (selectedPassId.value !== pass.id) return;
-    if (passVariant.value !== variant) return;
-    const value = places.value.filter(p => withinPassCoverage(p.at, coverage)).map(p => p.id);
-    rangeIds.value = value; ids.value = [...value];
-  } catch { /* The loading watcher displays the recovery message. */ }
 }
 function beginDrawing() {
   if (drawing.value) { drawing.value = false; return; }
@@ -222,7 +225,7 @@ function beginDrawing() {
 }
 function applyRefinement() {
   const result = refineSelection(places.value, ids.value, refinement.value);
-  ids.value = result.ids;
+  select(result.ids);
   refinementStatus.value = result.changes.length ? result.changes.join('、') + '。地圖已更新。' : '請使用完整景點名稱，例如「加入' + (places.value[0]?.name || '景點名稱') + '」。';
   if (result.changes.length) refinement.value = '';
 }
@@ -262,7 +265,7 @@ function save() {
     panel.value = 'saved';
     notify('草案已儲存到'+activeTrip.value?.title);
 }
-onBeforeUnmount(() => clearTimeout(generationTimer));
+onBeforeUnmount(() => {clearTimeout(generationTimer);clearTimeout(viewportTimer);coverageController?.abort();});
 </script>
 <template>
   <section v-if="activeTrip" class="screen active planner-screen">
@@ -286,7 +289,7 @@ onBeforeUnmount(() => clearTimeout(generationTimer));
       <span><b>{{ selectedPass.name }}</b><small>{{ selectedPass.region }} · {{ selectedPass.kind === 'stored-value' ? '合作服務・需儲值' : '路線／合作景點' }}</small></span>
       <a :href="selectedPass.coverageUrl" target="_blank" rel="noopener">官方適用範圍 ↗</a>
     </div>
-    <p v-if="selectedPass" class="small-note" role="status">{{ coverageLoading ? '正在載入票券路網輪廓…' : coverageError || coverageMetadata?.note }} 輪廓內的景點門票與交通優惠仍依票券條件。</p>
+    <p v-if="selectedPass" class="small-note" role="status">{{ coverageLoading ? '正在載入票券路網輪廓…' : coverageError || coverageMetadata?.note }} 放大地圖會載入附近景點；門票與交通優惠仍依票券條件。</p>
     <div v-if="passVariants.length" class="bundle-choices">
       <label>票券版本・依持有票券選擇<select v-model="passVariant"><option v-for="variant in passVariants" :key="variant.id" :value="variant.id">{{ variant.label }}</option></select></label>
     </div>
@@ -411,4 +414,8 @@ onBeforeUnmount(() => clearTimeout(generationTimer));
 .planner-place-choice>button{min-width:44px;min-height:44px;padding:8px 4px;color:#0085a6;font-size:12px}
 .planner-list-more{width:100%;min-height:46px;background:#f0f9fb;border-radius:9px;margin-top:8px;color:#0085a6;font-size:13px}
 @media(max-width:600px){.planner-screen :deep(select),.planner-screen :deep(textarea),.planner-screen :deep(input:not([type=checkbox])){font-size:16px}.range-choices button{font-size:13px;padding:12px 7px;gap:5px}.planning-next{gap:8px}.planning-next .primary{min-width:140px;min-height:48px}.selected-pass{flex-wrap:wrap}.selected-pass>span{flex:1}.selected-pass>a{min-height:44px;display:flex;align-items:center}.text-refinement form{flex-wrap:wrap}.text-refinement textarea{flex-basis:100%}.text-refinement .secondary{min-height:44px;width:100%}.planner-results h2{font-size:18px}}
+</style>
+
+<style scoped>
+@media(max-width:600px){.planner-screen{box-sizing:border-box;padding-inline:max(12px,env(safe-area-inset-left)) max(12px,env(safe-area-inset-right))}.planner-screen :deep(.planner-map-panel){padding-inline:0}.planner-screen .page-heading{margin-inline:8px}.planner-screen .range-choices button{overflow-wrap:anywhere}}
 </style>

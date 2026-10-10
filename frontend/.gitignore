@@ -17,3 +17,6 @@ __pycache__/
 /public/poi/cache/
 /public/poi/.import-lock
 /public/poi/regions/* [0-9].json
+
+# Derived mobile map payloads are generated before dev/build.
+/public/pass-coverage/compact/

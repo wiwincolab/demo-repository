@@ -56,25 +56,54 @@ export function plannerStopClusters(stops: Stop[], selected: number[] = [], rang
   })));
 }
 
-type FetchJson = (url: string) => Promise<unknown>;
+type FetchJson = (url: string, signal?:AbortSignal) => Promise<unknown>;
 // A catalog can exist on the API while an individual region is still being
 // published. Fall back per request, including for static subpath deployments.
 export function createPoiRepository(fetchJson: FetchJson, asset: (path: string) => string) {
-  const requests = new Map<string, Promise<PoiSnapshot>>();
-  async function read<T>(api: string, file: string): Promise<T> {
-    try { return await fetchJson(asset(api)) as T; }
-    catch { return await fetchJson(asset(file)) as T; }
+  const requests = new Map<string, {promise:Promise<PoiSnapshot>;signal?:AbortSignal}>();
+  async function read<T>(api: string, file: string, signal?:AbortSignal): Promise<T> {
+    try { return await fetchJson(asset(api),signal) as T; }
+    catch(error) { if(signal?.aborted)throw error;return await fetchJson(asset(file),signal) as T; }
   }
   return {
     catalog: () => read<PoiCatalog>('api/poi/catalog', 'poi/index.json'),
-    region(region: PoiRegion) {
+    region(region: PoiRegion, signal?:AbortSignal) {
       if (!region.file) return Promise.reject(new Error('POI region is unavailable'));
+      if(requests.get(region.id)?.signal?.aborted)requests.delete(region.id);
       if (!requests.has(region.id)) {
-        const request = read<PoiSnapshot>(`api/poi/regions/${region.id}`, `poi/${region.file}`)
-          .catch(error => { requests.delete(region.id); throw error; });
-        requests.set(region.id, request);
+        const promise=read<PoiSnapshot>(`api/poi/regions/${region.id}`, `poi/${region.file}`,signal)
+          .catch(error => { if(requests.get(region.id)?.promise===promise)requests.delete(region.id); throw error; });
+        requests.set(region.id, {promise,signal});
       }
-      return requests.get(region.id)!;
+      return requests.get(region.id)!.promise;
     },
   };
+}
+
+// Cache downloads, but only publish the latest visible regions. Out-of-order
+// replies must not replace a newer destination or append the entire country.
+export function createVisiblePoiLoader(repository: {region:(region:PoiRegion,signal?:AbortSignal)=>Promise<PoiSnapshot>}, publish:(snapshots:PoiSnapshot[])=>void) {
+  const prepared=new Map<string,PoiSnapshot>();
+  let shown:PoiSnapshot[]=[];
+  const update=(snapshots:PoiSnapshot[])=>{if(snapshots.length!==shown.length || snapshots.some((s,i)=>s!==shown[i])){shown=snapshots;publish(snapshots);}};
+  let revision=0, key='', active:Promise<void> | undefined;
+  let controller:AbortController | undefined;
+  async function load(regions:PoiRegion[]) {
+    const nextKey=regions.map(r=>r.id).sort().join(',');
+    if (nextKey===key && active)return active;
+    controller?.abort();controller=new AbortController();const signal=controller.signal;
+    key=nextKey;
+    const current=++revision;
+    update(regions.flatMap(r=>prepared.has(r.id) ? [prepared.get(r.id)!] : []));
+    const work=(async()=>{
+      for(let i=0;i<regions.length && current===revision;i+=3) {
+        await Promise.all(regions.slice(i,i+3).map(async r=>{const snapshot=prepared.get(r.id) || await repository.region(r,signal);prepared.set(r.id,snapshot);return snapshot;}));
+        if (current!==revision)return;
+        update(regions.flatMap(r=>prepared.has(r.id) ? [prepared.get(r.id)!] : []));
+      }
+    })();
+    active=work;
+    try {await work;} finally {if(current===revision)active=undefined;}
+  }
+  return {load,dispose(){revision++;controller?.abort();}};
 }

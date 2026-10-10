@@ -44,3 +44,7 @@ npm run typecheck
 `export.py` 核對預設與替代版本檔的幾何有效、座標範圍、來源及完成狀態，再輸出報表。測試包含東京迪士尼／成田排除、京阪京都券不含大阪、近鐵 1 日券終點、JR 關西迷你不含姬路／和歌山、札幌登別不含洞爺／旭川、阿里山不混入高鐵接駁、Taiwan PASS 任選項目隔離、會津三版本終點、JR 渡輪與巴士業者排除及過期券停用。
 
 OSM 衍生路線與輪廓保留 © OpenStreetMap contributors（ODbL 1.0）。來源 URL、查核日期與 `planningOnly` 保留在各檔 metadata。資料快照不能保證即時營運、現場售票、停駛代行或所有方案變動。
+
+### Mobile ticket payloads
+
+`npm run dev`, `build`, and `generate` prepare `public/pass-coverage/compact/` using `compact-pass-coverage.mjs`. These derived files are ignored by Git. Network paths are grouped by access type and transport, rounded to five decimal places for display, and retain the original eligible OSM way IDs. Planning contours (including holes and disconnected destinations) keep their original coordinates. The full source files remain available for provenance and route tests. The planner loads the compact file with a fallback to the original, caches three tickets, cancels superseded requests, and loads at most three nearby POI regions per viewport (one when zoomed out to a country).

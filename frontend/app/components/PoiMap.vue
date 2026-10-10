@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Poi, PoiRegion } from '~/types/poi';
+import { visibleMapTarget } from '~/utils/planner-map';
 import { poiClusterIndex } from '~/utils/poi';
 import { loadScript } from '~/utils/loadScript';
 import { attachTransitMap, preparePlannerBasemap, type TransitLegendLine } from '~/utils/transit-map';
@@ -22,10 +23,10 @@ function renderPins() {
     const at=map.project(feature.geometry.coordinates), p=feature.properties;
     if('cluster' in p)return {key:`cluster:${p.cluster_id}`,x:at.x,y:at.y,count:p.point_count,clusterId:p.cluster_id,name:'',photo:p.photoCount>0,version};
     return {key:p.id,x:at.x,y:at.y,count:1,id:p.id,name:p.name,photo:p.photo,src:photoUrls.get(p.id),version};
-  });
+  }).filter(pin=>visibleMapTarget([pin.x,pin.y],container.value!.clientWidth,container.value!.clientHeight));
 }
 function schedule() {cancelAnimationFrame(frame);frame=requestAnimationFrame(renderPins);}
-function update() {version++;photoUrls=new Map(props.pois.filter(p=>p.photo).map(p=>[p.id,p.photo!.src]));clusters=poiClusterIndex(props.pois);renderPins();}
+function update() {version++;photoUrls=new Map(props.pois.filter(p=>p.photo).map(p=>[p.id,p.photo!.src]));clusters=poiClusterIndex(props.pois,(container.value?.clientWidth || 720)<=600 ? 60 : 45);renderPins();}
 function fit() {
   if(!map || !props.region)return;
   const [w,s,e,n]=props.region.bbox;
@@ -67,7 +68,7 @@ onBeforeUnmount(()=>{disposed=true;cancelAnimationFrame(frame);observer?.disconn
 <template>
   <div class="poi-map-wrap" @pointerdown.capture="beginPointer" @click.capture="chooseAtPointer">
     <div ref="container" class="poi-map" role="region" aria-label="日韓台景點地圖，可拖曳、縮放，點選景點查看照片" />
-    <div class="poi-pin-layer"><button v-for="pin in pins" :key="pin.key" class="poi-pin" :class="{cluster:pin.clusterId!==undefined,unavailable:!pin.photo,selected:pin.id===selected,thumbnail:pin.src && !failedPhotos.includes(pin.src)}" :style="{left:pin.x+'px',top:pin.y+'px'}" :aria-label="pin.clusterId!==undefined ? pin.count+' 個景點，點選放大' : pin.name+'，查看景點照片'" @click.stop="choose(pin)"><span v-if="pin.clusterId!==undefined">{{ pin.count }}</span><img v-else-if="pin.src && !failedPhotos.includes(pin.src)" :src="pin.src" :alt="pin.name" loading="lazy" @error="photoFailed(pin.src)"><span v-if="pin.clusterId===undefined && showLabels" class="poi-pin-label">{{ pin.name }}</span></button></div>
+    <div class="poi-pin-layer"><button v-for="pin in pins" :key="pin.key" class="poi-pin" :class="{cluster:pin.clusterId!==undefined,unavailable:!pin.photo,selected:pin.id===selected,thumbnail:pin.src && !failedPhotos.includes(pin.src)}" :style="{left:pin.x+'px',top:pin.y+'px','--label-top':(container && pin.y+66>container.clientHeight-8 ? '-28px' : '44px'),'--label-shift':Math.max(-60,Math.min(60,container ? container.clientWidth/2-pin.x : 0))+'px'}" :aria-label="pin.clusterId!==undefined ? pin.count+' 個景點，點選放大' : pin.name+'，查看景點照片'" @click.stop="choose(pin)"><span v-if="pin.clusterId!==undefined">{{ pin.count }}</span><img v-else-if="pin.src && !failedPhotos.includes(pin.src)" :src="pin.src" :alt="pin.name" loading="lazy" @error="photoFailed(pin.src)"><span v-if="pin.clusterId===undefined && showLabels" class="poi-pin-label">{{ pin.name }}</span></button></div>
     <details v-if="transitLines.length" class="poi-transit-legend"><summary>地鐵路線顏色</summary><ul><li v-for="line in transitLines" :key="line.key"><i :style="{background:line.colour}" />{{ line.ref }} {{ line.name }}</li></ul></details>
     <p v-if="error" class="poi-map-status" role="status">{{ error }}</p>
     <span v-else-if="!ready" class="poi-map-status" role="status">正在開啟景點地圖…</span>
@@ -80,4 +81,17 @@ onBeforeUnmount(()=>{disposed=true;cancelAnimationFrame(frame);observer?.disconn
 </style>
 <style scoped>
 .poi-pin.thumbnail{width:42px;height:42px;background:white}.poi-pin.thumbnail img{display:block;width:100%;height:100%;border-radius:50%;object-fit:cover}.poi-pin.thumbnail .poi-pin-label{top:43px}.poi-transit-legend{position:absolute;right:12px;bottom:35px;z-index:2;max-width:75%;border-radius:9px;background:#fffffff5;border:1px solid #d5e5eb;color:#315869;font-size:11px}.poi-transit-legend summary{padding:8px 10px;cursor:pointer}.poi-transit-legend ul{list-style:none;margin:0;padding:0 10px 9px;max-height:150px;overflow:auto}.poi-transit-legend li{display:flex;align-items:center;gap:6px;font-size:10px;margin:6px 0}.poi-transit-legend i{width:20px;height:4px;border:1px solid #0002;border-radius:2px;flex:none}
+</style>
+
+<style scoped>
+.poi-pin-label,.poi-pin.thumbnail .poi-pin-label{margin-left:var(--label-shift,0px);top:var(--label-top,44px)}
+.poi-pin{width:44px;height:44px;background:none;border:0;box-shadow:none;display:grid;place-items:center}
+.poi-pin:not(.thumbnail):not(.cluster):before{content:'';width:18px;height:18px;border:2px solid white;border-radius:50%;background:#008eb2;box-shadow:0 1px 5px #14364855}
+.poi-pin.unavailable:not(.thumbnail):not(.cluster):before{background:#8799a0}
+.poi-pin.cluster{width:44px;height:44px;border:2px solid white;background:#008eb2;box-shadow:0 1px 5px #14364855}
+.poi-pin.cluster.unavailable{background:#8799a0}
+.poi-map-wrap :deep(.maplibregl-ctrl-group button){width:44px;height:44px}
+.poi-transit-legend summary{min-height:44px;display:flex;align-items:center}
+.poi-pin.thumbnail{width:44px;height:44px;border:2px solid white}.poi-pin.selected{border-color:#ffc500}
+@media(max-width:600px){.poi-map-wrap{margin-inline:12px}.poi-map-hint{font-size:11px;max-width:calc(100% - 78px)}.poi-pin-label{max-width:120px}}
 </style>

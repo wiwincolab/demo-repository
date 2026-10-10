@@ -1,10 +1,11 @@
 import index from '../../public/pass-coverage/index.json' with { type: 'json' };
-import { pointInPolygon, type Point } from './map.ts';
+import type { Point } from './map.ts';
+import { indexRing } from './polygon-index.ts';
 
 export type PassAccess = 'unlimited' | 'round-trip' | 'one-way' | 'through-service' | 'exit-only' | 'scheduled-tour';
 export const passAccessLabels: Record<PassAccess,string> = { unlimited:'自由搭乘區段', 'round-trip':'限次往返路徑', 'one-way':'指定單程路徑', 'through-service':'限直通列車', 'exit-only':'只可下車區段', 'scheduled-tour':'指定團班停靠點' };
 export interface PassCoverageMetadata { id:string; mode:string; note:string; officialUrl:string; checkedAt:string; file:string|null; networkWays:number; venues:number; stops?:number; missingComponents?:string[]; components?:{name:string;access:PassAccess;source:string}[]; availability?:'current'|'expired'; variants?:{id:string;label:string;file:string|null}[]; variantId?:string; variantLabel?:string }
-export interface PassCoverageFeature { type:'Feature'; properties:{role:string;name?:string;osmId?:number;routeId?:number;access?:PassAccess;source?:string;section?:string;transport?:string}; geometry:{type:string;coordinates:any} }
+export interface PassCoverageFeature { type:'Feature'; properties:{role:string;name?:string;osmId?:number;osmIds?:number[];routeId?:number;access?:PassAccess;source?:string;section?:string;transport?:string}; geometry:{type:string;coordinates:any} }
 export interface PassCoverage { type:'FeatureCollection'; metadata:PassCoverageMetadata; features:PassCoverageFeature[] }
 export const passCoverageIndex = index as Record<string,PassCoverageMetadata>;
 export function coverageStatus(metadata?:PassCoverageMetadata) {
@@ -29,14 +30,26 @@ export function mergeBundleCoverage(base:PassCoverage,city?:PassCoverage|null,sh
   const missing=selections.flatMap(c=>c.metadata.missingComponents || []).filter(g=>!g.includes('任選一'));
   if(!city)missing.push('請選擇已兌換的都會交通（任選一）');
   if(!shuttle)missing.push('請選擇已兌換的景區接駁（任選一）');
-  return {type:'FeatureCollection',features,metadata:{...base.metadata,mode:'partial',networkWays:features.filter(f=>f.properties.role==='network').length,venues:features.filter(f=>f.properties.role==='venue').length,stops:features.filter(f=>f.properties.role==='stop').length,missingComponents:[...new Set(missing)],note:'顯示共通鐵路與你選擇的都會交通、景區接駁；各項兌換次數與有效日期依官方條件。',components:selections.flatMap(c=>c.metadata.components || [])}};
+  return {type:'FeatureCollection',features,metadata:{...base.metadata,mode:'partial',networkWays:selections.reduce((n,c)=>n+c.metadata.networkWays,0),venues:features.filter(f=>f.properties.role==='venue').length,stops:features.filter(f=>f.properties.role==='stop').length,missingComponents:[...new Set(missing)],note:'顯示共通鐵路與你選擇的都會交通、景區接駁；各項兌換次數與有效日期依官方條件。',components:selections.flatMap(c=>c.metadata.components || [])}};
 }
 export function coveragePolygons(coverage?: PassCoverage | null): Point[][][] {
-  return (coverage?.features || []).filter(f=>f.properties.role==='planning-contour').flatMap(f=>f.geometry.type==='Polygon' ? [f.geometry.coordinates] : f.geometry.type==='MultiPolygon' ? f.geometry.coordinates : []);
+  if (!coverage) return [];
+  return indexedCoverage(coverage).polygons;
 }
 export function withinPassCoverage(point:Point,coverage?:PassCoverage|null) {
-  return coveragePolygons(coverage).some(rings=>pointInPolygon(point,rings[0]!) && !rings.slice(1).some(hole=>pointInPolygon(point,hole)));
+  return !!coverage && indexedCoverage(coverage).contains(point);
 }
 export function coverageExtent(coverage?:PassCoverage|null): Point[][] {
   return coveragePolygons(coverage).map(rings=>rings[0]!);
+}
+const coverageIndexes = new WeakMap<PassCoverage,{polygons:Point[][][];contains:(point:Point)=>boolean}>();
+function indexedCoverage(coverage: PassCoverage) {
+  let entry=coverageIndexes.get(coverage);
+  if (!entry) {
+    const polygons:Point[][][]=coverage.features.filter(f=>f.properties.role==='planning-contour').flatMap(f=>f.geometry.type==='Polygon' ? [f.geometry.coordinates] : f.geometry.type==='MultiPolygon' ? f.geometry.coordinates : []);
+    const rings=polygons.map(p=>p.map(indexRing));
+    entry={polygons,contains:point=>rings.some(p=>p[0]?.(point) && !p.slice(1).some(hole=>hole(point)))};
+    coverageIndexes.set(coverage,entry);
+  }
+  return entry;
 }

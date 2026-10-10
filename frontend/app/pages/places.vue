@@ -3,9 +3,9 @@ import type { Poi, PoiCatalog, PoiCountry, PoiRegion, PoiSnapshot } from '~/type
 import { filterPois } from '~/utils/poi';
 import { createPoiRepository } from '~/utils/planner-poi';
 const asset=useAsset(), route=useRoute();
-const catalog=ref<PoiCatalog | null>(null), pois=ref<Poi[]>([]), country=ref<PoiCountry>('JP'), regionId=ref('jp-tokyo');
+const catalog=shallowRef<PoiCatalog | null>(null), pois=shallowRef<Poi[]>([]), country=ref<PoiCountry>('JP'), regionId=ref('jp-tokyo');
 const loading=ref(true), error=ref(''), query=ref(''), category=ref(''), photosOnly=ref(false), limit=ref(36), selected=ref<string | null>(null);
-const repository=createPoiRepository(url=>$fetch(url,{timeout:8000}),asset);
+const repository=createPoiRepository((url,signal)=>$fetch(url,{timeout:8000,signal}),asset);
 const countries=[{id:'JP' as const,name:'日本'},{id:'KR' as const,name:'韓國'},{id:'TW' as const,name:'台灣'}];
 const regions=computed(()=>catalog.value?.regions.filter(r=>r.country===country.value) || []);
 const region=computed<PoiRegion | null>(()=>catalog.value?.regions.find(r=>r.id===regionId.value) || null);
@@ -20,7 +20,7 @@ async function loadRegion() {
   pois.value=[];selected.value=null;query.value='';category.value='';limit.value=36;imageFailures.value=[];error.value='';loading.value=true;
   if(!region.value?.file){loading.value=false;error.value='這個區域的景點資料尚未完成，請先查看其他區域。';return;}
   try {
-    const data=await repository.region(region.value);
+    const data=await repository.region(region.value,signal);
     if(!signal.aborted)pois.value=data.pois;
   } catch {if(!signal.aborted)error.value='景點載入失敗，請重試。';}
   finally {if(!signal.aborted)loading.value=false;}
@@ -70,4 +70,8 @@ function imageFailed(id:string){if(!imageFailures.value.includes(id))imageFailur
 </template>
 <style scoped>
 .poi-screen{padding:0 18px 30px}.poi-screen .page-heading{padding-inline:0}.poi-countries{display:flex;gap:8px;margin:12px 0 18px}.poi-countries button{flex:1;padding:12px;border:1px solid #d3e3ea;background:white;border-radius:12px;color:#476777;font-weight:600}.poi-countries button[aria-pressed=true]{background:#e7f6fb;border-color:#009fc5;color:#007f9e}.poi-filters{display:grid;grid-template-columns:1.5fr 1fr;gap:12px}.poi-filters label,.poi-search{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#476777}.poi-filters select,.poi-search input{width:100%;min-width:0;padding:12px;border:1px solid #d3e3ea;border-radius:10px;background:white;color:#274e64;font:inherit;font-size:14px}.poi-search{margin:14px 0}.poi-summary{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:16px 0;font-size:12px;color:#426879}.poi-summary label{white-space:nowrap;display:flex;gap:5px;align-items:center}.poi-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}.poi-card{padding:0;background:white;border:1px solid #dbe6eb;border-radius:14px;text-align:left;overflow:hidden;min-width:0;color:#244e64}.poi-card img,.poi-no-photo{display:block;width:100%;height:120px;object-fit:cover}.poi-no-photo{display:grid;place-items:center;background:#edf3f5;color:#718894;font-size:11px}.poi-card-text{display:flex;flex-direction:column;gap:5px;padding:12px}.poi-card-text small{font-size:10px;color:#008daf}.poi-card-text b{font-size:14px;line-height:1.5}.poi-card-text>span{font-size:11px;color:#718894;line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.poi-note{font-size:11px;line-height:1.8;color:#718894;margin:14px 0}.poi-note a{color:#007fa2}.poi-error{padding:12px;background:#fff4eb;color:#95532a;font-size:13px;border-radius:10px}.poi-empty{padding:24px;text-align:center;color:#718894}.poi-detail-photo{width:100%;max-height:340px;object-fit:cover;border-radius:12px}.poi-details{display:grid;grid-template-columns:92px 1fr;gap:10px;font-size:13px;line-height:1.7}.poi-details dt{color:#718894}.poi-details dd{margin:0;overflow-wrap:anywhere}.poi-links{display:flex;flex-direction:column;gap:10px}.poi-card:focus-visible,.poi-countries button:focus-visible{outline:3px solid #ffc500;outline-offset:2px}@media(min-width:720px){.poi-cards{grid-template-columns:repeat(3,minmax(0,1fr))}.poi-card img,.poi-no-photo{height:160px}}
+</style>
+
+<style scoped>
+@media(max-width:600px){.poi-screen{box-sizing:border-box;padding-inline:max(12px,env(safe-area-inset-left)) max(12px,env(safe-area-inset-right))}.poi-screen :deep(.poi-map-wrap){margin-inline:0}.poi-screen input:not([type=checkbox]),.poi-screen select{font-size:16px;min-height:44px}.poi-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.poi-filters label{min-width:0}.poi-screen select{max-width:100%}}
 </style>

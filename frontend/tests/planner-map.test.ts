@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { plannerMarkerState, mapDetailLevel, visibleMapDetails, validPlanningBoundary, withinPlanningAreas, isUsableMapStroke } from '../app/utils/planner-map.ts';
+import { plannerMarkerState, mapDetailLevel, visibleMapDetails, validPlanningBoundary, withinPlanningAreas, isUsableMapStroke, visibleMapTarget, sampleMapStroke } from '../app/utils/planner-map.ts';
 
 test('gray markers only appear outside a completed selection', () => {
   assert.equal(plannerMarkerState(1, [], [], false), 'candidate');
@@ -39,4 +39,11 @@ test('an accidental click, straight drag or tiny loop does not complete a range'
   const loop = [[20,20],[120,20],[120,120],[20,120]];
   assert.equal(isUsableMapStroke(loop), true);
   assert.equal(isUsableMapStroke([...loop].reverse()), true);
+});
+test('touch targets touching a map edge are omitted, and drawing remains bounded',()=>{
+  for(const p of [[10,100],[320,100],[100,20],[100,420]])assert.equal(visibleMapTarget(p,335,422),false);
+  assert.equal(visibleMapTarget([100,100],335,422),true);
+  const stroke=Array.from({length:4000},(_,i)=>[Math.cos(i/3999*2*Math.PI)*100+150,Math.sin(i/3999*2*Math.PI)*100+150]);
+  const sampled=sampleMapStroke(stroke);
+  assert.equal(sampled.length,256);assert.deepEqual(sampled[0],stroke[0]);assert.deepEqual(sampled.at(-1),stroke.at(-1));assert.equal(isUsableMapStroke(sampled),true);
 });

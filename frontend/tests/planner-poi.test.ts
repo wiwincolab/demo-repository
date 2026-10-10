@@ -1,11 +1,37 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { createPoiRepository, plannerPoiId, poiToPlannerStop, mergePlannerPlaces, poiRegionsInBounds, plannerStopClusters } from '../app/utils/planner-poi.ts';
+import { createPoiRepository, createVisiblePoiLoader, plannerPoiId, poiToPlannerStop, mergePlannerPlaces, poiRegionsInBounds, plannerStopClusters } from '../app/utils/planner-poi.ts';
 import type { Poi, PoiCatalog, PoiSnapshot } from '../app/types/poi.ts';
 
 const catalog = JSON.parse(readFileSync(new URL('../public/poi/index.json', import.meta.url), 'utf8')) as PoiCatalog;
 const snapshot = (file: string) => JSON.parse(readFileSync(new URL(`../public/poi/${file}`, import.meta.url), 'utf8')) as PoiSnapshot;
+
+test('rapid destination switches publish only the newest POIs and reuse cached downloads',async()=>{
+  const tokyo=snapshot('regions/jp-tokyo.json'),busan=snapshot('regions/kr-busan.json');
+  let completeTokyo!:(value:PoiSnapshot)=>void, calls=0;
+  const published:PoiSnapshot[][]=[];
+  const loader=createVisiblePoiLoader({region:async region=>{calls++;return region.id===tokyo.region.id ? new Promise<PoiSnapshot>(resolve=>{completeTokyo=resolve;}) : busan;}},value=>published.push(value));
+  const first=loader.load([tokyo.region]);
+  await loader.load([busan.region]);
+  completeTokyo(tokyo);await first;
+  assert.deepEqual(published.at(-1)?.map(s=>s.region.id),[busan.region.id]);
+  await loader.load([tokyo.region]);assert.deepEqual(published.at(-1)?.map(s=>s.region.id),[tokyo.region.id]);assert.equal(calls,2);
+  const count=published.length;await loader.load([tokyo.region]);assert.equal(published.length,count);
+  loader.dispose();
+});
+test('cancelled POI requests stop without a static retry and can be loaded again',async()=>{
+  const tokyo=snapshot('regions/jp-tokyo.json'),controller=new AbortController();
+  const region=catalog.regions.find(r=>r.id===tokyo.region.id)!;
+  const urls:string[]=[];
+  const repository=createPoiRepository(async(url,signal)=>{urls.push(url);if(!signal)return tokyo;return new Promise((resolve,reject)=>signal.addEventListener('abort',()=>reject(signal.reason),{once:true}));},path=>'/'+path);
+  const first=repository.region(region,controller.signal),cancelled=assert.rejects(first);
+  controller.abort();
+  const retried=repository.region(region);
+  await cancelled;assert.equal(await retried,tokyo);
+  assert.equal(urls.length,2);assert.ok(urls.every(url=>url.startsWith('/api/poi/')));
+  assert.equal(repository.region(region),retried);
+});
 
 test('each prepared Japanese and Korean region has selectable clustered places, including those without photos', () => {
   const regions = catalog.regions.filter(r => ['JP','KR'].includes(r.country));
