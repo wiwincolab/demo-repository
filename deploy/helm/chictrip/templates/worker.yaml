@@ -1,5 +1,5 @@
 # 照片標類別與每日卡片的佇列：跟 api 用同一個映像，CHICTRIP_ROLE=worker 時另外啟動 BullMQ worker（frontend/server/plugins/worker.ts）。
-# 一個就夠：只做照片標類別與每日卡片，不生圖
+# 多個 Pod 透過同一個 BullMQ 佇列領取工作；相同 jobId 的補回工作由 Redis 去重。
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -7,7 +7,7 @@ metadata:
   labels:
     {{- include "chictrip.labels" . | nindent 4 }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.worker.replicas }}
   # 先停舊的再開新的；排隊中的每日卡片，新 worker 啟動時會從資料表接回來
   strategy:
     type: Recreate
@@ -21,10 +21,13 @@ spec:
       annotations:
         {{- include "chictrip.configChecksum" . | nindent 8 }}
     spec:
+      terminationGracePeriodSeconds: {{ .Values.worker.terminationGracePeriodSeconds }}
       containers:
         - name: worker
           image: "{{ .Values.image.api }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources:
+            {{- toYaml .Values.worker.resources | nindent 12 }}
           env:
             - name: CHICTRIP_ROLE
               value: worker

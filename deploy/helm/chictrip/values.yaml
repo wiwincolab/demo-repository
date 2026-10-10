@@ -24,13 +24,26 @@ redis:
 media:
   storage: 10Gi
 
+# 兩個 Pod 共用 Redis 佇列；每個 Pod 的並行數由 WORKER_CONCURRENCY 決定。
+# media 使用 local-path PVC，這些 Pod 必須留在 PVC 所在的同一台節點。
+worker:
+  replicas: 2
+  terminationGracePeriodSeconds: 120
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+
 # 程式參數：改這裡、commit、推 main 就會部署生效（跟 MEDDEMO 一樣）。
 # 這裡寫什麼鍵，ConfigMap 就產生同名的環境變數（server/utils/config.ts 讀），留空＝用程式裡的預設值。
 # 金鑰不放這裡，放 GitHub Secrets（見下面的 secrets）
 config:
   # 貼文文案、eSIM 推薦理由、照片標類別、每日卡片。AI 創作的成品不生成，一律用預製圖或手機上合成的示範圖
   TEXT_MODEL: gemini-3.5-flash-lite
-  # worker 同時處理幾件
+  # 每個 worker Pod 同時處理幾件；預設 2 × 4 = 8 件
   WORKER_CONCURRENCY: "4"
   # 每日卡片單次 Gemini 呼叫的逾時，以及排隊超過多久就退回不配文字的卡片（毫秒）
   JOB_TIMEOUT_MS: "90000"
