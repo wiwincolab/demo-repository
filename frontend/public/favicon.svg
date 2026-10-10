@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>去趣旅行</title>
+  <rect width="64" height="64" rx="18" fill="#009fc5"/>
+  <path d="M32 10c-11 0-19 8-19 19 0 13 19 27 19 27s19-14 19-27c0-11-8-19-19-19Z" fill="#fff"/>
+  <circle cx="32" cy="29" r="11" fill="#ffd45c"/>
+  <path d="m27 33 3-8 8-3-3 8Z" fill="#087b99"/>
+</svg>

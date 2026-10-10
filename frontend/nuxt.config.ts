@@ -13,7 +13,7 @@ export default defineNuxtConfig({
                 { name: 'theme-color', content: '#ffffff' },
                 { name: 'description', content: '去趣旅行提案：行程、旅伴 eSIM 優惠與旅行回憶的手機體驗。' }
             ],
-            link: [{ rel: 'icon', href: 'data:,' }]
+            link: [{ rel: 'icon', type: 'image/svg+xml', sizes: 'any', href: `${(process.env.NUXT_APP_BASE_URL || '/').replace(/\/?$/, '/')}favicon.svg` }]
         }
     },
     nitro: {
