@@ -14,7 +14,10 @@ const root=resolve(process.env.POI_DATA_DIR || join(dirname(fileURLToPath(import
 const catalog=JSON.parse(await readFile(join(root,'index.json'),'utf8'));
 const snapshots=await Promise.all(catalog.regions.filter(r=>r.file).map(async r=>({path:join(root,r.file),data:JSON.parse(await readFile(join(root,r.file),'utf8'))})));
 const unique=new Map(snapshots.flatMap(s=>s.data.pois).map(p=>[p.id,p]));
-const jobs=[...unique.values()].filter(p=>p.photo?.licenseStatus==='unspecified' && !p.photo.thumbnailOf && Math.max(p.photo.width,p.photo.height)>1280);
+const selected=process.env.POI_THUMB_IDS_FILE?JSON.parse(await readFile(resolve(process.env.POI_THUMB_IDS_FILE),'utf8')):null;
+if(process.env.POI_THUMB_IDS_FILE && (!Array.isArray(selected) || selected.some(id=>typeof id!=='string')))throw new Error('POI_THUMB_IDS_FILE must contain an array of POI IDs');
+const selectedIds=selected?new Set(selected):null;
+const jobs=[...unique.values()].filter(p=>(!selectedIds || selectedIds.has(p.id)) && p.photo?.licenseStatus==='unspecified' && !p.photo.thumbnailOf && Math.max(p.photo.width,p.photo.height)>1280);
 const lock=join(root,'.import-lock');await (await open(lock,'wx')).close();
 const temporary=await mkdtemp(join(tmpdir(),'chictrip-photo-'));
 const images=join(root,'photos');await mkdir(images,{recursive:true});
@@ -26,13 +29,17 @@ async function thumbnail(p){
     let existing;try{existing=imageDimensions(await readFile(path));}catch(error){if(error.code!=='ENOENT')throw error;}
     if(!existing){
       const response=await fetch(url,{signal:AbortSignal.timeout(15000),headers:{'User-Agent':'chicTrip-POI/1.2 (https://github.com/wiwincolab/demo-repository)'}});
-      if(!response.ok || !publicHttpsUrl(response.url) || !/^image\/(jpeg|png|webp)/i.test(response.headers.get('content-type') || '') || Number(response.headers.get('content-length'))>16*1024*1024){await response.body?.cancel();throw new Error('Source photo unavailable or exceeds 16 MiB');}
+      if(!response.ok || !publicHttpsUrl(response.url) || !/^image\/(jpeg|png|webp)/i.test(response.headers.get('content-type') || '') || Number(response.headers.get('content-length'))>32*1024*1024){await response.body?.cancel();throw new Error('Source photo unavailable or exceeds 32 MiB');}
       const reader=response.body.getReader(),parts=[];let length=0;
-      try{while(true){const {value,done}=await reader.read();if(done)break;length+=value.length;if(length>16*1024*1024)throw new Error('Source photo exceeds 16 MiB');parts.push(Buffer.from(value));}}finally{await reader.cancel();}
+      try{while(true){const {value,done}=await reader.read();if(done)break;length+=value.length;if(length>32*1024*1024)throw new Error('Source photo exceeds 32 MiB');parts.push(Buffer.from(value));}}finally{await reader.cancel();}
       const source=Buffer.concat(parts),originalSize=imageDimensions(source);if(!originalSize || originalSize.width*originalSize.height>40_000_000)throw new Error('Invalid or excessive source image dimensions');
       const input=join(temporary,hash+'.source'),output=join(temporary,hash+'.jpg');await writeFile(input,source);
-      await run('/usr/bin/sips',['-s','format','jpeg','-s','formatOptions','70','-Z','640',input,'--out',output],{timeout:15000});
-      const image=await readFile(output);existing=imageDimensions(image);if(!existing || Math.max(existing.width,existing.height)>640 || image.length>200*1024)throw new Error('Thumbnail failed size validation');
+      let image;
+      for(const quality of ['70','50','35']){
+        await run('/usr/bin/sips',['-s','format','jpeg','-s','formatOptions',quality,'-Z','640',input,'--out',output],{timeout:15000});
+        image=await readFile(output);if(image.length<=200*1024)break;
+      }
+      existing=imageDimensions(image);if(!existing || Math.max(existing.width,existing.height)>640 || image.length>200*1024)throw new Error('Thumbnail failed size validation');
       await rename(output,path);await rm(input,{force:true});
     }
     updates.set(p.id,{...photo,src:relative,thumbnailOf:url,...existing});bytes+=(await stat(path)).size;

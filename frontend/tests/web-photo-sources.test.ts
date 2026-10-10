@@ -15,6 +15,9 @@ test('native search separates images even when the divider touches the caption',
   const items=nativeImages(raw);assert.equal(items.length,2);assert.equal(items[1].src,'https://example.org/nitori.jpg');assert.doesNotMatch(items[0].caption,/似鳥/);
   assert.deepEqual(matchingWebImages(items,{name:'似鳥美術館'}).map(i=>i.src),['https://example.org/nitori.jpg']);
   assert.equal(matchingWebImages([{...items[0],caption:'似鳥美術館'}],{name:'似鳥美術館'}).length,0);
+  const mountain=nativeImages('白雲山 (https://example.org/mountain)\nImage URL: https://example.org/mountain.jpg# Summit panorama\n\nA summit overlooking Busan.\n\nAn unrelated article mentions Seoul.');
+  assert.equal(matchingWebImages(mountain,{name:'白雲山'},{locations:['Busan'],requireLocation:true}).length,1);
+  assert.equal(matchingWebImages(mountain,{name:'白雲山'},{locations:['Seoul'],requireLocation:true}).length,0);
 });
 test('shared photos need the same identity or physical place, not just a shared name',()=>{
   const p={id:'a',country:'JP',wikidata:null,at:[139,35]};

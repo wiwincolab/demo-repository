@@ -68,7 +68,7 @@ export function nativeImages(raw) {
     const body=section.slice(section.indexOf(image[0])+image[0].length).replace(/^#\s*/,'').trim().split(/\r?\n\s*\r?\n/);
     const source=publicHttpsUrl(heading[2]),src=publicHttpsUrl(image[1]);if(!source || !src)return [];
     return [{title:text(heading[1].replace(/cite[^]*/g,'')),src,original:src,source,credit:new URL(source).hostname,
-      scene:body[0]?.slice(0,250) || '',caption:body.slice(0,2).join(' ').slice(0,1000),width:0,height:0,provider:'Web image search'}];
+      scene:body[0]?.slice(0,250) || '',photoDescription:body[1]?.slice(0,1000) || '',caption:body.slice(0,2).join(' ').slice(0,1000),width:0,height:0,provider:'Web image search'}];
   });
 }
 const notPhoto=/(?:\b(?:logo|icon|favicon|sprite|banner|poster|flyer|map|diagram|floorplan|flag|pdf|qr)\b|地図|地圖|地图|平面図|路線圖|ポスター|チラシ|로고|포스터|약도|지도|海報|活動簡章|출발.*(?:패키지|여행)|(?:北朝鮮|북한|中國|中国).*백두산)/i;
@@ -80,8 +80,8 @@ export function matchingWebImages(items,poi,{locations=[],requireLocation=false,
   return items.filter(item=>{
     if(!publicHttpsUrl(item.src) || !publicHttpsUrl(item.original) || !publicHttpsUrl(item.source))return false;
     // Native captions may include article context mentioning other attractions.
-    // Only the result title and the individual image's heading identify its subject.
-    const title=normalize(item.title+' '+(item.scene || '')+' '+decodeURIComponentSafe(item.source));
+    // Use the result title and the individual image's heading/description.
+    const title=normalize(item.title+' '+(item.scene || '')+' '+(item.photoDescription || '')+' '+decodeURIComponentSafe(item.source));
     const locationMatch=locations.some(location=>title.includes(normalize(location)));
     if(!names.some(name=>title.includes(name)) && !municipalNames.some(n=>title.includes(n.name) && title.includes(n.location)) && !(locationMatch && alternate.some(name=>title.includes(name))))return false;
     // A first image from a multi-stop travel diary can depict another stop.

@@ -106,11 +106,12 @@ const krRegion={'kr-seoul':'서울','kr-busan':'부산','kr-jeju':'제주','kr-i
 function locations(p,specific=false){
   const language=p.country==='JP'?'ja':p.country==='KR'?'ko':'zh';
   const parents=claimValues(entities.get(p.wikidata),'P131').flatMap(value=>{const labels=entities.get(value?.id)?.labels;return [labels?.[language]?.value,labels?.en?.value];}).filter(Boolean);
+  const addressLocations=p.country==='KR'?(p.address || '').match(/[가-힣]{1,10}?(?:특별자치시|광역시|특별시|시|군|구)/gu) || []:p.country==='JP'?(p.address || '').match(/[\p{L}]{1,10}?[都道府県市区町村]/gu) || []:(p.address || '').match(/[\p{L}]{1,6}?[縣市區鄉鎮]/gu) || [];
   const region=regionFor.get(p.id),fallback=p.country==='KR'?krRegion[region?.id]?.split(' '):region?.name?.split(/[・／]/);
-  const aliases=parents.map(value=>value.replace(/(?:特別市|廣域市|特别市|广域市|[都道府県縣市区區郡町村]|특별자치시|특별자치도|광역시|특별시|[시군구도]| (?:City|Prefecture|District|Ward))$/iu,'')).filter(value=>value.length>=2);
-  return [...new Set([...parents,...aliases,...(!specific ? fallback || [] : [])])];
+  const aliases=[...parents,...addressLocations].map(value=>value.replace(/(?:特別市|廣域市|特别市|广域市|[都道府県縣市区區郡町村]|특별자치시|특별자치도|광역시|특별시|[시군구도]| (?:City|Prefecture|District|Ward))$/iu,'')).filter(value=>value.length>=2);
+  return [...new Set([...parents,...aliases,...addressLocations,...(!specific ? fallback || [] : [])])];
 }
-function matchingOptions(p){const specific=p.category==='peak' || (nameCounts.get(placeNames(p)[0]) || 0)>1;return {locations:locations(p,specific),requireLocation:specific,aliases:Object.values(entities.get(p.wikidata)?.labels || {}).map(label=>label.value)};}
+function matchingOptions(p){const first=placeNames(p)[0],specific=p.category==='peak' || (nameCounts.get(first) || 0)>1 || (first?.length || 0)<=4;return {locations:locations(p,specific),requireLocation:specific,aliases:Object.values(entities.get(p.wikidata)?.labels || {}).map(label=>label.value)};}
 function searchUrl(pois){
   const first=pois[0],region=regionFor.get(first.id),names=pois.map(p=>placeNames(p)[0].replace(/["|\\]/g,' '));
   const individualLocation=pois.length===1?locations(first)[0]:null;

@@ -1,10 +1,14 @@
 {
-  "oldPhotos": 12907,
-  "newPhotos": 14469,
-  "added": 1562,
+  "baselineCommit": "66e57065d698c79507dcfc6a9ae9cdcedec55dce",
+  "baselinePhotos": 14469,
+  "originalPhotos": 12907,
+  "newPhotos": 16815,
+  "addedThisBatch": 2346,
+  "addedOverall": 3908,
+  "missing": 16667,
   "originalPhotosPreserved": true,
+  "publishedPhotosPreserved": true,
   "allNonPhotoDataPreserved": true,
   "uniquePOIs": 33482,
-  "changed": 1711,
-  "generatedAt": "2026-10-10T16:28:12.093Z"
+  "generatedAt": "2026-10-10T17:53:07.487Z"
 }

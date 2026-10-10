@@ -44,6 +44,7 @@ POI_WEB_STAGE=search POI_REGIONS=kr-busan node scripts/poi/supplement-web-photos
 POI_WEB_STAGE=native POI_WEB_RESULTS=/absolute/path/results.json node scripts/poi/supplement-web-photos.mjs
 # macOS：將超過 1280px 的網路照片縮成 640px JPEG；保留原圖與來源連結。
 node scripts/poi/cache-web-thumbnails.mjs
+# 可用 POI_THUMB_IDS_FILE=/absolute/path/ids.json 限定新補的景點，JSON 內容為 ID 字串陣列。
 # 輸出各國可攜資料：
 node scripts/poi/export.mjs
 # 讓本機 API 直接讀這批資料：
