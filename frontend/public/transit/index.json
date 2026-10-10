@@ -1,0 +1,50 @@
+{
+  "checkedAt": "2026-10-10",
+  "source": "https://www.openstreetmap.org",
+  "queryEndpoint": "https://overpass-api.de/api/interpreter",
+  "license": "ODbL-1.0",
+  "licenseUrl": "https://www.openstreetmap.org/copyright",
+  "note": "Active railway=subway/light_rail and railway=rail + highspeed=yes ways; depots/service tracks omitted. Metro lines and stations also appear in the OpenFreeMap base style. These tracks do not assert travel-pass validity.",
+  "countryMask": {
+    "source": "https://www.naturalearthdata.com/downloads/",
+    "license": "Public domain",
+    "coastalBufferDegrees": 0.15,
+    "scale": "1:10m"
+  },
+  "countries": {
+    "JP": {
+      "file": "jp.json",
+      "counts": {
+        "high-speed": 11856,
+        "light-rail": 838,
+        "metro": 2201
+      },
+      "osmTimestamps": [
+        "2026-10-10T04:50:31Z",
+        "2026-10-10T04:51:20Z"
+      ]
+    },
+    "KR": {
+      "file": "kr.json",
+      "counts": {
+        "high-speed": 4665,
+        "metro": 726,
+        "light-rail": 119
+      },
+      "osmTimestamps": [
+        "2026-10-10T04:46:34Z"
+      ]
+    },
+    "TW": {
+      "file": "tw.json",
+      "counts": {
+        "high-speed": 609,
+        "metro": 623,
+        "light-rail": 288
+      },
+      "osmTimestamps": [
+        "2026-10-10T04:47:35Z"
+      ]
+    }
+  }
+}

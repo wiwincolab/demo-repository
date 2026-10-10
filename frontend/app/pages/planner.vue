@@ -2,7 +2,10 @@
 import ChictripMotion from '~/components/ChictripMotion.vue';
 import {tripItineraries,plannerStorageKey} from '~/data/trips';
 import type { Stop } from '~/types/trip';
-import { pointInPolygon, type Point } from '~/utils/map';
+import type { Point } from '~/utils/map';
+import { withinPlanningAreas, validPlanningBoundary } from '~/utils/planner-map';
+import { travelPasses, filterTravelPasses, findTravelPass, passCountries, passKindLabels, travelPassRegions, type TravelPass, type TravelPassCountry } from '~/data/travel-passes';
+import { benefitsForPass, benefitLocationFrame } from '~/data/pass-benefits';
 import { plannerKeywords } from '~/data/planner-preferences';
 import { recommendPlaces, refineSelection, rainPlanFor, type Recommendation } from '~/utils/planner';
 const asset = useAsset();
@@ -16,20 +19,28 @@ const places = computed<Stop[]>(()=>{
 const { keywordIds, enabled: useKeywords } = useTravelPreferences();
 const appliedKeywords = computed(() => useKeywords.value ? keywordIds.value : []);
 const appliedTitles = computed(() => plannerKeywords.filter(k => appliedKeywords.value.includes(k.id)).map(k => k.title));
-const ids = ref<number[]>([]), drawing = ref(true), preferences = ref(''), pace = ref(3);
+const ids = ref<number[]>([]), drawing = ref(false), preferences = ref(''), pace = ref(3);
 const selectionBoundary = ref<Point[]>([]);
 const rangeIds = ref<number[]>([]), hasRange = ref(false), mapRevision = ref(0), refinement = ref(''), refinementStatus = ref('');
-const insidePlaces = computed(() => places.value.filter(p => rangeIds.value.includes(p.id)));
-const outsidePlaces = computed(() => places.value.filter(p => !rangeIds.value.includes(p.id)));
-const extension = ref(0), planNotes = ref<string[]>([]), previousNotes = ref<string[]>([]);
-const panel = ref<'preferences' | 'preview' | 'saved' | null>(null);
+const selectedPassId = ref('');
+const passCountry = ref<TravelPassCountry | ''>(''), passRegion = ref(''), passQuery = ref('');
+const availablePasses = computed(() => filterTravelPasses({ country: passCountry.value, region: passRegion.value, query: passQuery.value }));
+const availableRegions = computed(() => travelPassRegions(passCountry.value));
+watch(passCountry, () => { passRegion.value = ''; });
+const selectedPass = computed(() => findTravelPass(selectedPassId.value));
+const selectedBenefits = computed(() => benefitsForPass(selectedPassId.value));
+function planningAreas(pass: TravelPass) {
+  return [...pass.areas, ...benefitsForPass(pass.id).filter(p => !withinPlanningAreas(p.at, pass.areas)).map(p => benefitLocationFrame(p.at))];
+}
+const selectionAreas = computed(() => selectedPass.value ? planningAreas(selectedPass.value) : []);
+const extension = ref(0), planNotes = ref<string[]>([]);
+const panel = ref<'passes' | 'preferences' | 'saved' | null>(null);
 const dirty = ref(false), error = ref('');
 const routeIds = computed(() => !dirty.value ? draft.value.map(s => s.id) : []);
-const busy = ref(false), draft = ref<Recommendation[]>([]), previous = ref<Recommendation[]>([]);
-const regions=computed(()=>activeId.value==='tokyo'?[{name:'淺草河岸範圍',ids:[0,1,2]},{name:'上野文化範圍',ids:[12,14]}]:activeId.value==='kansai'?[{name:'神戶範圍',ids:[1,2]},{name:'京都東山範圍',ids:[7,8]},{name:'奈良範圍',ids:[9]}]:[{name:'全部景點範圍',ids:places.value.map(p=>p.id)}]);
+const busy = ref(false), draft = ref<Recommendation[]>([]);
 let generationTimer: ReturnType<typeof setTimeout> | undefined;
-watch(activeId,()=>{clearTimeout(generationTimer);ids.value=[];rangeIds.value=[];selectionBoundary.value=[];hasRange.value=false;drawing.value=true;mapRevision.value++;refinement.value='';refinementStatus.value='';draft.value=[];previous.value=[];preferences.value='';previousNotes.value=[];extension.value=0;dirty.value=false;error.value='';planNotes.value=[];panel.value=null;busy.value=false;});
-watch([ids, preferences, pace, extension, () => appliedKeywords.value.join(',')], () => {
+watch(activeId,()=>{clearTimeout(generationTimer);ids.value=[];rangeIds.value=[];selectionBoundary.value=[];selectedPassId.value='';hasRange.value=false;drawing.value=false;mapRevision.value++;refinement.value='';refinementStatus.value='';draft.value=[];preferences.value='';extension.value=0;dirty.value=false;error.value='';planNotes.value=[];panel.value=null;busy.value=false;});
+watch([ids, preferences, pace, extension, selectedPassId, () => appliedKeywords.value.join(',')], () => {
   clearTimeout(generationTimer);
   busy.value = false;
   dirty.value = !!draft.value.length;
@@ -43,7 +54,8 @@ watch(activeId, id => {
       ids.value = (stored.ids || stored.saved.stops.filter((s: Recommendation) => !s.outside).map((s: Recommendation) => s.id)).filter((id: number) => places.value.some(p => p.id === id));
       rangeIds.value = (stored.rangeIds || ids.value).filter((id: number) => places.value.some(p => p.id === id));
       ids.value = [...new Set([...ids.value, ...stored.saved.stops.map((s: Recommendation) => s.id)])].filter(id => places.value.some(p => p.id === id));
-      selectionBoundary.value = Array.isArray(stored.boundary) ? stored.boundary.filter((p: unknown) => Array.isArray(p) && p.length === 2 && p.every(Number.isFinite)) : [];
+      selectionBoundary.value = validPlanningBoundary(stored.boundary);
+      selectedPassId.value = findTravelPass(stored.passId)?.id || '';
       hasRange.value = true;
       drawing.value = false;
       preferences.value = stored.saved.preference || '';
@@ -57,27 +69,25 @@ watch(activeId, id => {
 }, { immediate: true });
 function select(value: number[]) { ids.value = value; }
 function selectRange(value: number[], boundary: Point[] = []) {
+  selectedPassId.value = '';
   rangeIds.value = [...value]; ids.value = [...value]; hasRange.value = true;
   drawing.value = false; refinementStatus.value = ''; refinement.value = '';
   selectionBoundary.value = boundary;
 }
-function selectRegion(value: number[]) {
-  const locations = places.value.filter(p => value.includes(p.id));
-  if (!locations.length) return;
-  const xs = locations.map(p => p.at[0]!), ys = locations.map(p => p.at[1]!);
-  const west = Math.min(...xs) - .001, east = Math.max(...xs) + .001;
-  const south = Math.min(...ys) - .001, north = Math.max(...ys) + .001;
-  const boundary = [[west, south], [east, south], [east, north], [west, north]];
-  selectRange(places.value.filter(p => pointInPolygon(p.at, boundary)).map(p => p.id), boundary);
+function selectPass(pass: TravelPass) {
+  if (!findTravelPass(pass.id)) return;
+  const value = places.value.filter(p => withinPlanningAreas(p.at, planningAreas(pass))).map(p => p.id);
+  selectRange(value);
+  selectedPassId.value = pass.id; panel.value = null;
 }
-function clearRange() {
-  ids.value = []; rangeIds.value = []; hasRange.value = false;
-  selectionBoundary.value = []; drawing.value = true; mapRevision.value++; refinement.value = ''; refinementStatus.value = '';
+function beginDrawing() {
+  if (drawing.value) { drawing.value = false; return; }
+  drawing.value = true;
 }
 function applyRefinement() {
   const result = refineSelection(places.value, ids.value, refinement.value);
   ids.value = result.ids;
-  refinementStatus.value = result.changes.length ? result.changes.join('、') + '。地圖與清單已更新。' : '未找到可套用的景點，請使用清單中的完整名稱，例如「加入' + (outsidePlaces.value[0]?.name || places.value[0]?.name || '景點名稱') + '」。';
+  refinementStatus.value = result.changes.length ? result.changes.join('、') + '。地圖已更新。' : '請使用完整景點名稱，例如「加入' + (places.value[0]?.name || '景點名稱') + '」。';
   if (result.changes.length) refinement.value = '';
 }
 function openPreferences() { if (!hasRange.value || !ids.value.length) {
@@ -96,8 +106,6 @@ function generate() {
             return;
         }
         busy.value = false;
-        previous.value = draft.value;
-        previousNotes.value = planNotes.value;
         draft.value = result.stops;
         planNotes.value = result.notes;
         dirty.value = false;
@@ -109,7 +117,7 @@ function generate() {
 function save() {
     if(!activeId.value || dirty.value || !draft.value.length)return;
     try {
-        localStorage.setItem(plannerStorageKey(activeId.value), JSON.stringify({ trip:activeId.value, ids: ids.value, rangeIds: rangeIds.value, boundary: selectionBoundary.value, extension: extension.value, pace: pace.value, saved: { stops: draft.value, preference: preferences.value, keywordIds: [...appliedKeywords.value], notes: planNotes.value } }));
+        localStorage.setItem(plannerStorageKey(activeId.value), JSON.stringify({ trip:activeId.value, ids: ids.value, rangeIds: rangeIds.value, boundary: selectionBoundary.value, passId: selectedPassId.value, extension: extension.value, pace: pace.value, saved: { stops: draft.value, preference: preferences.value, keywordIds: [...appliedKeywords.value], notes: planNotes.value } }));
     }
     catch {
         notify('瀏覽器無法儲存，請保留這份預覽。');
@@ -118,115 +126,76 @@ function save() {
     panel.value = 'saved';
     notify('草案已儲存到'+activeTrip.value?.title);
 }
-function addPreference(text: string) { preferences.value = preferences.value ? preferences.value + '，' + text : text; }
 onBeforeUnmount(() => clearTimeout(generationTimer));
 </script>
 <template>
-  <section v-if="activeTrip" class="screen active">
+  <section v-if="activeTrip" class="screen active planner-screen">
     <div class="mascot-perch"><div class="page-heading">
       <span class="eyebrow">{{ activeTrip.english }} / DAY PLANNER</span>
-      <h1>圈出想去的地方，<br>剩下的，聊聊就好。</h1>
-      <p>先圈選範圍、查看景點，再用文字加入圈外地點。每一站都會附上雨天備案。</p>
+      <h1>圈出今天想玩的地方。</h1>
+      <p>自己畫範圍，或用手上的票券選區。放大地圖就能看景點。</p>
     </div><PageMascot /></div>
-    <aside class="planner-memory" aria-label="旅行偏好摘要">
-      <div><strong>吉祥物記住的偏好</strong><p>{{ appliedTitles.length ? appliedTitles.join('、') : '這次只依圈選與額外條件推薦' }}</p></div>
-      <label><input v-model="useKeywords" type="checkbox">這次套用</label>
-      <NuxtLink :to="{ path: '/wardrobe', query: { view: 'preferences', trip: activeId } }">管理偏好 →</NuxtLink>
-    </aside>
-    <ol class="planner-steps" aria-label="規劃流程"><li :class="{ current: !hasRange }">① 圈選範圍</li><li :class="{ current: hasRange && (!draft.length || dirty) }">② 查看景點、文字微調</li><li :class="{ current: draft.length && !dirty }">③ 生成行程與雨備</li></ol>
-    <div class="view-bar">
-      <h2>{{ activeTrip.location }}</h2>
-      <div class="segmented">
-        <button :aria-pressed="drawing" @click="drawing = true">圈選</button>
-        <button :aria-pressed="!drawing" :disabled="!hasRange" @click="drawing = false">點景點</button>
-      </div>
+    <div class="range-choices" aria-label="選擇遊玩範圍的方式">
+      <button :class="{ active: drawing }" :aria-pressed="drawing" @click="beginDrawing"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 4c5 3 5 13-2 15C8 22 1 17 3 10c1-4 5-7 9-6M14 8l6-6 2 2-6 6-3 1 1-3Z"/></svg>{{ drawing ? '取消圈選' : hasRange ? '自己重畫範圍' : '自己圈選' }}</button>
+      <button :class="{ active: selectedPass }" @click="panel = 'passes'"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v5a2 2 0 0 0 0 4v3H3v-3a2 2 0 0 0 0-4V6Zm12 0v3m0 3v3m0 1v2"/></svg>{{ selectedPass ? '更換票券範圍' : '用票券範圍' }}</button>
     </div>
-    <CircleMap :key="activeId || ''" :places="places" :selected="ids" :drawing="drawing" :boundary="selectionBoundary" :reset-key="mapRevision" :route="routeIds" @select="select" @range="selectRange" />
-    <div class="planner-controls">
-      <button v-for="region in regions" :key="region.name" @click="selectRegion(region.ids)">{{ region.name }}</button>
-      <button @click="clearRange">清除</button>
+    <div v-if="selectedPass" class="selected-pass" aria-label="目前使用的票券範圍">
+      <TravelPassArtwork :pass="selectedPass" />
+      <span><b>{{ selectedPass.name }}</b><small>{{ selectedPass.region }} · {{ selectedPass.kind === 'stored-value' ? '服務區域示意・需儲值' : '規劃範圍示意' }}</small></span>
+      <a :href="selectedPass.coverageUrl" target="_blank" rel="noopener">官方適用範圍 ↗</a>
     </div>
-    <section v-if="hasRange" class="selection-results" aria-label="圈選景點">
-      <h2>圈選範圍內 · {{ insidePlaces.length }} 個景點</h2>
-      <p v-if="!insidePlaces.length" class="small-note">這個範圍沒有景點，可以重新圈選，或用文字加入下方景點。</p>
-      <div class="map-stops">
-        <button v-for="place in insidePlaces" :key="place.id" :aria-pressed="ids.includes(place.id)" @click="select(ids.includes(place.id) ? ids.filter(n => n !== place.id) : [...ids, place.id])">
-          <b>{{ place.name }}</b><small>{{ ids.includes(place.id) ? '已選取' : '已移除' }} · {{ place.stay }}</small>
-        </button>
-      </div>
-      <h3>範圍外 · {{ outsidePlaces.length }} 個景點</h3>
-      <p class="small-note">灰色景點尚未選取；加入後會和圈內景點一樣顯示藍色。</p>
-      <div class="map-stops">
-        <button v-for="place in outsidePlaces" :key="place.id" :aria-pressed="ids.includes(place.id)" @click="select(ids.includes(place.id) ? ids.filter(n => n !== place.id) : [...ids, place.id])">
-          <b>{{ place.name }}</b><small>{{ ids.includes(place.id) ? '已加入' : '未選取' }} · {{ place.stay }}</small>
-        </button>
-      </div>
-      <label for="refinement">用文字微調景點</label>
-      <textarea id="refinement" v-model="refinement" maxlength="300" :placeholder="'例如：加入' + (outsidePlaces[0]?.name || places[0]?.name || '景點名稱') + '，移除' + (insidePlaces[0]?.name || '景點名稱')" />
-      <p class="small-note">目前支援「加入／移除＋完整景點名稱」，多個操作請用逗號分隔。</p>
-      <button class="secondary" :disabled="!refinement.trim()" @click="applyRefinement">套用文字微調</button>
-      <p role="status" aria-live="polite">{{ refinementStatus }}</p>
+    <CircleMap :key="activeId || ''" :places="places" :selected="ids" :drawing="drawing" :has-range="hasRange" :range-ids="rangeIds" :boundary="selectionBoundary" :areas="selectionAreas" :benefits="selectedBenefits" :reset-key="mapRevision" :route="routeIds" @select="select" @range="selectRange" @cancel="drawing = false" />
+    <p v-if="selectedPass" class="pass-range-note">{{ selectedPass.exclusions }} <template v-if="selectedBenefits.length">已標示 {{ selectedBenefits.length }} 個有確認座標的合作設施；黃框為位置示意，完整名單與方案限制見官網。</template></p>
+    <div class="planning-next">
+      <span>{{ hasRange ? ids.length + ' 個景點已加入' : '先選一個想逛的範圍' }}</span>
+      <button class="primary" :disabled="!hasRange || !ids.length || drawing" @click="openPreferences">{{ draft.length ? '重新安排這一天' : '產生行程' }} <span aria-hidden="true">→</span></button>
+    </div>
+    <p v-if="hasRange && !ids.length" class="small-note empty-selection">{{ selectedPass && !rangeIds.length ? '這張票券未涵蓋目前「' + activeTrip.title + '」行程的景點。可切換到對應旅程，或自己重畫範圍。' : '這裡目前沒有選到景點。可以重畫範圍，或放大地圖點選想去的地方。' }}</p>
+    <details v-if="hasRange" class="text-refinement">
+      <summary>也可以用文字調整景點</summary>
+      <form @submit.prevent="applyRefinement"><label for="refinement" class="sr-only">用文字調整景點</label><textarea id="refinement" v-model="refinement" maxlength="300" :placeholder="'例如：加入' + (places[0]?.name || '景點名稱') + '，移除另一個景點'" /><button class="secondary" :disabled="!refinement.trim()">套用</button></form>
+      <p v-if="refinementStatus" role="status" aria-live="polite">{{ refinementStatus }}</p>
+    </details>
+    <section v-if="draft.length" class="planner-results" aria-label="行程草案">
+      <div class="row"><h2>這樣玩，你覺得呢？</h2><span class="planner-badge">{{ dirty ? '需求已變更' : '行程草案' }}</span></div>
+      <p v-if="dirty" class="planner-error" role="status">需求已變更，重新安排後就能儲存。</p>
+      <details class="plan-notes"><summary>時間與安排</summary><p v-for="note in planNotes" :key="note" class="small-note">{{ note }}</p></details>
+      <article v-for="s in draft" :key="s.id" class="planner-card">
+        <time>{{ s.time }}</time><span><h3>{{ s.name }}</h3><small>{{ s.stay }}</small><p>{{ s.reason }}</p><details class="rain-plan"><summary>雨天備案</summary><p>{{ s.rainPlan }}</p></details><small v-if="s.travelMinutes">前一站交通約 {{ s.travelMinutes }} 分鐘 · 示範估算</small></span>
+        <img :src="asset(s.photo.src)" :alt="s.photo.alt" width="48" height="48" style="object-fit:cover;border-radius:8px">
+      </article>
+      <button class="primary" :disabled="dirty || busy" @click="save">儲存這份行程</button>
     </section>
-    <div class="panel">
-      <div class="row">
-        <span class="muted">{{ ids.length }} 個景點已選取</span>
-        <NuxtLink :to="tripHref('/trip')">返回行程</NuxtLink>
-      </div>
-      <p v-if="!ids.length" class="small-note">圈選主要想逛的地方，不必畫得精準。也可以試試上方的快捷範圍。</p>
-      <button class="primary" @click="openPreferences">下一步：生成行程與雨天備案 ↓</button>
-    </div>
-    <section v-if="draft.length" class="planner-results" aria-label="景點推薦">
-      <div class="row"><div><span class="eyebrow">YOUR DAY, YOUR WAY</span><h2>這樣玩，你覺得呢？</h2></div><span class="planner-badge">{{ dirty ? '需求已變更' : '行程草案' }}</span></div>
-      <p v-if="dirty" class="planner-error" role="status">圈選或需求已變更，請重新產生推薦後再儲存。</p>
-      <div class="planner-legend"><span>● 藍色：已選取景點</span><span>● 灰色：尚未選取</span></div>
-        <div class="panel" aria-live="polite"><b>你的需求與安排</b><p v-for="note in planNotes" :key="note" class="small-note">{{ note }}</p></div>
-        <article v-for="s in draft" :key="s.id" class="planner-card" :class="{ outside: s.outside }">
-          <time>{{ s.time }}</time>
-          <span>
-            <span class="planner-badge">{{ rangeIds.includes(s.id) ? '圈內景點' : '圈外已加入' }}</span><h3>{{ s.name }}</h3>
-            <small>{{ s.stay }}</small>
-            <p>{{ s.reason }}</p><div class="rain-plan"><b>☂ 雨天備案</b><p>{{ s.rainPlan }}</p></div><small v-if="s.travelMinutes">前一站交通約 {{ s.travelMinutes }} 分鐘 · 示範估算</small>
-          </span>
-          <img :src="asset(s.photo.src)" :alt="s.photo.alt" width="48" height="48" style="object-fit:cover;border-radius:8px">
+    <AppSheet :model-value="!!panel" :title="panel === 'passes' ? '用票券選一個遊玩範圍' : panel === 'preferences' ? '這一天，想怎麼玩？' : '行程已儲存'" @update:model-value="panel = null">
+      <template v-if="panel === 'passes'">
+        <p class="pass-intro">日本、韓國、台灣都能選，不受目前旅程限制。相同範圍的不同天數合併在同一張卡。</p>
+        <div class="pass-filters">
+          <label class="pass-search"><span class="sr-only">搜尋票券名稱或城市</span><input v-model="passQuery" type="search" placeholder="搜尋票券、城市，例如九州、釜山、日月潭" maxlength="100"></label>
+          <label><span class="sr-only">票券國家</span><select v-model="passCountry"><option value="">全部國家</option><option v-for="country in passCountries" :key="country.id" :value="country.id">{{ country.name }}</option></select></label>
+          <label><span class="sr-only">票券地區</span><select v-model="passRegion"><option value="">全部地區</option><option v-for="region in availableRegions" :key="region" :value="region">{{ region }}</option></select></label>
+        </div>
+        <p class="pass-count" role="status" aria-live="polite">{{ availablePasses.length }} / {{ travelPasses.length }} 張票券與旅遊卡</p>
+        <article v-for="pass in availablePasses" :key="pass.id" class="pass-option">
+          <button class="pass-choice" :aria-pressed="selectedPassId === pass.id" @click="selectPass(pass)"><TravelPassArtwork :pass="pass" /><span><em class="pass-kind" :class="{ prepaid: pass.kind === 'stored-value' }">{{ passKindLabels[pass.kind] }}{{ pass.kind === 'stored-value' ? '・需儲值' : '' }}</em><b>{{ pass.name }}</b><small>{{ pass.english }}</small><em>{{ pass.region }}</em><strong>{{ selectedPassId === pass.id ? '目前使用的範圍 ✓' : '套用範圍 →' }}</strong></span></button>
+          <p class="pass-coverage">{{ pass.coverage }}</p>
+          <details class="pass-conditions"><summary>使用限制與官方範圍</summary><p class="pass-exclusions">{{ pass.exclusions }}</p><a :href="pass.coverageUrl" target="_blank" rel="noopener">查看官方路線／合作景點 ↗</a><small class="pass-credit">圖片：{{ pass.credit }} · 資料查核 {{ pass.checkedAt }}</small></details>
         </article>
-        <p class="small-note">這份草案保存在「{{ activeTrip.title }}」內，確認前不更動原有安排。</p>
-        <button class="primary" :disabled="dirty || busy" @click="save">確認並儲存行程</button>
-        <button class="secondary" @click="panel = 'preferences'">再微調一下</button>
-        <button v-if="previous.length" class="secondary" @click="draft = previous; planNotes = previousNotes; previous = []; dirty = true; openPreferences()">復原上一版</button>
-    </section>
-
-    <AppSheet :model-value="!!panel" :title="panel === 'preferences' ? '這一天，想怎麼玩？' : panel === 'preview' ? '先看看你的安排' : '行程已儲存'" @update:model-value="panel = null">
-      <template v-if="panel === 'preferences'">
-        <p class="planner-area">已選景點：{{ places.filter(p => ids.includes(p.id)).map(p => p.name).join('、') }}</p>
-        <div class="panel"><b>本次參考的偏好關鍵字</b><p class="small-note">{{ appliedTitles.length ? appliedTitles.join('、') : '未選用偏好，只依本次條件推薦' }}</p><small>本次明確排除的項目會優先處理；偏好可到上方吉祥物的「記憶偏好」管理。</small></div><p class="muted">再補充這次的額外條件（選填）</p>
-        <textarea v-model="preferences" aria-label="旅行偏好" maxlength="300" placeholder="我有四小時，喜歡自然景點。預算 3000 日圓，已買周遊券。" />
-        <div class="choice-row">
-          <button v-for="hint in ['喜歡自然景點', '老街與甜點', '有四小時', '雨天室內']" :key="hint" @click="addPreference(hint)">{{ hint }}</button>
-        </div>
-        <div class="planner-fields">
-        <label for="pace">旅行步調</label>
-        <select id="pace" v-model.number="pace">
-          <option :value="2">悠閒 · 最多 2 個景點</option>
-          <option :value="3">剛好 · 最多 3 個景點</option>
-          <option :value="4">充實 · 最多 4 個景點</option>
-        </select>
-        </div>
+        <p v-if="!availablePasses.length" class="pass-empty">沒有符合的票券，試試其他名稱或地區。</p>
+        <p class="small-note">地圖輪廓為規劃示意；實際優惠依票券方案、合作景點與指定路線。也可回到地圖自己重畫範圍。</p>
+      </template>
+      <template v-else-if="panel === 'preferences'">
+        <label class="planner-input-label" for="day-preferences">還有什麼想法？（選填）</label>
+        <textarea id="day-preferences" v-model="preferences" aria-label="旅行偏好" maxlength="300" placeholder="有四小時，想喝咖啡、逛老街，步調悠閒一點。" />
+        <div class="planner-fields"><label for="pace">旅行步調</label><select id="pace" v-model.number="pace"><option :value="2">悠閒 · 最多 2 個景點</option><option :value="3">剛好 · 最多 3 個景點</option><option :value="4">充實 · 最多 4 個景點</option></select></div>
+        <label class="memory-choice"><input v-model="useKeywords" type="checkbox">套用吉祥物記住的偏好</label><p v-if="useKeywords && appliedTitles.length" class="small-note">{{ appliedTitles.join('、') }}</p>
         <p v-if="error" class="planner-error" role="alert">{{ error }}</p>
-        <p class="small-note">依關鍵字規則產生示範推薦，尚未串接 AI。交通為估算；預算與周遊券先記下需求，費用及適用路線待查核。</p>
-        <button class="primary" :disabled="busy" @click="generate">{{ busy ? '正在安排…' : '生成行程與每站雨天備案 →' }}</button>
+        <p class="small-note">交通時間為估算，費用與票券優惠不會自動計入。</p>
+        <button class="primary" :disabled="busy" @click="generate">{{ busy ? '正在安排…' : '安排這一天與雨天備案 →' }}</button>
       </template>
-      <template v-else>
-        <ChictripMotion v-if="panel === 'saved'" motion="happy" :size="112"/>
-        <p>下次回到「行程 → 已儲存」即可查看草案。</p>
-        <NuxtLink class="primary" :to="tripHref('/trip')" @click="panel = null">回到我的行程</NuxtLink>
-      </template>
+      <template v-else><ChictripMotion motion="happy" :size="112"/><p>已儲存到「{{ activeTrip.title }}」。</p><NuxtLink class="primary" :to="tripHref('/trip')" @click="panel = null">查看我的行程</NuxtLink></template>
     </AppSheet>
   </section>
 </template>
-
-
 <style scoped>
-.selection-results{padding:16px}.selection-results h2{font-size:18px}.selection-results h3{font-size:15px;margin-top:24px}.selection-results .map-stops{margin:12px 0}.selection-results .map-stops button{background:#eef0f2;color:#646e77;border:1px solid #d8dde1}.selection-results .map-stops button[aria-pressed=true]{background:#edf8ff;color:#007eae;border-color:#009fe8}.selection-results textarea{width:100%;min-height:90px;margin-top:10px}.selection-results label{font-weight:600}.rain-plan{margin-top:12px;padding:12px;background:#eff7f8;border-radius:10px}.rain-plan b{font-size:12px;color:#356772}.rain-plan p{margin:6px 0 0;font-size:12px;line-height:1.7}
-
-.planner-memory{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 16px;align-items:center;background:#f0f7f6;border:1px solid #dce9e7;border-radius:14px;padding:14px 16px;margin:16px 0}.planner-memory strong{font-size:13px;color:#325e66}.planner-memory p{font-size:11px;color:#74898e;margin:5px 0 0;line-height:1.5}.planner-memory label{display:flex;align-items:center;gap:5px;font-size:12px;white-space:nowrap}.planner-memory input{accent-color:#397b87}.planner-memory a{grid-column:1/-1;justify-self:end;color:#397b87;font-size:12px;text-decoration:none;padding:4px 0}.planner-memory a:focus-visible{outline:2px solid #397b87;outline-offset:3px}
+.planner-screen{max-width:1000px;margin:auto}.page-heading h1{font-size:clamp(24px,4vw,34px);line-height:1.4}.page-heading p{max-width:560px;line-height:1.7}.range-choices{display:flex;gap:10px;margin:18px 0 14px}.range-choices button{display:flex;align-items:center;justify-content:center;gap:9px;padding:13px 17px;border:1px solid #cfe4e9;border-radius:13px;background:#fff;color:#38768c;font-size:13px;cursor:pointer;flex:1;min-height:48px}.range-choices button.active{background:#eafaff;border-color:#009fc5;color:#0084a5}.range-choices svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}.selected-pass{display:flex;align-items:center;gap:12px;background:#f3fbff;border:1px solid #d4edf3;border-radius:13px;margin-bottom:12px;padding:10px 12px}.selected-pass :deep(.pass-artwork){width:75px;flex:none}.selected-pass span b{font-size:13px;color:#21647b}.selected-pass small{display:block;font-size:10px;color:#7192a0;margin-top:4px}.selected-pass a{margin-left:auto;font-size:10px;color:#1382a1;text-decoration:none;text-align:right}.pass-range-note{font-size:10px;line-height:1.7;color:#8099a3;margin:9px 3px 0}.planning-next{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:18px 0}.planning-next>span{font-size:12px;color:#708e9a}.planning-next .primary{width:auto;margin:0;min-width:152px;border-radius:13px;background:#009fc5;padding:13px 17px}.planning-next .primary:disabled{background:#edf3f5;color:#93a8b1;box-shadow:none;cursor:default}.empty-selection{margin:0 0 15px}.text-refinement,.plan-notes{font-size:12px;color:#688897;border-top:1px solid #e5edef;padding:13px 0;margin:0 0 12px}.text-refinement summary,.plan-notes summary,.rain-plan summary{cursor:pointer}.text-refinement form{display:flex;align-items:stretch;gap:8px;margin-top:12px}.text-refinement textarea{flex:1;min-height:80px;margin:0;resize:vertical}.text-refinement .secondary{width:auto;padding:10px 15px;margin:0}.text-refinement p{font-size:11px}.planner-results{margin-top:24px}.planner-results h2{font-size:21px}.planner-card h3{margin-top:3px}.rain-plan{margin:10px 0;padding:9px 11px;border-radius:9px;background:#f0f9fb;color:#45798b;font-size:11px}.rain-plan p{font-size:11px;line-height:1.7}.planner-input-label{font-size:13px;font-weight:600;display:block;margin:10px 0 12px}.memory-choice{display:flex;align-items:center;gap:6px;color:#668692;font-size:12px;margin:8px 0}.memory-choice input{accent-color:#009fc5}.pass-filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:15px 0 8px;position:sticky;top:0;background:#fff;padding:8px 0;z-index:1}.pass-search{grid-column:1/-1}.pass-filters input,.pass-filters select{width:100%;min-height:42px;border:1px solid #d4e9ed;border-radius:11px;background:#f8fcfd;color:#38768c;font-size:12px;padding:10px 12px;margin:0}.pass-filters input:focus,.pass-filters select:focus{outline:2px solid #009fc5;outline-offset:1px}.pass-count{font-size:11px;color:#7794a0;margin:8px 0}.pass-conditions{color:#74909c;font-size:11px;padding:5px 3px}.pass-conditions summary{cursor:pointer}.pass-conditions .pass-exclusions{margin-top:10px}.pass-choice .pass-kind{display:inline-block;padding:3px 7px;background:#e9f7fc;color:#0089ac;font-size:9px;border-radius:6px;margin-bottom:7px}.pass-choice .pass-kind.prepaid{color:#7a6500;background:#fff4c4}.pass-empty{font-size:13px;text-align:center;color:#73939f;padding:28px 12px}.pass-intro{font-size:13px;color:#638290;line-height:1.7}.pass-option{padding:16px 0;border-bottom:1px solid #e1ecef}.pass-choice{width:100%;display:grid;grid-template-columns:135px 1fr;align-items:center;gap:15px;padding:13px;text-align:left;border:1px solid #d4e9ed;border-radius:16px;background:#f8fdff;color:#276b83;cursor:pointer}.pass-choice[aria-pressed=true]{border-color:#009fc5;background:#effaff}.pass-choice span b{font-size:16px;display:block}.pass-choice small{font-size:10px;display:block;margin:4px 0 9px;color:#809ca7}.pass-choice em{font-size:11px;display:block;font-style:normal}.pass-choice strong{display:block;font-size:11px;color:#0092b5;margin-top:13px}.pass-option p{font-size:12px;line-height:1.8;color:#4d7383;margin:13px 3px 7px}.pass-option p.pass-exclusions{font-size:11px;color:#7b919b;margin-top:0}.pass-option a{font-size:11px;color:#0092b5;display:inline-block;padding:4px 3px;text-decoration:none}.pass-credit{display:block;margin:7px 3px;color:#94a5ad;font-size:9px;line-height:1.7}.range-choices button:focus-visible,.pass-choice:focus-visible{outline:3px solid #ffc500;outline-offset:3px}@media(max-width:600px){.planner-screen{padding-bottom:16px}.range-choices{gap:8px}.range-choices button{font-size:12px;padding:12px 8px}.pass-choice{grid-template-columns:105px 1fr;gap:11px}.selected-pass{gap:9px}.selected-pass a{font-size:9px}.planning-next .primary{min-width:145px;font-size:13px}.planning-next>span{font-size:11px}}
 </style>
