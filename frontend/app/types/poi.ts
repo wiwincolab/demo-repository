@@ -12,7 +12,7 @@ export interface Poi {
   wikidata: string | null; wikipedia: string | null; commonsFile: string | null;
   wikidataMismatch?: 'human';
   imageStatus: 'available' | 'pending' | 'unavailable';
-  photo: {src: string; original: string; source: string; credit: string; license: string; licenseUrl: string; width: number; height: number} | null;
+  photo: {src: string; original: string; source: string; credit: string; license: string; licenseUrl: string; width: number; height: number; licenseStatus?: 'unspecified'; provider?: string; retrievedAt?: string; thumbnailOf?: string} | null;
   source: {provider:string; url:string; license:string; licenseUrl:string}; fetchedAt:string;
 }
 export interface PoiCatalog {

@@ -15,14 +15,14 @@ for(const region of catalog.regions.filter(r=>r.file)) {
   }
 }
 const pois=[...unique.values()];
-const fields=['id','country','regions','name','localName','names','category','categoryLabel','longitude','latitude','description','address','website','phone','openingHours','fee','wheelchair','wikidata','wikipedia','wikidataMismatch','imageStatus','imageUrl','imageOriginalUrl','imageSource','imageCredit','imageLicense','imageLicenseUrl','osmUrl','sourceLicense','sourceLicenseUrl','fetchedAt'];
+const fields=['id','country','regions','name','localName','names','category','categoryLabel','longitude','latitude','description','address','website','phone','openingHours','fee','wheelchair','wikidata','wikipedia','wikidataMismatch','imageStatus','imageUrl','imageLocalThumbnail','imageOriginalUrl','imageSource','imageCredit','imageLicense','imageLicenseUrl','imageLicenseStatus','imageProvider','osmUrl','sourceLicense','sourceLicenseUrl','fetchedAt'];
 const cell=value=>{const text=String(value ?? '');return `"${(/^[=+@-]/.test(text)?"'":'')+text.replaceAll('"','""')}"`;};
 for(const country of ['JP','KR','TW']) {
   const rows=pois.filter(p=>p.country===country);
-  const geojson={type:'FeatureCollection',name:`chicTrip ${country} POIs`,license:'OpenStreetMap ODbL-1.0; Wikidata CC0; image licenses per photo',attribution:'© OpenStreetMap contributors; Wikidata; Wikimedia Commons and Wikipedia image authors',generatedAt:catalog.generatedAt,features:rows.map(p=>{const {at,...properties}=p;return {type:'Feature',id:p.id,geometry:{type:'Point',coordinates:at},properties};})};
+  const geojson={type:'FeatureCollection',name:`chicTrip ${country} POIs`,license:'OpenStreetMap ODbL-1.0; Wikidata CC0; image licenses per photo',attribution:'© OpenStreetMap contributors; Wikidata; Wikimedia Commons, Wikipedia and per-photo source credits',generatedAt:catalog.generatedAt,features:rows.map(p=>{const {at,...properties}=p;return {type:'Feature',id:p.id,geometry:{type:'Point',coordinates:at},properties};})};
   await writeFile(join(output,`${country.toLowerCase()}.geojson`),JSON.stringify(geojson));
   const csv=[fields.map(cell).join(','),...rows.map(p=>{
-    const flat={...p,regions:p.regions.join('|'),names:JSON.stringify(p.names),longitude:p.at[0],latitude:p.at[1],imageUrl:p.photo?.src,imageOriginalUrl:p.photo?.original,imageSource:p.photo?.source,imageCredit:p.photo?.credit,imageLicense:p.photo?.license,imageLicenseUrl:p.photo?.licenseUrl,osmUrl:p.source.url,sourceLicense:p.source.license,sourceLicenseUrl:p.source.licenseUrl};
+    const flat={...p,regions:p.regions.join('|'),names:JSON.stringify(p.names),longitude:p.at[0],latitude:p.at[1],imageUrl:p.photo?.thumbnailOf || p.photo?.src,imageLocalThumbnail:p.photo?.thumbnailOf ? p.photo.src : null,imageOriginalUrl:p.photo?.original,imageSource:p.photo?.source,imageCredit:p.photo?.credit,imageLicense:p.photo?.license,imageLicenseUrl:p.photo?.licenseUrl,imageLicenseStatus:p.photo?.licenseStatus,imageProvider:p.photo?.provider,osmUrl:p.source.url,sourceLicense:p.source.license,sourceLicenseUrl:p.source.licenseUrl};
     return fields.map(field=>cell(flat[field])).join(',');
   })].join('\r\n');
   await writeFile(join(output,`${country.toLowerCase()}.csv`),'\ufeff'+csv);
@@ -37,6 +37,10 @@ const reasons={
   'Ambiguous or short name; needs manual verification':'名稱過短或不明確，需人工確認景點身分',
   'No verified photo from linked sources':'來源連結未找到能確認對應景點的照片',
   'No linked image source':'資料沒有照片來源連結',
+  'No matching loadable photo in web search results':'已查網路圖片搜尋，未找到名稱／地區相符且可載入的照片',
+  'Web search returned no images':'網路圖片搜尋沒有回傳照片',
+  'Web source request failed; needs retry':'來源網頁暫時無法連線，需重試',
+  'Not searched on the web yet':'尚未完成網路圖片搜尋',
 };
 const countries={JP:'日本',KR:'韓國',TW:'台灣'};
 const regionNames=new Map(catalog.regions.map(region=>[region.id,region.name]));

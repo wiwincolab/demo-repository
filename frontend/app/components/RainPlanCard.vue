@@ -10,7 +10,7 @@ watch(() => props.alternative?.photo.src, () => { photoFailed.value = false; });
   <details class="rain-plan-card" open>
     <summary>雨天備案</summary>
     <div v-if="alternative" class="rain-plan-choice">
-      <img v-if="alternative.photo.src && !photoFailed" :src="asset(alternative.photo.src)" :alt="alternative.photo.alt" :style="{ objectPosition: alternative.photo.objectPosition }" width="160" height="112" loading="lazy" decoding="async" @error="photoFailed = true">
+      <img referrerpolicy="no-referrer" v-if="alternative.photo.src && !photoFailed" :src="asset(alternative.photo.src)" :alt="alternative.photo.alt" :style="{ objectPosition: alternative.photo.objectPosition }" width="160" height="112" loading="lazy" decoding="async" @error="photoFailed = true">
       <p v-else class="rain-plan-no-photo">{{ photoFailed ? '照片暫時無法載入' : '景點照片待補' }}</p>
       <div class="rain-plan-copy">
         <strong>{{ alternative.name }}</strong>

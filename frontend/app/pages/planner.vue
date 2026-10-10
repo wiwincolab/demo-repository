@@ -311,7 +311,7 @@ onBeforeUnmount(() => {clearTimeout(generationTimer);clearTimeout(viewportTimer)
         <div class="planner-list-status"><span>勾選即可加入行程</span><button v-if="ids.length" type="button" :disabled="drawing" @click="select([])">清空已選</button></div>
         <div class="planner-choice-scroll" aria-label="目前地圖內的景點清單">
           <div v-for="s in placeChoices.slice(0,placeListLimit)" :key="s.id" class="planner-place-choice" :class="{selected:ids.includes(s.id)}">
-            <label><input type="checkbox" :checked="ids.includes(s.id)" :disabled="drawing || (!hasRange && viewport.length !== 4)" :aria-label="'將'+s.name+'加入行程'" @change="toggleListPlace(s)"><img v-if="s.photo.src && !failedListPhotos.includes(s.photo.src)" :src="asset(s.photo.src)" :alt="s.photo.alt" width="48" height="48" loading="lazy" @error="failedListPhotos.push(s.photo.src)"><span v-else class="planner-list-no-photo" aria-hidden="true">景點</span><span class="planner-choice-name"><b>{{ s.name }}</b><small>{{ ids.includes(s.id) ? '已加入行程' : s.stay }}</small></span></label>
+            <label><input type="checkbox" :checked="ids.includes(s.id)" :disabled="drawing || (!hasRange && viewport.length !== 4)" :aria-label="'將'+s.name+'加入行程'" @change="toggleListPlace(s)"><img referrerpolicy="no-referrer" v-if="s.photo.src && !failedListPhotos.includes(s.photo.src)" :src="asset(s.photo.src)" :alt="s.photo.alt" width="48" height="48" loading="lazy" @error="failedListPhotos.push(s.photo.src)"><span v-else class="planner-list-no-photo" aria-hidden="true">景點</span><span class="planner-choice-name"><b>{{ s.name }}</b><small>{{ ids.includes(s.id) ? '已加入行程' : s.stay }}</small></span></label>
             <button type="button" :aria-label="'查看'+s.name+'照片與詳情'" @click="inspectedId=s.id">詳情</button>
           </div>
           <p v-if="!placeChoices.length" class="small-note">{{ poiLoading ? '正在載入景點…' : '這個畫面沒有符合的景點，可以移動地圖或調整搜尋。' }}</p>
@@ -337,14 +337,14 @@ onBeforeUnmount(() => {clearTimeout(generationTimer);clearTimeout(viewportTimer)
       <details class="plan-notes"><summary>時間與安排</summary><p v-for="note in planNotes" :key="note" class="small-note">{{ note }}</p></details>
       <article v-for="s in draft" :key="s.id" class="planner-card">
         <time>{{ s.time }}</time><div><h3>{{ s.name }}</h3><small>{{ s.stay }}</small><p>{{ s.reason }}</p><RainPlanCard :text="s.rainPlan" :alternative="s.rainAlternative" /><small v-if="s.travelMinutes">前一站交通約 {{ s.travelMinutes }} 分鐘 · 示範估算</small></div>
-        <img v-if="s.photo.src" :src="asset(s.photo.src)" :alt="s.photo.alt" width="48" height="48" style="object-fit:cover;border-radius:8px">
+        <img referrerpolicy="no-referrer" v-if="s.photo.src" :src="asset(s.photo.src)" :alt="s.photo.alt" width="48" height="48" style="object-fit:cover;border-radius:8px">
       </article>
       <button class="primary" :disabled="dirty || busy" @click="save">儲存這份行程</button>
     </section>
     <AppSheet :model-value="!!inspectedPlace" :title="inspectedPlace?.name || '景點詳情'" @update:model-value="inspectedId=null">
       <template v-if="inspectedPlace">
-        <img v-if="inspectedPlace.photo.src && !inspectedPhotoFailed" class="planner-inspected-photo" :src="asset(inspectedPlace.photo.src)" :alt="inspectedPlace.photo.alt" @error="inspectedPhotoFailed=true">
-        <p v-else class="small-note">{{ inspectedPhotoFailed ? '照片暫時無法載入。' : '這個景點尚未取得可確認授權的照片。' }}</p>
+        <img referrerpolicy="no-referrer" v-if="inspectedPlace.photo.src && !inspectedPhotoFailed" class="planner-inspected-photo" :src="asset(inspectedPlace.photo.src)" :alt="inspectedPlace.photo.alt" @error="inspectedPhotoFailed=true">
+        <p v-else class="small-note">{{ inspectedPhotoFailed ? '照片暫時無法載入。' : '尚未找到這個景點的照片。' }}</p>
         <p>{{ inspectedPlace.note }}</p>
         <p v-if="inspectedPlace.photo.src" class="small-note">照片：{{ inspectedPlace.photo.credit }} · <a v-if="inspectedPlace.photo.licenseUrl" :href="inspectedPlace.photo.licenseUrl" target="_blank" rel="noopener">{{ inspectedPlace.photo.license }}</a><template v-else>{{ inspectedPlace.photo.license }}</template> · <a v-if="inspectedPlace.photo.source" :href="inspectedPlace.photo.source" target="_blank" rel="noopener">原始來源 ↗</a></p>
         <a v-if="inspectedPoi" :href="inspectedPoi.source.url" target="_blank" rel="noopener">OpenStreetMap 景點來源 ↗</a>

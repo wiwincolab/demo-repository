@@ -18,15 +18,15 @@
 
 `scripts/poi/regions.mjs` 明列日本 35、韓國 17、台灣 22 個旅遊範圍的座標框。它們是旅遊區域及鄰近範圍，不是精確行政邊界、熱門排名或政府景點認證。區域可重疊，目錄總數以 OSM ID 去重，每區再以 Wikidata ID／名稱及座標合併重複點。
 
-`public/poi/index.json` 是目錄與實際筆數；`regions/*.json` 保存景點完整欄位，包括經緯度、中文／當地名稱、分類、地址、描述、官網、電話、開放時間、收費／無障礙標記、OSM／Wikidata ID、資料來源及抓取時間。來源未提供的值保留 `null`，不推算評分、價格或即時營業狀態。`exports/` 提供各國 CSV、GeoJSON 及總表 `report.json`，包含照片 URL、作者與授權。
+`public/poi/index.json` 是目錄與實際筆數；`regions/*.json` 保存景點完整欄位，包括經緯度、中文／當地名稱、分類、地址、描述、官網、電話、開放時間、收費／無障礙標記、OSM／Wikidata ID、資料來源及抓取時間。來源未提供的值保留 `null`，不推算評分、價格或即時營業狀態。`exports/` 提供各國 CSV、GeoJSON 及總表 `report.json`，包含照片 URL、來源署名與授權資訊。
 
-照片先用景點的 OSM `wikimedia_commons`／Wikidata P18 連結；沒有 Wikidata ID 時，僅從 OSM 已連結的 Wikipedia 文章取得 ID，不模糊比對名稱。再向 Commons `imageinfo` 取得縮圖及授權，僅發布可確認許可的影像。未配對、無圖片及待重試分別保留狀態，不拿鄰近景點照片補位。照片仍由 Wikimedia 提供；資料交付的是照片連結和來源，未批次下載原始照片。詳情顯示作者、授權及來源連結；影像失效時顯示載入失敗。
+照片先用景點的 OSM `wikimedia_commons`／Wikidata P18 連結；沒有 Wikidata ID 時，僅從 OSM 已連結的 Wikipedia 文章取得 ID，不模糊比對名稱。再向 Commons `imageinfo` 取得縮圖及授權。未配對、無圖片及待重試分別保留狀態，不拿鄰近景點照片補位。照片使用 Wikimedia、景點來源網站與圖片搜尋所提供的圖片連結；資料交付的是照片連結和來源，未批次下載原始照片。詳情顯示作者、授權及來源連結；影像失效時顯示載入失敗。
 
-`scripts/poi/supplement-photos.mjs` 補查尚缺照片的項目：Wikidata 已連結的 Wikipedia 主圖與同名景點影像、Commons P180 精確描繪識別碼、P373／OSM 已連結的景點相簿。`POI_PHOTO_MODE=geographic` 再以完整景點名稱與 250 公尺內的 Commons 照片／相簿座標查找沒有連結的項目，排除只有通用名稱的點位。Wikipedia 本地圖片也須通過作者、授權與影像來源檢查；不同語言站的同名檔不混用。人物、同名列表及分類頁識別碼須人工核對，地圖／標誌／肖像不當作景點實景。已查證的原始識別碼錯誤列在 `scripts/poi/photo-overrides.json`，保留核對來源。報表 `public/poi/exports/photo-supplement-report.json` 保存新增照片、來源錯誤及仍缺照片的景點；匯出後的 `public/poi/exports/missing-photos.csv` 提供國家、地區、景點名稱、座標與中文查找結果。沒有配對成功的項目維持無照片。
+`scripts/poi/supplement-photos.mjs` 補查尚缺照片的項目：Wikidata 已連結的 Wikipedia 主圖與同名景點影像、Commons P180 精確描繪識別碼、P373／OSM 已連結的景點相簿。`POI_PHOTO_MODE=geographic` 再以完整景點名稱與 250 公尺內的 Commons 照片／相簿座標查找沒有連結的項目，排除只有通用名稱的點位。Wikipedia 本地圖片也須通過作者、授權與影像來源檢查；不同語言站的同名檔不混用。人物、同名列表及分類頁識別碼須人工核對，地圖／標誌／肖像不當作景點實景。已查證的原始識別碼錯誤列在 `scripts/poi/photo-overrides.json`，保留核對來源。`scripts/poi/supplement-web-photos.mjs` 再讀取 OSM／Wikidata 已連結官網及公開圖片搜尋，依回傳順序採用第一張名稱相符且可載入的照片。重名與山岳加入行政區名稱核對；排除地圖、標誌與多景點旅遊文章。每筆保留原始圖片與網頁來源，尚未確認照片授權時明列 `licenseStatus: unspecified`，不標成 CC 授權。抓取離線執行、有快取與進度保存，不在使用者切換地圖時搜尋或爬圖。報表 `public/poi/exports/photo-supplement-report.json` 保存新增照片、來源錯誤及仍缺照片的景點；匯出後的 `public/poi/exports/missing-photos.csv` 提供國家、地區、景點名稱、座標與中文查找結果。沒有配對成功的項目維持無照片。
 
 地圖依區域載入準備好的 JSON，MapLibre 顯示底圖，使用 [Supercluster](https://github.com/mapbox/supercluster) 依縮放與可見範圍聚合點位；清單每次顯示 36 個景點，照片延後載入。搜尋及分類使用本機資料。`/api/poi/catalog`、`/api/poi/regions/:id` 只讀 PVC 上的快照，不對使用者請求即時爬取；沒有後端快照時，前端改讀靜態檔，GitHub Pages 也可用。
 
-`/places` 預設顯示全部景點（包含照片待補者），已取得的照片會顯示在獨立景點圓點上；「只看有照片」由使用者選擇。`/planner` 共用這些快照，可選日本 35、韓國 17、台灣 22 個現有旅遊區域，依地圖可見範圍或票券範圍載入，每批最多 3 區。匯入景點使用穩定的負數 OSM 衍生 ID，可圈選、點選、產生與儲存草案，並保留照片作者及授權。資料新增時不重設地圖視角；大量選取仍聚合點位。API 的單區資料缺失時也可退回靜態快照，支援網站子路徑。
+`/places` 預設顯示全部景點（包含照片待補者），已取得的照片會顯示在獨立景點圓點上；「只看有照片」由使用者選擇。`/planner` 共用這些快照，可選日本 35、韓國 17、台灣 22 個現有旅遊區域，依地圖可見範圍或票券範圍載入，每批最多 3 區。匯入景點使用穩定的負數 OSM 衍生 ID，可圈選、點選、產生與儲存草案，並保留照片來源及授權資訊。資料新增時不重設地圖視角；大量選取仍聚合點位。API 的單區資料缺失時也可退回靜態快照，支援網站子路徑。
 
 ```sh
 # 首次抓取：單一行程逐區執行，有快取、超時、重試及單一寫入鎖。
@@ -36,13 +36,21 @@ POI_STAGE=images POI_REGIONS=jp-tokyo,kr-seoul,tw-taipei node scripts/poi/import
 # 擴充補查缺少的照片（可用 POI_REGIONS 限定範圍）：
 node scripts/poi/supplement-photos.mjs
 POI_PHOTO_MODE=geographic node scripts/poi/supplement-photos.mjs
+# 官網與網路搜尋的第一張對應照片（只補缺圖，可限制範圍）：
+node scripts/poi/supplement-web-photos.mjs
+POI_WEB_STAGE=search POI_REGIONS=kr-busan node scripts/poi/supplement-web-photos.mjs
+# 匯入工具查到的圖片結果：JSON 陣列，每筆 {targets:[{id,query}],result:圖片搜尋原文}。
+# 原文只解析成圖片網址與來源，不執行內容。另支援 {id,query,items:[...]}。
+POI_WEB_STAGE=native POI_WEB_RESULTS=/absolute/path/results.json node scripts/poi/supplement-web-photos.mjs
+# macOS：將超過 1280px 的網路照片縮成 640px JPEG；保留原圖與來源連結。
+node scripts/poi/cache-web-thumbnails.mjs
 # 輸出各國可攜資料：
 node scripts/poi/export.mjs
 # 讓本機 API 直接讀這批資料：
 POI_DATA_DIR="$PWD/public/poi" npx nuxt dev --host 127.0.0.1 --port 8782
 ```
 
-外部 API 需網路連線。Overpass 公開服務適用一次性小規模擷取；大量或定期更新應設定 `POI_OVERPASS_URL` 使用自建／授權服務，或改用地區 OSM extracts。程式不自動排定公開 API 爬取。`POI_DATA_DIR` 可改資料目錄；OSM 快取預設 7 天，Wikimedia 快取 30 天。快取與寫入鎖不進 Git 或 Docker 映像。
+外部 API 需網路連線。Overpass 公開服務適用一次性小規模擷取；大量或定期更新應設定 `POI_OVERPASS_URL` 使用自建／授權服務，或改用地區 OSM extracts。程式不自動排定公開 API 爬取。`POI_DATA_DIR` 可改資料目錄；OSM 快取預設 7 天，Wikimedia 快取 30 天，網路圖片搜尋快取 7 天。快取與寫入鎖不進 Git 或 Docker 映像。
 
 Helm `poi.enabled=true` 預設新增獨立、短期的 `poi-import` Job Pod，將映像內已有資料發布至 2Gi PVC；API 唯讀掛載。Job 設定 CPU 100m／128Mi 請求、1 CPU／512Mi 上限、單一處理程序，與照片／每日卡片 worker 分開。每次 main 部署等待發布完成；`poi.enabled=false` 可停用。這輪只備好設定，未建立正式環境 Pod。
 
@@ -65,7 +73,7 @@ OSM 衍生資料依 ODbL 使用，保留 © OpenStreetMap contributors；Wikidat
 
 新增 JR 區域券、私鐵指定終點、纜車、來源中可對應的指定巴士／渡輪路徑與台灣接駁。地圖輪廓由實際路線生成，保留孔洞及分離區域；沿線 700 公尺緩衝、景點／停靠點 120 公尺定位圈只用於遊玩規劃，不能當作官方免費地域邊界。沒有來源的區段不畫推測道路，介面列出缺口及官方範圍。
 
-限次往返／單程、限定直通、只可下車採不同虛線圖例。Taiwan PASS 增加都會交通與景區接駁各任選一欄位，地圖只合併所選項目。完整路網可淡化券外交通，部分路網只強調已核對路線。票券 GeoJSON 選用時才載入，快取最多 5 張，GPU 畫路線；`/places` 的 74 個旅遊區域有 33,482 個去重景點，其中 10,241 個已取得可確認授權的照片連結。
+限次往返／單程、限定直通、只可下車採不同虛線圖例。Taiwan PASS 增加都會交通與景區接駁各任選一欄位，地圖只合併所選項目。完整路網可淡化券外交通，部分路網只強調已核對路線。票券 GeoJSON 選用時才載入，快取最多 5 張，GPU 畫路線；`/places` 的 74 個旅遊區域有 33,482 個去重景點，照片筆數以 `public/poi/index.json` 的 `totalWithPhoto` 為準。
 
 會津券新增會津田島／蘆之牧溫泉／喜多方版本切換，各版路線與輪廓獨立。補齊 JR 指定宮島渡輪、京都高雄／京北及若江線巴士、智頭急行、伊豆箱根與伊勢鐵道／和歌山電鐵；宜蘭券加入指定台鐵區段及平溪／深澳支線。下載資料共有 105 份預設幾何加 2 份會津替代版本，目錄仍為 109 張；未取得的巴士或購票出發站區段繼續列在缺口中。
 

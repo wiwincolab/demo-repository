@@ -57,7 +57,21 @@ test('shipped snapshots retain image licenses, geographic provenance and truthfu
   for(const r of catalog.regions.filter(r=>r.file)) {
     const {pois}=JSON.parse(readFileSync(new URL(`../public/poi/${r.file}`,import.meta.url),'utf8')) as {pois:Poi[]};
     assert.equal(pois.length,r.count,r.id);assert.equal(pois.filter(p=>p.photo).length,r.photoCount,r.id);
-    for(const p of pois){unique.set(p.id,p);assert.match(p.source.url,/^https:\/\/www.openstreetmap.org\/(node|way|relation)\/\d+$/);assert.equal(p.source.license,'ODbL-1.0');if(p.wikidataMismatch==='human'){assert.equal(p.photo,null);assert.equal(p.description,null);}if(p.photo){assert.match(p.photo.src,/^https:\/\/(upload|thumb)\.wikimedia\.org\//);assert.ok(p.photo.credit);assert.ok(p.photo.licenseUrl);assert.equal(p.imageStatus,'available');}}
+    for(const p of pois){
+      unique.set(p.id,p);assert.match(p.source.url,/^https:\/\/www.openstreetmap.org\/(node|way|relation)\/\d+$/);assert.equal(p.source.license,'ODbL-1.0');
+      if(p.wikidataMismatch==='human'){assert.equal(p.photo,null);assert.equal(p.description,null);}
+      if(p.photo){
+        assert.ok(p.photo.credit);assert.match(p.photo.source,/^https:\/\//);assert.equal(p.imageStatus,'available');
+        if(p.photo.licenseStatus==='unspecified'){
+          if(p.photo.thumbnailOf){
+            assert.match(p.photo.thumbnailOf,/^https:\/\//);assert.match(p.photo.src,/^poi\/photos\/[a-f0-9]{64}\.jpg$/);
+            assert.ok(readFileSync(new URL('../public/'+p.photo.src,import.meta.url)).length<=200*1024);assert.ok(Math.max(p.photo.width,p.photo.height)<=640);
+          }else assert.match(p.photo.src,/^https:\/\//);
+          assert.match(p.photo.original,/^https:\/\//);assert.equal(p.photo.licenseUrl,'');assert.equal(p.photo.license,'照片授權尚未確認');
+          assert.ok(['Linked website','Yahoo! JAPAN image search','Naver image search','Web image search','Official tourism data'].includes(p.photo.provider || ''));assert.ok(p.photo.retrievedAt);assert.ok(Math.min(p.photo.width,p.photo.height)>=120);
+        }else{assert.match(p.photo.src,/^https:\/\/(upload|thumb)\.wikimedia\.org\//);assert.ok(p.photo.licenseUrl);}
+      }
+    }
   }
   assert.equal(unique.size,catalog.totalUnique);assert.equal([...unique.values()].filter(p=>p.photo).length,catalog.totalWithPhoto);
   const sample=[...unique.values()].slice(0,10);

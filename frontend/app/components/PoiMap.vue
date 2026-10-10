@@ -26,7 +26,7 @@ function renderPins() {
   }).filter(pin=>visibleMapTarget([pin.x,pin.y],container.value!.clientWidth,container.value!.clientHeight));
 }
 function schedule() {cancelAnimationFrame(frame);frame=requestAnimationFrame(renderPins);}
-function update() {version++;photoUrls=new Map(props.pois.filter(p=>p.photo).map(p=>[p.id,p.photo!.src]));clusters=poiClusterIndex(props.pois,(container.value?.clientWidth || 720)<=600 ? 60 : 45);renderPins();}
+function update() {version++;photoUrls=new Map(props.pois.filter(p=>p.photo).map(p=>[p.id,asset(p.photo!.src)]));clusters=poiClusterIndex(props.pois,(container.value?.clientWidth || 720)<=600 ? 60 : 45);renderPins();}
 function fit() {
   if(!map || !props.region)return;
   const [w,s,e,n]=props.region.bbox;
@@ -68,7 +68,7 @@ onBeforeUnmount(()=>{disposed=true;cancelAnimationFrame(frame);observer?.disconn
 <template>
   <div class="poi-map-wrap" @pointerdown.capture="beginPointer" @click.capture="chooseAtPointer">
     <div ref="container" class="poi-map" role="region" aria-label="日韓台景點地圖，可拖曳、縮放，點選景點查看照片" />
-    <div class="poi-pin-layer"><button v-for="pin in pins" :key="pin.key" class="poi-pin" :class="{cluster:pin.clusterId!==undefined,unavailable:!pin.photo,selected:pin.id===selected,thumbnail:pin.src && !failedPhotos.includes(pin.src)}" :style="{left:pin.x+'px',top:pin.y+'px','--label-top':(container && pin.y+66>container.clientHeight-8 ? '-28px' : '44px'),'--label-shift':Math.max(-60,Math.min(60,container ? container.clientWidth/2-pin.x : 0))+'px'}" :aria-label="pin.clusterId!==undefined ? pin.count+' 個景點，點選放大' : pin.name+'，查看景點照片'" @click.stop="choose(pin)"><span v-if="pin.clusterId!==undefined">{{ pin.count }}</span><img v-else-if="pin.src && !failedPhotos.includes(pin.src)" :src="pin.src" :alt="pin.name" loading="lazy" @error="photoFailed(pin.src)"><span v-if="pin.clusterId===undefined && showLabels" class="poi-pin-label">{{ pin.name }}</span></button></div>
+    <div class="poi-pin-layer"><button v-for="pin in pins" :key="pin.key" class="poi-pin" :class="{cluster:pin.clusterId!==undefined,unavailable:!pin.photo,selected:pin.id===selected,thumbnail:pin.src && !failedPhotos.includes(pin.src)}" :style="{left:pin.x+'px',top:pin.y+'px','--label-top':(container && pin.y+66>container.clientHeight-8 ? '-28px' : '44px'),'--label-shift':Math.max(-60,Math.min(60,container ? container.clientWidth/2-pin.x : 0))+'px'}" :aria-label="pin.clusterId!==undefined ? pin.count+' 個景點，點選放大' : pin.name+'，查看景點照片'" @click.stop="choose(pin)"><span v-if="pin.clusterId!==undefined">{{ pin.count }}</span><img referrerpolicy="no-referrer" v-else-if="pin.src && !failedPhotos.includes(pin.src)" :src="pin.src" :alt="pin.name" loading="lazy" @error="photoFailed(pin.src)"><span v-if="pin.clusterId===undefined && showLabels" class="poi-pin-label">{{ pin.name }}</span></button></div>
     <details v-if="transitLines.length" class="poi-transit-legend"><summary>地鐵路線顏色</summary><ul><li v-for="line in transitLines" :key="line.key"><i :style="{background:line.colour}" />{{ line.ref }} {{ line.name }}</li></ul></details>
     <p v-if="error" class="poi-map-status" role="status">{{ error }}</p>
     <span v-else-if="!ready" class="poi-map-status" role="status">正在開啟景點地圖…</span>

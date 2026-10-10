@@ -6,7 +6,7 @@ defineProps<{
 const asset = useAsset();
 </script>
 <template>
-  <img class="spot-photo" :src="asset(stop.photo.src)" :alt="stop.photo.alt" :style="{ objectPosition: stop.photo.objectPosition }">
+  <img referrerpolicy="no-referrer" class="spot-photo" :src="asset(stop.photo.src)" :alt="stop.photo.alt" :style="{ objectPosition: stop.photo.objectPosition }">
   <h3>第 {{ stop.day + 1 }} 天 · {{ stop.name }}</h3>
   <p>{{ stop.note }}</p>
   <p v-if="stop.transit" class="small-note">{{ stop.transit }}</p>
