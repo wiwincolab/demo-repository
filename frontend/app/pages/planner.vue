@@ -22,6 +22,8 @@ const itineraryPlaces = computed<Stop[]>(()=>{
 const { catalog: poiCatalog, snapshots: poiSnapshots, loading: poiLoading, error: poiError, loadCatalog, loadRegions } = usePlannerPois();
 const poiCountry = ref<PoiCountry>('JP'), poiRegionId = ref(''), mapBounds = shallowRef<number[] | null>(null);
 const viewport = shallowRef<number[]>([]), savedPoiStops = ref<Stop[]>([]), inspectedId = ref<number | null>(null);
+const placeListOpen = ref(false), placeQuery = ref(''), placeListLimit = ref(30), failedListPhotos = ref<string[]>([]);
+const placeList = ref<HTMLDetailsElement>();
 const inspectedPhotoFailed = ref(false);
 watch(inspectedId,()=>{inspectedPhotoFailed.value=false;});
 const pendingSavedIds = new Set<number>();
@@ -71,6 +73,15 @@ const { keywordIds, enabled: useKeywords } = useTravelPreferences();
 const appliedKeywords = computed(() => useKeywords.value ? keywordIds.value : []);
 const appliedTitles = computed(() => plannerKeywords.filter(k => appliedKeywords.value.includes(k.id)).map(k => k.title));
 const ids = ref<number[]>([]), drawing = ref(false), preferences = ref(''), pace = ref(3);
+const placeChoices = computed(() => {
+  const query = placeQuery.value.trim().normalize('NFKC').toLocaleLowerCase();
+  const [w,s,e,n] = viewport.value;
+  const centre = [(w!+e!)/2,(s!+n!)/2];
+  const distance = (p: Stop) => Math.hypot((p.at[0]!-centre[0]!) * 90,(p.at[1]!-centre[1]!) * 111);
+  return [...viewportPlaces.value].filter(p => !query || (p.name+p.short).normalize('NFKC').toLocaleLowerCase().includes(query)).sort((a,b) => distance(a)-distance(b) || a.id-b.id);
+});
+watch(placeQuery, () => { placeListLimit.value = 30; });
+watch([poiCountry,poiRegionId], () => { placeQuery.value = ''; placeListLimit.value = 30; });
 const selectionBoundary = ref<Point[]>([]);
 const rangeIds = ref<number[]>([]), hasRange = ref(false), mapRevision = ref(0), refinement = ref(''), refinementStatus = ref('');
 const selectedPassId = ref('');
@@ -167,10 +178,25 @@ watch(activeId, id => {
   } catch { /* A fresh draft remains available when saved data cannot be read. */ }
 }, { immediate: true });
 function select(value: number[]) { pendingSavedIds.clear(); ids.value = value; }
-function selectRange(value: number[], boundary: Point[] = []) {
+function toggleListPlace(place: Stop) {
+  if (drawing.value) return;
+  if (!hasRange.value) {
+    const [w,s,e,n] = viewport.value;
+    const boundary = validPlanningBoundary([[w!,s!],[e!,s!],[e!,n!],[w!,n!]]);
+    if (!boundary.length) return;
+    selectRange([],boundary);
+    rangeIds.value = viewportPlaces.value.map(p => p.id);
+  }
+  select(ids.value.includes(place.id) ? ids.value.filter(id => id !== place.id) : [...ids.value,place.id]);
+}
+function selectRange(value: number[], boundary: Point[] = [], selectAll = true) {
   pendingSavedIds.clear();
   selectedPassId.value = '';
-  rangeIds.value = [...value]; ids.value = [...value]; hasRange.value = true;
+  rangeIds.value = [...value]; ids.value = selectAll ? [...value] : []; hasRange.value = true;
+  if (!selectAll) {
+    placeListOpen.value = true;
+    void nextTick(() => { placeList.value?.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'}); });
+  }
   drawing.value = false; refinementStatus.value = ''; refinement.value = '';
   selectionBoundary.value = boundary;
 }
@@ -243,12 +269,12 @@ onBeforeUnmount(() => clearTimeout(generationTimer));
     <div class="mascot-perch"><div class="page-heading">
       <span class="eyebrow">{{ activeTrip.english }} / DAY PLANNER</span>
       <h1>圈出今天想玩的地方。</h1>
-      <p>自己畫範圍，或用手上的票券選區。放大地圖就能看景點。</p>
+      <p>移到想逛的地方，按「選這一區」。也可用清單挑景點，或自己圈選。</p>
       <NuxtLink to="/places">探索日韓台更多景點與照片 →</NuxtLink>
     </div><PageMascot /></div>
     <div class="planner-destinations">
-      <label>景點國家<select v-model="poiCountry" @change="choosePoiCountry"><option v-for="country in poiCountries" :key="country.id" :value="country.id">{{ country.name }}</option></select></label>
-      <label>景點地區<select v-model="poiRegionId" @change="choosePoiRegion()"><option v-for="region in poiRegions" :key="region.id" :value="region.id">{{ region.name }}</option></select></label>
+      <label>景點國家<select v-model="poiCountry" aria-label="景點國家" @change="choosePoiCountry"><option v-for="country in poiCountries" :key="country.id" :value="country.id">{{ country.name }}</option></select></label>
+      <label>景點地區<select v-model="poiRegionId" aria-label="景點地區" @change="choosePoiRegion()"><option v-for="region in poiRegions" :key="region.id" :value="region.id">{{ region.name }}</option></select></label>
     </div>
     <p class="small-note planner-poi-status" role="status">{{ poiLoading ? '正在載入附近景點與照片…' : `目前範圍 ${viewportPlaces.length.toLocaleString()} 個景點 · ${viewportPlaces.filter(p=>p.photo.src).length.toLocaleString()} 個有照片` }}<template v-if="poiError"> · {{ poiError }} <button @click="loadCatalog().then(()=>loadVisiblePois())">重試</button></template></p>
     <div class="range-choices" aria-label="選擇遊玩範圍的方式">
@@ -274,13 +300,29 @@ onBeforeUnmount(() => clearTimeout(generationTimer));
       <a :href="coverageMetadata.officialUrl" target="_blank" rel="noopener">核對官方區段與方案 ↗</a>
     </details>
     <CircleMap :key="activeId || ''" :places="places" :selected="ids" :drawing="drawing" :has-range="hasRange" :range-ids="rangeIds" :boundary="selectionBoundary" :coverage="passCoverage" :benefits="selectedBenefits" :reset-key="mapRevision" :route="routeIds" :bounds="mapBounds" @viewport="onViewport" @inspect="inspectedId=$event" @select="select" @range="selectRange" @cancel="drawing = false" />
+    <details ref="placeList" class="planner-place-list" :open="placeListOpen" @toggle="placeListOpen = ($event.target as HTMLDetailsElement).open">
+      <summary>用清單挑景點 <span>{{ viewportPlaces.length.toLocaleString() }} 個</span></summary>
+      <div v-if="placeListOpen" class="planner-place-picker">
+        <label for="place-query" class="sr-only">搜尋目前地圖內的景點</label>
+        <input id="place-query" v-model="placeQuery" type="search" placeholder="搜尋目前地圖內的景點" autocomplete="off">
+        <div class="planner-list-status"><span>勾選即可加入行程</span><button v-if="ids.length" type="button" :disabled="drawing" @click="select([])">清空已選</button></div>
+        <div class="planner-choice-scroll" aria-label="目前地圖內的景點清單">
+          <div v-for="s in placeChoices.slice(0,placeListLimit)" :key="s.id" class="planner-place-choice" :class="{selected:ids.includes(s.id)}">
+            <label><input type="checkbox" :checked="ids.includes(s.id)" :disabled="drawing || (!hasRange && viewport.length !== 4)" :aria-label="'將'+s.name+'加入行程'" @change="toggleListPlace(s)"><img v-if="s.photo.src && !failedListPhotos.includes(s.photo.src)" :src="asset(s.photo.src)" :alt="s.photo.alt" width="48" height="48" loading="lazy" @error="failedListPhotos.push(s.photo.src)"><span v-else class="planner-list-no-photo" aria-hidden="true">景點</span><span class="planner-choice-name"><b>{{ s.name }}</b><small>{{ ids.includes(s.id) ? '已加入行程' : s.stay }}</small></span></label>
+            <button type="button" :aria-label="'查看'+s.name+'照片與詳情'" @click="inspectedId=s.id">詳情</button>
+          </div>
+          <p v-if="!placeChoices.length" class="small-note">{{ poiLoading ? '正在載入景點…' : '這個畫面沒有符合的景點，可以移動地圖或調整搜尋。' }}</p>
+          <button v-if="placeChoices.length > placeListLimit" type="button" class="planner-list-more" @click="placeListLimit += 30">顯示更多景點</button>
+        </div>
+      </div>
+    </details>
     <p class="small-note">點選數字展開景點，放大可看名稱與照片。尚未圈選時，點選景點可查看詳情。<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">景點 © OpenStreetMap contributors（ODbL）</a> · 照片來源與授權見景點詳情。</p>
     <p v-if="selectedPass" class="pass-range-note">{{ selectedPass.exclusions }} <template v-if="selectedBenefits.length">已標示 {{ selectedBenefits.length }} 個有確認座標的合作設施；黃色標記與定位圈協助找景點，完整名單與方案限制見官網。</template></p>
     <div class="planning-next">
       <span>{{ hasRange ? ids.length + ' 個景點已加入' : '先選一個想逛的範圍' }}</span>
       <button class="primary" :disabled="!hasRange || !ids.length || drawing" @click="openPreferences">{{ draft.length ? '重新安排這一天' : '產生行程' }} <span aria-hidden="true">→</span></button>
     </div>
-    <p v-if="hasRange && !ids.length" class="small-note empty-selection">{{ poiLoading ? '正在找這個範圍內的景點…' : '這裡目前沒有選到景點。可以重畫範圍，或放大地圖點選想去的地方。' }}</p>
+    <p v-if="hasRange && !ids.length" class="small-note empty-selection">{{ rangeIds.length ? '從清單勾選想去的景點，再產生行程。' : poiLoading ? '正在找這個範圍內的景點…' : '這裡目前沒有景點。可以移動地圖或重畫範圍。' }}</p>
     <details v-if="hasRange" class="text-refinement">
       <summary>也可以用文字調整景點</summary>
       <form @submit.prevent="applyRefinement"><label for="refinement" class="sr-only">用文字調整景點</label><textarea id="refinement" v-model="refinement" maxlength="300" :placeholder="'例如：加入' + (places[0]?.name || '景點名稱') + '，移除另一個景點'" /><button class="secondary" :disabled="!refinement.trim()">套用</button></form>
@@ -341,4 +383,32 @@ onBeforeUnmount(() => clearTimeout(generationTimer));
 .bundle-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:14px;color:#476d7b;font-size:12px}.bundle-choices select{display:block;width:100%;margin-top:6px;padding:10px;border:1px solid #cfe4e9;border-radius:10px;background:#fff;color:#315869}
 .coverage-gaps{font-size:12px;color:#476d7b;background:#f5fafb;border-radius:10px;padding:12px;margin:0 0 12px;line-height:1.8}.coverage-gaps summary{cursor:pointer}.coverage-gaps ul{padding-left:20px;margin:8px 0}.coverage-gaps a{color:#0085a6}.coverage-status{margin-top:8px;color:#0085a6}.pass-choice:disabled{opacity:.6;cursor:default}
 .planner-screen{max-width:1000px;margin:auto}.page-heading h1{font-size:clamp(24px,4vw,34px);line-height:1.4}.page-heading p{max-width:560px;line-height:1.7}.range-choices{display:flex;gap:10px;margin:18px 0 14px}.range-choices button{display:flex;align-items:center;justify-content:center;gap:9px;padding:13px 17px;border:1px solid #cfe4e9;border-radius:13px;background:#fff;color:#38768c;font-size:13px;cursor:pointer;flex:1;min-height:48px}.range-choices button.active{background:#eafaff;border-color:#009fc5;color:#0084a5}.range-choices svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}.selected-pass{display:flex;align-items:center;gap:12px;background:#f3fbff;border:1px solid #d4edf3;border-radius:13px;margin-bottom:12px;padding:10px 12px}.selected-pass :deep(.pass-artwork){width:75px;flex:none}.selected-pass span b{font-size:13px;color:#21647b}.selected-pass small{display:block;font-size:10px;color:#7192a0;margin-top:4px}.selected-pass a{margin-left:auto;font-size:10px;color:#1382a1;text-decoration:none;text-align:right}.pass-range-note{font-size:10px;line-height:1.7;color:#8099a3;margin:9px 3px 0}.planning-next{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:18px 0}.planning-next>span{font-size:12px;color:#708e9a}.planning-next .primary{width:auto;margin:0;min-width:152px;border-radius:13px;background:#009fc5;padding:13px 17px}.planning-next .primary:disabled{background:#edf3f5;color:#93a8b1;box-shadow:none;cursor:default}.empty-selection{margin:0 0 15px}.text-refinement,.plan-notes{font-size:12px;color:#688897;border-top:1px solid #e5edef;padding:13px 0;margin:0 0 12px}.text-refinement summary,.plan-notes summary,.rain-plan summary{cursor:pointer}.text-refinement form{display:flex;align-items:stretch;gap:8px;margin-top:12px}.text-refinement textarea{flex:1;min-height:80px;margin:0;resize:vertical}.text-refinement .secondary{width:auto;padding:10px 15px;margin:0}.text-refinement p{font-size:11px}.planner-results{margin-top:24px}.planner-results h2{font-size:21px}.planner-card h3{margin-top:3px}.rain-plan{margin:10px 0;padding:9px 11px;border-radius:9px;background:#f0f9fb;color:#45798b;font-size:11px}.rain-plan p{font-size:11px;line-height:1.7}.planner-input-label{font-size:13px;font-weight:600;display:block;margin:10px 0 12px}.memory-choice{display:flex;align-items:center;gap:6px;color:#668692;font-size:12px;margin:8px 0}.memory-choice input{accent-color:#009fc5}.pass-filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:15px 0 8px;position:sticky;top:0;background:#fff;padding:8px 0;z-index:1}.pass-search{grid-column:1/-1}.pass-filters input,.pass-filters select{width:100%;min-height:42px;border:1px solid #d4e9ed;border-radius:11px;background:#f8fcfd;color:#38768c;font-size:12px;padding:10px 12px;margin:0}.pass-filters input:focus,.pass-filters select:focus{outline:2px solid #009fc5;outline-offset:1px}.pass-count{font-size:11px;color:#7794a0;margin:8px 0}.pass-conditions{color:#74909c;font-size:11px;padding:5px 3px}.pass-conditions summary{cursor:pointer}.pass-conditions .pass-exclusions{margin-top:10px}.pass-choice .pass-kind{display:inline-block;padding:3px 7px;background:#e9f7fc;color:#0089ac;font-size:9px;border-radius:6px;margin-bottom:7px}.pass-choice .pass-kind.prepaid{color:#7a6500;background:#fff4c4}.pass-empty{font-size:13px;text-align:center;color:#73939f;padding:28px 12px}.pass-intro{font-size:13px;color:#638290;line-height:1.7}.pass-option{padding:16px 0;border-bottom:1px solid #e1ecef}.pass-choice{width:100%;display:grid;grid-template-columns:135px 1fr;align-items:center;gap:15px;padding:13px;text-align:left;border:1px solid #d4e9ed;border-radius:16px;background:#f8fdff;color:#276b83;cursor:pointer}.pass-choice[aria-pressed=true]{border-color:#009fc5;background:#effaff}.pass-choice span b{font-size:16px;display:block}.pass-choice small{font-size:10px;display:block;margin:4px 0 9px;color:#809ca7}.pass-choice em{font-size:11px;display:block;font-style:normal}.pass-choice strong{display:block;font-size:11px;color:#0092b5;margin-top:13px}.pass-option p{font-size:12px;line-height:1.8;color:#4d7383;margin:13px 3px 7px}.pass-option p.pass-exclusions{font-size:11px;color:#7b919b;margin-top:0}.pass-option a{font-size:11px;color:#0092b5;display:inline-block;padding:4px 3px;text-decoration:none}.pass-credit{display:block;margin:7px 3px;color:#94a5ad;font-size:9px;line-height:1.7}.range-choices button:focus-visible,.pass-choice:focus-visible{outline:3px solid #ffc500;outline-offset:3px}@media(max-width:600px){.planner-screen{padding-bottom:16px}.range-choices{gap:8px}.range-choices button{font-size:12px;padding:12px 8px}.pass-choice{grid-template-columns:105px 1fr;gap:11px}.selected-pass{gap:9px}.selected-pass a{font-size:9px}.planning-next .primary{min-width:145px;font-size:13px}.planning-next>span{font-size:11px}}
+</style>
+<style scoped>
+.planner-screen{width:100%;min-width:0}
+.planner-destinations{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr)}
+.planner-destinations label,.page-heading,.selected-pass>span,.planner-card>div{min-width:0}
+.range-choices button{min-width:0}.range-choices svg{flex-shrink:0}
+.text-refinement textarea{min-width:0}
+.planner-card{grid-template-columns:42px minmax(0,1fr) 44px}
+.planner-card>div,.selected-pass>span{overflow-wrap:anywhere}
+.planner-place-list{margin-top:12px;border:1px solid #d6e9ec;border-radius:13px;background:#fff;color:#315869;scroll-margin-top:76px}
+.planner-place-list summary{display:flex;align-items:center;justify-content:space-between;min-height:48px;padding:12px 14px;font-size:14px;font-weight:600;cursor:pointer}
+.planner-place-list summary::before{content:'＋';margin-right:8px}.planner-place-list[open] summary::before{content:'−'}
+.planner-place-list summary span{margin-left:auto;color:#75919c;font-size:11px;font-weight:400}
+.planner-place-picker{padding:0 10px 10px}
+.planner-place-picker>input{display:block;width:100%;min-width:0;min-height:46px;margin:0;padding:10px 12px;border:1px solid #cfe4e9;border-radius:10px;color:#315869;background:#f8fcfd;font-size:16px}
+.planner-list-status{display:flex;align-items:center;justify-content:space-between;min-height:44px;font-size:11px;color:#75919c}
+.planner-list-status button{min-height:44px;padding:8px;color:#0085a6;font-size:12px}
+.planner-choice-scroll{max-height:350px;overflow:auto;overscroll-behavior:contain}
+.planner-place-choice{display:flex;align-items:center;gap:6px;border-top:1px solid #e6eef1;padding:4px;border-radius:8px}
+.planner-place-choice.selected{background:#effaff}
+.planner-place-choice label{display:flex;align-items:center;gap:9px;flex:1;min-width:0;min-height:66px;margin:0;cursor:pointer}
+.planner-place-choice input{width:22px;height:22px;flex:none;margin:0;accent-color:#008bad}
+.planner-place-choice img,.planner-list-no-photo{width:48px;height:48px;border-radius:8px;object-fit:cover;flex:none}
+.planner-list-no-photo{display:grid;place-items:center;background:#edf3f5;color:#8098a1;font-size:11px}
+.planner-choice-name{min-width:0}.planner-choice-name b{display:block;overflow-wrap:anywhere;font-size:13px;line-height:1.5;font-weight:600}.planner-choice-name small{display:block;margin-top:3px;color:#79949e;font-size:10px}
+.planner-place-choice>button{min-width:44px;min-height:44px;padding:8px 4px;color:#0085a6;font-size:12px}
+.planner-list-more{width:100%;min-height:46px;background:#f0f9fb;border-radius:9px;margin-top:8px;color:#0085a6;font-size:13px}
+@media(max-width:600px){.planner-screen :deep(select),.planner-screen :deep(textarea),.planner-screen :deep(input:not([type=checkbox])){font-size:16px}.range-choices button{font-size:13px;padding:12px 7px;gap:5px}.planning-next{gap:8px}.planning-next .primary{min-width:140px;min-height:48px}.selected-pass{flex-wrap:wrap}.selected-pass>span{flex:1}.selected-pass>a{min-height:44px;display:flex;align-items:center}.text-refinement form{flex-wrap:wrap}.text-refinement textarea{flex-basis:100%}.text-refinement .secondary{min-height:44px;width:100%}.planner-results h2{font-size:18px}}
 </style>

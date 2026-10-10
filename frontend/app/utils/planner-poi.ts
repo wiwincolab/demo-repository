@@ -48,10 +48,10 @@ export function poiRegionsInBounds(regions: PoiRegion[], bounds: number[]) {
 }
 
 export const individualSelectionLimit = 100;
-export function plannerStopClusters(stops: Stop[], selected: number[] = [], rangeIds: number[] = [], hasRange = false) {
+export function plannerStopClusters(stops: Stop[], selected: number[] = [], rangeIds: number[] = [], hasRange = false, radius = 44) {
   const chosen = new Set(selected);
   const range = new Set(rangeIds), separateSelected = selected.length <= individualSelectionLimit;
-  return new Supercluster<{ id: number; inRange: number; selectedCount: number }, {inRange:number;selectedCount:number}>({ radius: 44, maxZoom: 16, map:p=>({inRange:p.inRange,selectedCount:p.selectedCount}), reduce:(total,p)=>{total.inRange+=p.inRange;total.selectedCount+=p.selectedCount;} }).load(stops.filter(p => !separateSelected || !chosen.has(p.id)).map(p => ({
+  return new Supercluster<{ id: number; inRange: number; selectedCount: number }, {inRange:number;selectedCount:number}>({ radius, maxZoom: 16, map:p=>({inRange:p.inRange,selectedCount:p.selectedCount}), reduce:(total,p)=>{total.inRange+=p.inRange;total.selectedCount+=p.selectedCount;} }).load(stops.filter(p => !separateSelected || !chosen.has(p.id)).map(p => ({
     type: 'Feature' as const, geometry: { type: 'Point' as const, coordinates: p.at }, properties: { id: p.id, inRange:Number(!hasRange || range.has(p.id)),selectedCount:Number(chosen.has(p.id)) },
   })));
 }

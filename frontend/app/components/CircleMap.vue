@@ -11,7 +11,7 @@ const props = defineProps<{
   places: Stop[]; selected: number[]; drawing: boolean; hasRange: boolean; rangeIds: number[];
   boundary?: Point[]; areas?: Point[][]; benefits?: PassBenefitPlace[]; resetKey?: number; route?: number[]; coverage?: PassCoverage | null; bounds?: number[] | null;
 }>();
-const emit = defineEmits<{ range: [ids: number[], boundary: Point[]]; select: [ids: number[]]; cancel: []; viewport: [bounds: number[], zoom: number]; inspect: [id: number] }>();
+const emit = defineEmits<{ range: [ids: number[], boundary: Point[], selectAll?: boolean]; select: [ids: number[]]; cancel: []; viewport: [bounds: number[], zoom: number]; inspect: [id: number] }>();
 const asset = useAsset();
 useHead({ link: [{ rel: 'stylesheet', href: asset('vendor/maplibre-gl.css') }] });
 const box = ref<HTMLElement>(), geography = ref<HTMLElement>(), canvas = ref<HTMLCanvasElement>(), gesture = ref<SVGSVGElement>();
@@ -66,13 +66,23 @@ function chooseMapClick(event:MouseEvent) {
   else {const group=groupedPoints.value.find(g=>g.id===Number(hit.dataset.clusterId));if(group)expandCluster(group);}
 }
 function photoFailed(src:string) { if (!failedPhotos.value.includes(src)) failedPhotos.value.push(src); }
-function rebuildClusters() { stopById = new Map(props.places.map(p=>[p.id,p])); clusterIndex = plannerStopClusters(props.places,props.selected,props.rangeIds,props.hasRange); refresh(); }
+function rebuildClusters() { stopById = new Map(props.places.map(p=>[p.id,p])); clusterIndex = plannerStopClusters(props.places,props.selected,props.rangeIds,props.hasRange,(box.value?.clientWidth || size.width) <= 600 ? 60 : 44); refresh(); }
 function currentBounds() {
   if (!fallback.value && map) { const b=map.getBounds(); return [b.getWest(),b.getSouth(),b.getEast(),b.getNorth()]; }
   const [w,n]=invert([0,0]), [e,s]=invert([size.width,size.height]);
   return [w!,s!,e!,n!];
 }
 function reportViewport() { if (!disposed && (props.places.length || props.bounds)) emit('viewport', currentBounds(), zoom.value); }
+function zoomBy(amount: number) {
+  if (props.drawing) return;
+  if (!fallback.value && map) map.zoomTo(Math.max(2,Math.min(18,map.getZoom()+amount)),{duration:matchMedia('(prefers-reduced-motion: reduce)').matches?0:200});
+  else { fallbackZoom(2 ** amount); reportViewport(); }
+}
+function selectVisibleArea(selectAll = false) {
+  cancelStroke();
+  const boundary = [[16,16],[size.width-16,16],[size.width-16,size.height-16],[16,size.height-16]].map(invert);
+  emit('range',props.places.filter(s=>withinPlanningAreas(s.at,[boundary])).map(s=>s.id),boundary,selectAll);
+}
 function expandCluster(group:typeof groupedPoints.value[number]) {
   if (props.drawing) return;
   const nextZoom=clusterIndex.getClusterExpansionZoom(group.id);
@@ -215,8 +225,7 @@ function keyboard(e: KeyboardEvent) {
   if (e.key === 'Escape' && props.drawing) { stroke.value = []; emit('cancel'); return; }
   if (e.key === 'Enter' && props.drawing) {
     e.preventDefault();
-    const boundary = [[20, 20], [size.width - 20, 20], [size.width - 20, size.height - 20], [20, size.height - 20]].map(invert);
-    emit('range', props.places.filter(s => withinPlanningAreas(s.at, [boundary])).map(s => s.id), boundary); return;
+    selectVisibleArea(true); return;
   }
   if (!fallback.value) return;
   const actions: Record<string, () => void> = { '+': () => fallbackZoom(1.5), '=': () => fallbackZoom(1.5), '-': () => fallbackZoom(1 / 1.5), '0': () => fit(), ArrowLeft: () => camera.x += 40, ArrowRight: () => camera.x -= 40, ArrowUp: () => camera.y += 40, ArrowDown: () => camera.y -= 40 };
@@ -228,7 +237,8 @@ function toggle(id: number) {
   emit('select', props.selected.includes(id) ? props.selected.filter(n => n !== id) : [...props.selected, id]);
 }
 watch(() => props.drawing, drawingMode, { flush: 'post' });
-watch(() => [props.boundary, props.areas, props.coverage], () => { cancelStroke(); updateCoverage(); fit(true); }, { deep: true });
+watch(() => props.boundary, () => { cancelStroke(); refresh(); }, { deep: true });
+watch(() => [props.areas, props.coverage], () => { cancelStroke(); updateCoverage(); if (props.coverage || props.areas?.length) fit(true); else refresh(); }, { deep: true });
 watch(() => props.route, scheduleRefresh, { deep: true });
 watch(() => props.benefits, () => { focusedBenefit.value = ''; scheduleRefresh(); });
 watch(() => props.resetKey, () => { cancelStroke(); fit(); });
@@ -237,7 +247,7 @@ watch(() => [props.selected,props.rangeIds,props.hasRange], rebuildClusters);
 watch(() => props.bounds, () => { cancelStroke(); fit(!!props.coverage); });
 onMounted(async () => {
   rebuildClusters();
-  observer = new ResizeObserver(() => { map?.resize(); refresh(); }); observer.observe(box.value!); refresh();
+  observer = new ResizeObserver(() => { map?.resize(); rebuildClusters(); }); observer.observe(box.value!); refresh();
   if (isTokyo.value) $fetch<BaseMap>(asset('assets/tokyo-map.json')).then(value => { if (!disposed) { base = value; refresh(); } }).catch(() => {});
   try {
     await loadScript(asset('vendor/maplibre-gl.js')); if (disposed) return;
@@ -287,7 +297,13 @@ onBeforeUnmount(() => { disposed = true; cancelAnimationFrame(frame); observer?.
     <svg v-if="drawing || fallback" ref="gesture" class="planner-gesture" :viewBox="`0 0 ${size.width} ${size.height}`" tabindex="0" role="group" :aria-label="drawing ? '拖曳畫出範圍；Enter 選取目前可見區域，Escape 取消圈選' : '地圖可拖曳平移，加減鍵、滾輪或雙指縮放'" @pointerdown="start" @pointermove="move" @pointerup="finish" @pointercancel="finish">
       <polygon v-if="stroke.length > 2" :points="stroke.map(p => p.join(',')).join(' ')" fill="#009fc51a" stroke="#009fc5" stroke-width="2" stroke-dasharray="5 4" />
     </svg>
-    <span class="planner-map-hint">{{ drawing ? '拖曳畫出想逛的範圍，放開就完成' : coverage?.metadata.mode === 'network' ? '券內路線保留原色 · 未包含路線淡化' : '放大地圖看景點 · 雙指或滾輪縮放' }}</span>
+    <div class="planner-map-actions" aria-label="地圖操作" @pointerdown.stop @wheel.stop>
+      <button type="button" class="planner-select-view" :disabled="!places.length" @click="selectVisibleArea()">選這一區</button>
+      <button type="button" aria-label="重新置中地圖" :disabled="drawing" @click="fit(!!geographicAreas.length)">置中</button>
+      <button type="button" aria-label="放大地圖" :disabled="drawing || zoom >= 18" @click="zoomBy(1)">＋</button>
+      <button type="button" aria-label="縮小地圖" :disabled="drawing || zoom <= 2" @click="zoomBy(-1)">−</button>
+    </div>
+    <span v-if="drawing" class="planner-map-hint">畫出範圍，放開即完成；也可按「選這一區」</span>
     <span v-if="!drawing" class="planner-map-legend"><span v-for="access in accessTypes" :key="access"><i :style="{background:accessColours[access],borderTopColor:accessColours[access]}" :class="{limited:access !== 'unlimited'}" />{{ passAccessLabels[access] }}</span><span v-if="coverage"><i class="contour" />沿線／景點規劃輪廓</span><span v-if="benefits?.length"><i class="venue" />合作景點定位圈</span><template v-if="!fallback"><span><i class="line-colours" />地鐵依路線標色</span><span><i class="high-speed" />新幹線／高鐵</span></template></span>
     <details v-if="!drawing && !fallback && transitLines.length" class="planner-transit-legend" @wheel.stop @keydown.stop><summary>地鐵路線顏色 · {{ transitLines.length }} 條</summary><ul><li v-for="line in transitLines" :key="line.key" :class="{ excluded: line.covered === false }"><i :style="{ background: line.colour }" /><b v-if="line.ref">{{ line.ref }}</b>{{ line.name }}<small v-if="line.covered !== undefined">{{ line.covered ? '券內適用' : '未包含' }}{{ line.colour === '#778896' ? '・色彩待查核' : '' }}</small><small v-else-if="line.colour === '#778896'">色彩待查核</small></li></ul></details>
     <span v-if="loading && fallback" class="planner-map-credit">正在載入道路地圖…</span>
@@ -317,4 +333,14 @@ onBeforeUnmount(() => { disposed = true; cancelAnimationFrame(frame); observer?.
 </style>
 <style scoped>
 .planner-transit-legend li.excluded{opacity:.45}.planner-transit-legend li small{margin-left:auto;white-space:nowrap}.planner-map-hint{max-width:45%;font-size:9px}
+</style>
+<style scoped>
+.planner-map-actions{position:absolute;top:10px;left:10px;right:10px;z-index:8;display:flex;gap:6px;pointer-events:none}
+.planner-map-actions button{pointer-events:auto;min-width:44px;min-height:44px;padding:0 10px;border:1px solid #cfe1e7;border-radius:10px;background:#fffffff5;color:#315869;font-size:13px;font-weight:600;box-shadow:0 2px 8px #244c6314;touch-action:manipulation}
+.planner-map-actions .planner-select-view{margin-right:auto;background:#008bad;color:#fff;border-color:#008bad;font-size:14px}
+.planner-map-hint{top:66px;max-width:calc(100% - 24px);font-size:11px}
+.planner-transit-legend{top:66px;max-width:calc(100% - 24px)}
+.planner-transit-legend summary{min-height:44px;display:flex;align-items:center}
+.planner-poi-cluster{width:44px;height:44px}
+@media(max-width:600px){.planner-map{height:50svh;min-height:320px;max-height:440px}.planner-map-legend{bottom:28px;left:8px;right:8px;font-size:9px;padding:5px 7px;gap:5px 9px}.planner-transit-legend summary{padding:8px 10px}.planner-map :deep(.maplibregl-ctrl-attrib){max-width:calc(100% - 16px);font-size:9px}.planner-place-detail.photo{width:132px}.planner-place-detail.photo p{display:none}}
 </style>
