@@ -22,6 +22,8 @@
 
 照片先用景點的 OSM `wikimedia_commons`／Wikidata P18 連結；沒有 Wikidata ID 時，僅從 OSM 已連結的 Wikipedia 文章取得 ID，不模糊比對名稱。再向 Commons `imageinfo` 取得縮圖及授權，僅發布可確認許可的影像。未配對、無圖片及待重試分別保留狀態，不拿鄰近景點照片補位。照片仍由 Wikimedia 提供；資料交付的是照片連結和來源，未批次下載原始照片。詳情顯示作者、授權及來源連結；影像失效時顯示載入失敗。
 
+`scripts/poi/supplement-photos.mjs` 補查尚缺照片的項目：Wikidata 已連結的 Wikipedia 主圖與同名景點影像、Commons P180 精確描繪識別碼、P373／OSM 已連結的景點相簿。`POI_PHOTO_MODE=geographic` 再以完整景點名稱與 250 公尺內的 Commons 照片／相簿座標查找沒有連結的項目，排除只有通用名稱的點位。Wikipedia 本地圖片也須通過作者、授權與影像來源檢查；不同語言站的同名檔不混用。人物、同名列表及分類頁識別碼須人工核對，地圖／標誌／肖像不當作景點實景。已查證的原始識別碼錯誤列在 `scripts/poi/photo-overrides.json`，保留核對來源。報表 `public/poi/exports/photo-supplement-report.json` 保存新增照片、來源錯誤及仍缺照片的景點；匯出後的 `public/poi/exports/missing-photos.csv` 提供國家、地區、景點名稱、座標與中文查找結果。沒有配對成功的項目維持無照片。
+
 地圖依區域載入準備好的 JSON，MapLibre 顯示底圖，使用 [Supercluster](https://github.com/mapbox/supercluster) 依縮放與可見範圍聚合點位；清單每次顯示 36 個景點，照片延後載入。搜尋及分類使用本機資料。`/api/poi/catalog`、`/api/poi/regions/:id` 只讀 PVC 上的快照，不對使用者請求即時爬取；沒有後端快照時，前端改讀靜態檔，GitHub Pages 也可用。
 
 `/places` 預設顯示全部景點（包含照片待補者），已取得的照片會顯示在獨立景點圓點上；「只看有照片」由使用者選擇。`/planner` 共用這些快照，可選日本 35、韓國 17、台灣 22 個現有旅遊區域，依地圖可見範圍或票券範圍載入，每批最多 3 區。匯入景點使用穩定的負數 OSM 衍生 ID，可圈選、點選、產生與儲存草案，並保留照片作者及授權。資料新增時不重設地圖視角；大量選取仍聚合點位。API 的單區資料缺失時也可退回靜態快照，支援網站子路徑。
@@ -31,6 +33,9 @@
 node scripts/poi/import.mjs
 # 只更新圖片，或指定部分區域：
 POI_STAGE=images POI_REGIONS=jp-tokyo,kr-seoul,tw-taipei node scripts/poi/import.mjs
+# 擴充補查缺少的照片（可用 POI_REGIONS 限定範圍）：
+node scripts/poi/supplement-photos.mjs
+POI_PHOTO_MODE=geographic node scripts/poi/supplement-photos.mjs
 # 輸出各國可攜資料：
 node scripts/poi/export.mjs
 # 讓本機 API 直接讀這批資料：

@@ -1,26 +1,26 @@
 {
-  "generatedAt": "2026-10-10T05:16:38.500Z",
+  "generatedAt": "2026-10-10T13:01:29.032Z",
   "coverage": "Curated bounding boxes of travel areas; not an exhaustive national inventory or a popularity ranking.",
   "totalUnique": 33482,
-  "totalWithPhoto": 10241,
+  "totalWithPhoto": 12907,
   "totalPendingPhotos": 0,
   "countries": [
     {
       "country": "JP",
       "pois": 20317,
-      "photos": 8488,
+      "photos": 10124,
       "regions": 35
     },
     {
       "country": "KR",
       "pois": 4175,
-      "photos": 259,
+      "photos": 507,
       "regions": 17
     },
     {
       "country": "TW",
       "pois": 8990,
-      "photos": 1494,
+      "photos": 2276,
       "regions": 22
     }
   ],
@@ -37,7 +37,7 @@
       ],
       "status": "ready",
       "count": 3942,
-      "photoCount": 2792,
+      "photoCount": 2955,
       "fetchedAt": "2026-10-10T04:53:59.563Z",
       "file": "regions/jp-tokyo.json"
     },
@@ -53,7 +53,7 @@
       ],
       "status": "ready",
       "count": 351,
-      "photoCount": 142,
+      "photoCount": 207,
       "fetchedAt": "2026-10-10T04:53:59.827Z",
       "file": "regions/jp-sapporo-otaru.json"
     },
@@ -69,7 +69,7 @@
       ],
       "status": "ready",
       "count": 95,
-      "photoCount": 37,
+      "photoCount": 53,
       "fetchedAt": "2026-10-10T04:54:00.002Z",
       "file": "regions/jp-hakodate.json"
     },
@@ -85,7 +85,7 @@
       ],
       "status": "ready",
       "count": 143,
-      "photoCount": 37,
+      "photoCount": 60,
       "fetchedAt": "2026-10-10T04:54:00.170Z",
       "file": "regions/jp-furano-asahikawa.json"
     },
@@ -101,7 +101,7 @@
       ],
       "status": "ready",
       "count": 195,
-      "photoCount": 66,
+      "photoCount": 92,
       "fetchedAt": "2026-10-10T04:54:00.333Z",
       "file": "regions/jp-aomori-hirosaki.json"
     },
@@ -117,7 +117,7 @@
       ],
       "status": "ready",
       "count": 529,
-      "photoCount": 127,
+      "photoCount": 156,
       "fetchedAt": "2026-10-10T04:54:00.496Z",
       "file": "regions/jp-sendai-matsushima.json"
     },
@@ -133,7 +133,7 @@
       ],
       "status": "ready",
       "count": 1346,
-      "photoCount": 736,
+      "photoCount": 833,
       "fetchedAt": "2026-10-10T04:54:00.685Z",
       "file": "regions/jp-yokohama-kamakura.json"
     },
@@ -149,7 +149,7 @@
       ],
       "status": "ready",
       "count": 464,
-      "photoCount": 112,
+      "photoCount": 142,
       "fetchedAt": "2026-10-10T04:54:00.862Z",
       "file": "regions/jp-hakone.json"
     },
@@ -165,7 +165,7 @@
       ],
       "status": "ready",
       "count": 970,
-      "photoCount": 229,
+      "photoCount": 293,
       "fetchedAt": "2026-10-10T04:54:01.018Z",
       "file": "regions/jp-fuji.json"
     },
@@ -181,7 +181,7 @@
       ],
       "status": "ready",
       "count": 210,
-      "photoCount": 46,
+      "photoCount": 74,
       "fetchedAt": "2026-10-10T04:54:01.192Z",
       "file": "regions/jp-nikko.json"
     },
@@ -197,7 +197,7 @@
       ],
       "status": "ready",
       "count": 967,
-      "photoCount": 316,
+      "photoCount": 382,
       "fetchedAt": "2026-10-10T04:54:01.350Z",
       "file": "regions/jp-nagano-matsumoto.json"
     },
@@ -213,7 +213,7 @@
       ],
       "status": "ready",
       "count": 951,
-      "photoCount": 372,
+      "photoCount": 601,
       "fetchedAt": "2026-10-10T04:54:01.516Z",
       "file": "regions/jp-nagoya.json"
     },
@@ -229,7 +229,7 @@
       ],
       "status": "ready",
       "count": 191,
-      "photoCount": 75,
+      "photoCount": 99,
       "fetchedAt": "2026-10-10T04:54:01.688Z",
       "file": "regions/jp-takayama-shirakawa.json"
     },
@@ -245,7 +245,7 @@
       ],
       "status": "ready",
       "count": 221,
-      "photoCount": 78,
+      "photoCount": 99,
       "fetchedAt": "2026-10-10T04:54:01.840Z",
       "file": "regions/jp-kanazawa.json"
     },
@@ -261,7 +261,7 @@
       ],
       "status": "ready",
       "count": 1416,
-      "photoCount": 689,
+      "photoCount": 771,
       "fetchedAt": "2026-10-10T04:54:02.005Z",
       "file": "regions/jp-kyoto.json"
     },
@@ -277,7 +277,7 @@
       ],
       "status": "ready",
       "count": 1900,
-      "photoCount": 808,
+      "photoCount": 949,
       "fetchedAt": "2026-10-10T04:54:02.175Z",
       "file": "regions/jp-osaka.json"
     },
@@ -293,7 +293,7 @@
       ],
       "status": "ready",
       "count": 995,
-      "photoCount": 434,
+      "photoCount": 497,
       "fetchedAt": "2026-10-10T04:54:14.954Z",
       "file": "regions/jp-nara.json"
     },
@@ -309,7 +309,7 @@
       ],
       "status": "ready",
       "count": 515,
-      "photoCount": 262,
+      "photoCount": 306,
       "fetchedAt": "2026-10-10T04:54:31.970Z",
       "file": "regions/jp-kobe.json"
     },
@@ -325,7 +325,7 @@
       ],
       "status": "ready",
       "count": 250,
-      "photoCount": 82,
+      "photoCount": 99,
       "fetchedAt": "2026-10-10T04:54:40.928Z",
       "file": "regions/jp-himeji.json"
     },
@@ -341,7 +341,7 @@
       ],
       "status": "ready",
       "count": 641,
-      "photoCount": 202,
+      "photoCount": 243,
       "fetchedAt": "2026-10-10T04:54:54.252Z",
       "file": "regions/jp-wakayama.json"
     },
@@ -357,7 +357,7 @@
       ],
       "status": "ready",
       "count": 318,
-      "photoCount": 105,
+      "photoCount": 153,
       "fetchedAt": "2026-10-10T04:55:45.833Z",
       "file": "regions/jp-hiroshima-miyajima.json"
     },
@@ -373,7 +373,7 @@
       ],
       "status": "ready",
       "count": 400,
-      "photoCount": 111,
+      "photoCount": 155,
       "fetchedAt": "2026-10-10T04:55:58.893Z",
       "file": "regions/jp-okayama-kurashiki.json"
     },
@@ -389,7 +389,7 @@
       ],
       "status": "ready",
       "count": 918,
-      "photoCount": 186,
+      "photoCount": 217,
       "fetchedAt": "2026-10-10T04:56:13.908Z",
       "file": "regions/jp-tottori-shimane.json"
     },
@@ -405,7 +405,7 @@
       ],
       "status": "ready",
       "count": 667,
-      "photoCount": 187,
+      "photoCount": 235,
       "fetchedAt": "2026-10-10T04:56:26.438Z",
       "file": "regions/jp-takamatsu-setouchi.json"
     },
@@ -421,7 +421,7 @@
       ],
       "status": "ready",
       "count": 118,
-      "photoCount": 53,
+      "photoCount": 66,
       "fetchedAt": "2026-10-10T04:56:48.413Z",
       "file": "regions/jp-matsuyama.json"
     },
@@ -437,7 +437,7 @@
       ],
       "status": "ready",
       "count": 347,
-      "photoCount": 141,
+      "photoCount": 167,
       "fetchedAt": "2026-10-10T04:56:58.667Z",
       "file": "regions/jp-tokushima.json"
     },
@@ -453,7 +453,7 @@
       ],
       "status": "ready",
       "count": 138,
-      "photoCount": 46,
+      "photoCount": 56,
       "fetchedAt": "2026-10-10T04:57:06.747Z",
       "file": "regions/jp-kochi.json"
     },
@@ -469,7 +469,7 @@
       ],
       "status": "ready",
       "count": 672,
-      "photoCount": 166,
+      "photoCount": 245,
       "fetchedAt": "2026-10-10T04:57:21.382Z",
       "file": "regions/jp-fukuoka.json"
     },
@@ -485,7 +485,7 @@
       ],
       "status": "ready",
       "count": 241,
-      "photoCount": 58,
+      "photoCount": 77,
       "fetchedAt": "2026-10-10T04:57:30.120Z",
       "file": "regions/jp-nagasaki.json"
     },
@@ -501,7 +501,7 @@
       ],
       "status": "ready",
       "count": 262,
-      "photoCount": 75,
+      "photoCount": 108,
       "fetchedAt": "2026-10-10T04:57:53.570Z",
       "file": "regions/jp-kumamoto-aso.json"
     },
@@ -517,7 +517,7 @@
       ],
       "status": "ready",
       "count": 334,
-      "photoCount": 60,
+      "photoCount": 97,
       "fetchedAt": "2026-10-10T04:58:09.832Z",
       "file": "regions/jp-beppu-yufuin.json"
     },
@@ -533,7 +533,7 @@
       ],
       "status": "ready",
       "count": 274,
-      "photoCount": 96,
+      "photoCount": 110,
       "fetchedAt": "2026-10-10T04:58:26.406Z",
       "file": "regions/jp-kagoshima.json"
     },
@@ -549,7 +549,7 @@
       ],
       "status": "ready",
       "count": 281,
-      "photoCount": 60,
+      "photoCount": 95,
       "fetchedAt": "2026-10-10T04:58:42.561Z",
       "file": "regions/jp-miyazaki.json"
     },
@@ -565,7 +565,7 @@
       ],
       "status": "ready",
       "count": 529,
-      "photoCount": 87,
+      "photoCount": 125,
       "fetchedAt": "2026-10-10T04:58:57.451Z",
       "file": "regions/jp-okinawa.json"
     },
@@ -581,7 +581,7 @@
       ],
       "status": "ready",
       "count": 97,
-      "photoCount": 31,
+      "photoCount": 38,
       "fetchedAt": "2026-10-10T04:59:13.630Z",
       "file": "regions/jp-ishigaki-miyako.json"
     },
@@ -597,7 +597,7 @@
       ],
       "status": "ready",
       "count": 1125,
-      "photoCount": 114,
+      "photoCount": 201,
       "fetchedAt": "2026-10-10T04:59:31.815Z",
       "file": "regions/kr-seoul.json"
     },
@@ -613,7 +613,7 @@
       ],
       "status": "ready",
       "count": 299,
-      "photoCount": 10,
+      "photoCount": 29,
       "fetchedAt": "2026-10-10T04:59:46.028Z",
       "file": "regions/kr-incheon.json"
     },
@@ -629,7 +629,7 @@
       ],
       "status": "ready",
       "count": 367,
-      "photoCount": 24,
+      "photoCount": 45,
       "fetchedAt": "2026-10-10T05:00:00.589Z",
       "file": "regions/kr-busan.json"
     },
@@ -645,7 +645,7 @@
       ],
       "status": "ready",
       "count": 527,
-      "photoCount": 18,
+      "photoCount": 50,
       "fetchedAt": "2026-10-10T05:00:46.796Z",
       "file": "regions/kr-jeju.json"
     },
@@ -661,7 +661,7 @@
       ],
       "status": "ready",
       "count": 190,
-      "photoCount": 13,
+      "photoCount": 28,
       "fetchedAt": "2026-10-10T05:00:55.351Z",
       "file": "regions/kr-suwon.json"
     },
@@ -677,7 +677,7 @@
       ],
       "status": "ready",
       "count": 177,
-      "photoCount": 10,
+      "photoCount": 15,
       "fetchedAt": "2026-10-10T05:01:03.311Z",
       "file": "regions/kr-daejeon.json"
     },
@@ -693,7 +693,7 @@
       ],
       "status": "ready",
       "count": 202,
-      "photoCount": 5,
+      "photoCount": 19,
       "fetchedAt": "2026-10-10T05:01:11.392Z",
       "file": "regions/kr-daegu.json"
     },
@@ -709,7 +709,7 @@
       ],
       "status": "ready",
       "count": 158,
-      "photoCount": 5,
+      "photoCount": 10,
       "fetchedAt": "2026-10-10T05:01:59.623Z",
       "file": "regions/kr-gwangju.json"
     },
@@ -725,7 +725,7 @@
       ],
       "status": "ready",
       "count": 372,
-      "photoCount": 26,
+      "photoCount": 36,
       "fetchedAt": "2026-10-10T05:02:07.578Z",
       "file": "regions/kr-gyeongju.json"
     },
@@ -741,7 +741,7 @@
       ],
       "status": "ready",
       "count": 76,
-      "photoCount": 5,
+      "photoCount": 14,
       "fetchedAt": "2026-10-10T05:02:16.640Z",
       "file": "regions/kr-jeonju.json"
     },
@@ -757,7 +757,7 @@
       ],
       "status": "ready",
       "count": 84,
-      "photoCount": 1,
+      "photoCount": 6,
       "fetchedAt": "2026-10-10T05:02:24.651Z",
       "file": "regions/kr-gangneung.json"
     },
@@ -773,7 +773,7 @@
       ],
       "status": "ready",
       "count": 92,
-      "photoCount": 8,
+      "photoCount": 16,
       "fetchedAt": "2026-10-10T05:03:15.996Z",
       "file": "regions/kr-sokcho.json"
     },
@@ -789,7 +789,7 @@
       ],
       "status": "ready",
       "count": 105,
-      "photoCount": 4,
+      "photoCount": 11,
       "fetchedAt": "2026-10-10T05:03:24.020Z",
       "file": "regions/kr-chuncheon.json"
     },
@@ -805,7 +805,7 @@
       ],
       "status": "ready",
       "count": 208,
-      "photoCount": 10,
+      "photoCount": 17,
       "fetchedAt": "2026-10-10T05:03:33.078Z",
       "file": "regions/kr-yeosu-suncheon.json"
     },
@@ -821,7 +821,7 @@
       ],
       "status": "ready",
       "count": 92,
-      "photoCount": 1,
+      "photoCount": 8,
       "fetchedAt": "2026-10-10T05:03:41.913Z",
       "file": "regions/kr-andong.json"
     },
@@ -837,7 +837,7 @@
       ],
       "status": "ready",
       "count": 231,
-      "photoCount": 2,
+      "photoCount": 6,
       "fetchedAt": "2026-10-10T05:04:31.375Z",
       "file": "regions/kr-pohang.json"
     },
@@ -853,7 +853,7 @@
       ],
       "status": "ready",
       "count": 133,
-      "photoCount": 11,
+      "photoCount": 15,
       "fetchedAt": "2026-10-10T05:04:39.597Z",
       "file": "regions/kr-ulsan.json"
     },
@@ -869,7 +869,7 @@
       ],
       "status": "ready",
       "count": 1078,
-      "photoCount": 277,
+      "photoCount": 426,
       "fetchedAt": "2026-10-10T04:29:21.445Z",
       "file": "regions/tw-taipei.json"
     },
@@ -885,7 +885,7 @@
       ],
       "status": "ready",
       "count": 2591,
-      "photoCount": 461,
+      "photoCount": 738,
       "fetchedAt": "2026-10-10T04:29:21.680Z",
       "file": "regions/tw-new-taipei.json"
     },
@@ -901,7 +901,7 @@
       ],
       "status": "ready",
       "count": 250,
-      "photoCount": 32,
+      "photoCount": 43,
       "fetchedAt": "2026-10-10T04:29:21.908Z",
       "file": "regions/tw-keelung.json"
     },
@@ -917,7 +917,7 @@
       ],
       "status": "ready",
       "count": 1007,
-      "photoCount": 149,
+      "photoCount": 252,
       "fetchedAt": "2026-10-10T04:29:22.119Z",
       "file": "regions/tw-taoyuan.json"
     },
@@ -933,7 +933,7 @@
       ],
       "status": "ready",
       "count": 148,
-      "photoCount": 38,
+      "photoCount": 57,
       "fetchedAt": "2026-10-10T04:29:22.366Z",
       "file": "regions/tw-hsinchu-city.json"
     },
@@ -949,7 +949,7 @@
       ],
       "status": "ready",
       "count": 841,
-      "photoCount": 113,
+      "photoCount": 203,
       "fetchedAt": "2026-10-10T04:29:22.606Z",
       "file": "regions/tw-hsinchu-county.json"
     },
@@ -965,7 +965,7 @@
       ],
       "status": "ready",
       "count": 724,
-      "photoCount": 81,
+      "photoCount": 137,
       "fetchedAt": "2026-10-10T04:29:22.913Z",
       "file": "regions/tw-miaoli.json"
     },
@@ -981,7 +981,7 @@
       ],
       "status": "ready",
       "count": 1058,
-      "photoCount": 162,
+      "photoCount": 237,
       "fetchedAt": "2026-10-10T04:29:23.179Z",
       "file": "regions/tw-taichung.json"
     },
@@ -997,7 +997,7 @@
       ],
       "status": "ready",
       "count": 417,
-      "photoCount": 131,
+      "photoCount": 172,
       "fetchedAt": "2026-10-10T04:29:23.332Z",
       "file": "regions/tw-changhua.json"
     },
@@ -1013,7 +1013,7 @@
       ],
       "status": "ready",
       "count": 1313,
-      "photoCount": 137,
+      "photoCount": 237,
       "fetchedAt": "2026-10-10T04:29:23.457Z",
       "file": "regions/tw-nantou.json"
     },
@@ -1029,7 +1029,7 @@
       ],
       "status": "ready",
       "count": 364,
-      "photoCount": 86,
+      "photoCount": 110,
       "fetchedAt": "2026-10-10T04:29:23.593Z",
       "file": "regions/tw-yunlin.json"
     },
@@ -1045,7 +1045,7 @@
       ],
       "status": "ready",
       "count": 66,
-      "photoCount": 23,
+      "photoCount": 33,
       "fetchedAt": "2026-10-10T04:29:23.718Z",
       "file": "regions/tw-chiayi-city.json"
     },
@@ -1061,7 +1061,7 @@
       ],
       "status": "ready",
       "count": 796,
-      "photoCount": 125,
+      "photoCount": 193,
       "fetchedAt": "2026-10-10T04:29:23.843Z",
       "file": "regions/tw-chiayi-county.json"
     },
@@ -1077,7 +1077,7 @@
       ],
       "status": "ready",
       "count": 828,
-      "photoCount": 229,
+      "photoCount": 287,
       "fetchedAt": "2026-10-10T04:29:23.990Z",
       "file": "regions/tw-tainan.json"
     },
@@ -1093,7 +1093,7 @@
       ],
       "status": "ready",
       "count": 1890,
-      "photoCount": 371,
+      "photoCount": 509,
       "fetchedAt": "2026-10-10T04:29:24.121Z",
       "file": "regions/tw-kaohsiung.json"
     },
@@ -1109,7 +1109,7 @@
       ],
       "status": "ready",
       "count": 673,
-      "photoCount": 95,
+      "photoCount": 151,
       "fetchedAt": "2026-10-10T04:29:24.278Z",
       "file": "regions/tw-pingtung.json"
     },
@@ -1125,7 +1125,7 @@
       ],
       "status": "ready",
       "count": 1011,
-      "photoCount": 104,
+      "photoCount": 173,
       "fetchedAt": "2026-10-10T04:29:24.414Z",
       "file": "regions/tw-yilan.json"
     },
@@ -1141,7 +1141,7 @@
       ],
       "status": "ready",
       "count": 1066,
-      "photoCount": 62,
+      "photoCount": 120,
       "fetchedAt": "2026-10-10T04:29:24.562Z",
       "file": "regions/tw-hualien.json"
     },
@@ -1157,7 +1157,7 @@
       ],
       "status": "ready",
       "count": 817,
-      "photoCount": 59,
+      "photoCount": 98,
       "fetchedAt": "2026-10-10T04:29:24.715Z",
       "file": "regions/tw-taitung.json"
     },
@@ -1173,7 +1173,7 @@
       ],
       "status": "ready",
       "count": 128,
-      "photoCount": 49,
+      "photoCount": 69,
       "fetchedAt": "2026-10-10T04:29:25.762Z",
       "file": "regions/tw-penghu.json"
     },
@@ -1189,7 +1189,7 @@
       ],
       "status": "ready",
       "count": 128,
-      "photoCount": 39,
+      "photoCount": 52,
       "fetchedAt": "2026-10-10T02:45:39.306Z",
       "file": "regions/tw-kinmen.json"
     },
@@ -1205,7 +1205,7 @@
       ],
       "status": "ready",
       "count": 112,
-      "photoCount": 20,
+      "photoCount": 35,
       "fetchedAt": "2026-10-10T02:45:42.280Z",
       "file": "regions/tw-matsu.json"
     }

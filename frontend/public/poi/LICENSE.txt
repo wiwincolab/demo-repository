@@ -9,7 +9,7 @@ https://opendatacommons.org/licenses/odbl/1-0/
 Wikidata labels and descriptions: CC0.
 https://www.wikidata.org/wiki/Wikidata:Licensing
 
-Photos: Wikimedia Commons links; each photo has its own author credit, source page and license in the record. Retain those credits and comply with that license when reusing images. Original photos are not included in this package. Null photo means no verified usable image was matched; imageStatus distinguishes unavailable and pending. Missing source attributes remain null.
+Photos: Wikimedia Commons and Wikipedia links; each photo has its own author credit, source page and license in the record. Retain those credits and comply with that license when reusing images. Original photos are not included in this package. Null photo means no verified usable image was matched; imageStatus distinguishes unavailable and pending. Missing source attributes remain null.
 
 GeoJSON coordinates are [longitude, latitude], WGS84. CSV is UTF-8 with BOM; formula-like values are prefixed with an apostrophe for safe opening in spreadsheet applications.
 

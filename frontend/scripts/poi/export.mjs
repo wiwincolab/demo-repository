@@ -19,7 +19,7 @@ const fields=['id','country','regions','name','localName','names','category','ca
 const cell=value=>{const text=String(value ?? '');return `"${(/^[=+@-]/.test(text)?"'":'')+text.replaceAll('"','""')}"`;};
 for(const country of ['JP','KR','TW']) {
   const rows=pois.filter(p=>p.country===country);
-  const geojson={type:'FeatureCollection',name:`chicTrip ${country} POIs`,license:'OpenStreetMap ODbL-1.0; Wikidata CC0; image licenses per photo',attribution:'© OpenStreetMap contributors; Wikidata; Wikimedia Commons image authors',generatedAt:catalog.generatedAt,features:rows.map(p=>{const {at,...properties}=p;return {type:'Feature',id:p.id,geometry:{type:'Point',coordinates:at},properties};})};
+  const geojson={type:'FeatureCollection',name:`chicTrip ${country} POIs`,license:'OpenStreetMap ODbL-1.0; Wikidata CC0; image licenses per photo',attribution:'© OpenStreetMap contributors; Wikidata; Wikimedia Commons and Wikipedia image authors',generatedAt:catalog.generatedAt,features:rows.map(p=>{const {at,...properties}=p;return {type:'Feature',id:p.id,geometry:{type:'Point',coordinates:at},properties};})};
   await writeFile(join(output,`${country.toLowerCase()}.geojson`),JSON.stringify(geojson));
   const csv=[fields.map(cell).join(','),...rows.map(p=>{
     const flat={...p,regions:p.regions.join('|'),names:JSON.stringify(p.names),longitude:p.at[0],latitude:p.at[1],imageUrl:p.photo?.src,imageOriginalUrl:p.photo?.original,imageSource:p.photo?.source,imageCredit:p.photo?.credit,imageLicense:p.photo?.license,imageLicenseUrl:p.photo?.licenseUrl,osmUrl:p.source.url,sourceLicense:p.source.license,sourceLicenseUrl:p.source.licenseUrl};
@@ -30,3 +30,20 @@ for(const country of ['JP','KR','TW']) {
 }
 const report={generatedAt:catalog.generatedAt,coverage:catalog.coverage,totalUnique:pois.length,totalWithPhoto:pois.filter(p=>p.photo).length,totalPendingPhotos:pois.filter(p=>p.imageStatus==='pending').length,countries:['JP','KR','TW'].map(country=>({country,pois:pois.filter(p=>p.country===country).length,photos:pois.filter(p=>p.country===country && p.photo).length,regions:catalog.regions.filter(r=>r.country===country).length})),regions:catalog.regions};
 await writeFile(join(output,'report.json'),JSON.stringify(report,null,2));
+const supplement=JSON.parse(await readFile(join(root,'exports','photo-supplement-report.json'),'utf8').catch(error=>{if(error.code==='ENOENT')return 'null';throw error;}));
+const reasons={
+  'Linked identity is a person, list or disambiguation; needs manual verification':'來源指向人物、列表或消歧義頁，需人工確認景點身分',
+  'No verified photo after linked-source and name/location searches':'已查來源連結與景點名稱／座標，仍未找到能確認對應景點的照片',
+  'Ambiguous or short name; needs manual verification':'名稱過短或不明確，需人工確認景點身分',
+  'No verified photo from linked sources':'來源連結未找到能確認對應景點的照片',
+  'No linked image source':'資料沒有照片來源連結',
+};
+const countries={JP:'日本',KR:'韓國',TW:'台灣'};
+const regionNames=new Map(catalog.regions.map(region=>[region.id,region.name]));
+const remainingReasons=new Map((supplement?.remaining || []).map(p=>[p.id,reasons[p.reason] || p.reason]));
+const missing=pois.filter(p=>!p.photo).sort((a,b)=>a.country.localeCompare(b.country) || a.regions[0].localeCompare(b.regions[0]) || a.name.localeCompare(b.name,'zh-Hant'));
+const missingFields=['國家','地區','景點名稱','當地名稱','經度','緯度','景點 ID','OpenStreetMap 來源','Wikidata','Wikipedia','查找結果'];
+const wikipediaUrl=value=>{const match=value?.match(/^([a-z]{2,3}(?:-[a-z]+)?):(.+)$/);return match ? `https://${match[1]}.wikipedia.org/wiki/${encodeURIComponent(match[2].replaceAll(' ','_'))}` : value;};
+const missingRows=missing.map(p=>[countries[p.country] || p.country,p.regions.map(id=>regionNames.get(id) || id).join('／'),p.name,p.localName,p.at[0],p.at[1],p.id,p.source.url,p.wikidata ? `https://www.wikidata.org/wiki/${p.wikidata}` : '',wikipediaUrl(p.wikipedia),remainingReasons.get(p.id) || '尚未補上照片']);
+await writeFile(join(output,'missing-photos.csv'),'\ufeff'+[missingFields,...missingRows].map(row=>row.map(cell).join(',')).join('\r\n'));
+console.info(`[export] Missing photos: ${missing.length}; missing-photos.csv`);
