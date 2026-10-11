@@ -10,10 +10,15 @@ import { travelPasses, filterTravelPasses, findTravelPass, passCountries, passKi
 import { benefitsForPass } from '~/data/pass-benefits';
 import { passCoverageIndex, coverageExtent, withinPassCoverage, coverageStatus, displayCoverageGap, isTaiwanBundle, taiwanBundleOptions, mergeBundleCoverage, type PassCoverage } from '~/utils/pass-coverage';
 import { plannerKeywords } from '~/data/planner-preferences';
-import { recommendPlaces, refineSelection, rainPlanDetailsFor, type Recommendation } from '~/utils/planner';
+import { recommendPlaces, rainPlanDetailsFor, type Recommendation } from '~/utils/planner';
+import { conversationPlan, initialConversationStops, plannedDay } from '~/utils/planner-chat';
+import { redeemedPlanningContext, type PointsProduct } from '~/utils/points';
 const asset = useAsset();
-const { notify } = useDemo();
+const { notify, days: currentDays } = useDemo();
 const {activeId,activeTrip,tripHref}=useTripContext();
+const route=useRoute();
+const planningDay=computed(()=>{const n=Number(route.query.day || 0);return Number.isInteger(n)&&n>=0&&n<currentDays.value.length?n:0;});
+const {wallet:pointsWallet,ready:pointsReady}=usePointsWallet();
 const itineraryPlaces = computed<Stop[]>(()=>{
   if(!activeId.value)return [];
   const trip=tripItineraries[activeId.value];
@@ -142,12 +147,31 @@ watch([selectedPassId,bundleCity,bundleShuttle,passVariant], async ([id,city,shu
   finally { if (revision === coverageRevision) coverageLoading.value = false; }
 });
 const extension = ref(0), planNotes = ref<string[]>([]);
-const panel = ref<'passes' | 'preferences' | 'saved' | null>(null);
+const panel = ref<'passes' | 'saved' | null>(null);
 const dirty = ref(false), error = ref('');
 const routeIds = computed(() => !dirty.value ? draft.value.map(s => s.id) : []);
 const busy = ref(false), draft = ref<Recommendation[]>([]);
+const planningMode=ref<'ai'|'map'|'pass'>('ai'), chatText=ref('');
+const messages=ref<{role:'user'|'assistant';text:string}[]>([]);
+const ownedServices=computed(()=>redeemedPlanningContext(pointsWallet.value.orders,activeId.value || '',activeTrip.value?.country || 'japan',draft.value.length?draft.value:currentDays.value[planningDay.value]?.stops || []));
+const resultsBox=ref<HTMLElement>();
+function choosePlanningMode(mode:'ai'|'map'|'pass'){planningMode.value=mode;drawing.value=false;if(mode==='pass')panel.value='passes';}
+function initialDraft(){if(!draft.value.length)draft.value=initialConversationStops(currentDays.value[planningDay.value]?.stops || [],places.value);}
+onMounted(initialDraft);
+let autoPlannedTrip='';
+watch([activeId,pointsReady,()=>route.query.redeemed],async ([trip,ready,redeemed])=>{if(!import.meta.client||!trip||!ready||redeemed!=='1'||autoPlannedTrip===trip)return;autoPlannedTrip=trip;await nextTick();initialDraft();generate();},{immediate:true});
+watch(planningDay,()=>{draft.value=[];dirty.value=false;messages.value=[];void nextTick(initialDraft);});
+function serviceStop(p:PointsProduct):Stop{const code=[...p.id].reduce((n,c)=>(n*31+c.charCodeAt(0))%10000000,0);return {id:-2100000000-code,day:planningDay.value,name:p.name,short:p.brand,at:[...p.at],time:'10:00',stay:`體驗 ${p.minutes} 分鐘`,note:'已兌換的示範服務；日期、預約與使用條件待確認。',range:[p.minutes,p.minutes],photo:{src:p.image,alt:p.name+'情境參考照片',source:p.source,credit:p.credit,license:'情境參考照片',licenseUrl:p.source,objectPosition:'center'}};}
+function submitChat(){
+ const text=chatText.value.trim();if(!text||busy.value)return;initialDraft();messages.value.push({role:'user',text});chatText.value='';
+ const result=conversationPlan(places.value,draft.value,text,appliedKeywords.value);
+ if(result.changed){preferences.value=[preferences.value,text].filter(Boolean).join('，').slice(-300);draft.value=result.stops;planNotes.value=[...result.notes,...ownedServices.value.map(s=>s.note)];dirty.value=false;drawing.value=false;}
+ messages.value.push({role:'assistant',text:result.message});messages.value=messages.value.slice(-12);
+ void nextTick(()=>resultsBox.value?.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'}));
+}
+function suggestChat(text:string){chatText.value=text;submitChat();}
 let generationTimer: ReturnType<typeof setTimeout> | undefined;
-watch(activeId,()=>{selectAllForPass=false;clearTimeout(generationTimer);ids.value=[];rangeIds.value=[];selectionBoundary.value=[];selectedPassId.value='';hasRange.value=false;drawing.value=false;mapRevision.value++;refinement.value='';refinementStatus.value='';draft.value=[];preferences.value='';extension.value=0;dirty.value=false;error.value='';planNotes.value=[];panel.value=null;busy.value=false;savedPoiStops.value=[];pickedPoiStops.value=[];inspectedId.value=null;pendingSavedIds.clear();initializePoiDestination();});
+watch(activeId,()=>{planningMode.value='ai';messages.value=[];chatText.value='';selectAllForPass=false;clearTimeout(generationTimer);ids.value=[];rangeIds.value=[];selectionBoundary.value=[];selectedPassId.value='';hasRange.value=false;drawing.value=false;mapRevision.value++;refinement.value='';refinementStatus.value='';draft.value=[];preferences.value='';extension.value=0;dirty.value=false;error.value='';planNotes.value=[];panel.value=null;busy.value=false;savedPoiStops.value=[];pickedPoiStops.value=[];inspectedId.value=null;pendingSavedIds.clear();initializePoiDestination();void nextTick(initialDraft);});
 watch(places, () => {
   if (!hasRange.value) return;
   rangeIds.value = places.value.filter(p => selectedPassId.value ? withinPassCoverage(p.at, passCoverage.value) : withinPlanningAreas(p.at, [selectionBoundary.value])).map(p => p.id);
@@ -155,17 +179,20 @@ watch(places, () => {
   const restored=places.value.filter(p=>pendingSavedIds.has(p.id)).map(p=>p.id);
   if(restored.length){const wasDirty=dirty.value;restored.forEach(id=>pendingSavedIds.delete(id));ids.value=[...new Set([...ids.value,...restored])];dirty.value=wasDirty;}
 });
-watch([ids, preferences, pace, extension, selectedPassId, bundleCity, bundleShuttle, passVariant, () => appliedKeywords.value.join(',')], () => {
+function markDraftDirty() {
   clearTimeout(generationTimer);
   busy.value = false;
   dirty.value = !!draft.value.length;
   error.value = '';
-}, { flush: 'sync' });
-watch(activeId, id => {
+}
+watch([preferences,pace,extension,()=>appliedKeywords.value.join(',')],markDraftDirty,{flush:'sync'});
+watch([ids,selectedPassId,bundleCity,bundleShuttle,passVariant],()=>{if(planningMode.value!=='ai')markDraftDirty();},{flush:'sync'});
+watch([activeId,planningDay], ([id]) => {
   if (!import.meta.client || !id) return;
   try {
-    const stored = JSON.parse(localStorage.getItem(plannerStorageKey(id)) || 'null');
-    if (stored?.saved?.stops?.length) {
+    const cached = JSON.parse(localStorage.getItem(plannerStorageKey(id)) || 'null');
+    const stored=cached ? {...cached,saved:cached.savedDays?.[planningDay.value] || cached.saved} : null;
+    if (stored?.saved?.stops?.length && (stored.saved.day ?? 0)===planningDay.value) {
       savedPoiStops.value = stored.saved.stops.filter((s: Stop) => s.poiId && s.id < 0 && s.at?.length === 2 && s.at.every(Number.isFinite));
       for(const id of stored.ids || [])if(Number.isSafeInteger(id) && id<0)pendingSavedIds.add(id);
       if (['JP','KR','TW'].includes(stored.poiCountry)) poiCountry.value = stored.poiCountry;
@@ -183,7 +210,7 @@ watch(activeId, id => {
       preferences.value = stored.saved.preference || '';
       extension.value = stored.extension ?? 0;
       pace.value = stored.pace ?? 3;
-      draft.value = stored.saved.stops.filter((s: Recommendation) => places.value.some(p => p.id === s.id)).map((s: Recommendation) => s.rainAlternative !== undefined ? s : ({ ...s, ...rainPlanDetailsFor(s, places.value, preferences.value) }));
+      draft.value = stored.saved.stops.filter((s: Recommendation) => s.at?.length===2 && s.at.every(Number.isFinite) && s.photo).map((s: Recommendation) => s.rainAlternative !== undefined ? s : ({ ...s, ...rainPlanDetailsFor(s, places.value, preferences.value) }));
       planNotes.value = stored.saved.notes || [];
       dirty.value = JSON.stringify(stored.saved.keywordIds || []) !== JSON.stringify(appliedKeywords.value);
     }
@@ -214,6 +241,7 @@ function selectRange(value: number[], boundary: Point[] = [], selectAll = true) 
   selectionBoundary.value = boundary;
 }
 function selectPass(pass: TravelPass) {
+  planningMode.value='pass';
   if (!findTravelPass(pass.id) || passCoverageIndex[pass.id]?.availability === 'expired') return;
   selectRange([]);
   selectAllForPass=true;
@@ -223,22 +251,16 @@ function beginDrawing() {
   if (drawing.value) { drawing.value = false; return; }
   drawing.value = true;
 }
-function applyRefinement() {
-  const result = refineSelection(places.value, ids.value, refinement.value);
-  select(result.ids);
-  refinementStatus.value = result.changes.length ? result.changes.join('、') + '。地圖已更新。' : '請使用完整景點名稱，例如「加入' + (places.value[0]?.name || '景點名稱') + '」。';
-  if (result.changes.length) refinement.value = '';
-}
-function openPreferences() { if (!hasRange.value || !ids.value.length) {
-    notify('先圈選想去的區域，再挑選景點。');
-    return;
-} ; panel.value = 'preferences'; }
 function generate() {
-    if (!ids.value.length) { error.value = '先圈選主要遊玩區域，再挑選景點。'; return; }
+    const baseline=planningMode.value==='ai' ? (draft.value.length?draft.value:currentDays.value[planningDay.value]?.stops || []) : places.value.filter(p=>ids.value.includes(p.id));
+    if(!baseline.length){error.value='請先選擇景點或告訴我想去哪裡。';return;}
+    const activities=ownedServices.value.filter(s=>s.usable && s.product.kind==='activity' && (planningMode.value==='ai' || (selectedPassId.value ? withinPassCoverage(s.product.at,passCoverage.value) : withinPlanningAreas(s.product.at,[selectionBoundary.value])))).map(s=>serviceStop(s.product));
+    const pool=[...new Map([...activities,...baseline,...places.value].map(s=>[s.id,s])).values()];
+    const chosen=[...activities.map(s=>s.id),...baseline.map(s=>s.id)];
     if (busy.value) return;
     busy.value = true;
     generationTimer = setTimeout(() => {
-        const result = recommendPlaces(places.value, ids.value, preferences.value, pace.value, 0, appliedKeywords.value, true);
+        const result = recommendPlaces(pool, chosen, preferences.value, pace.value, 0, appliedKeywords.value, true);
         if (!result.stops.length) {
             busy.value = false;
             error.value = '目前沒有符合條件的景點，試試增加時間、擴大範圍或調整喜好。';
@@ -246,7 +268,8 @@ function generate() {
         }
         busy.value = false;
         draft.value = result.stops;
-        planNotes.value = result.notes;
+        planNotes.value = [...result.notes,...ownedServices.value.map(s=>s.note)];
+        messages.value.push({role:'assistant',text:'已安排這一天，並參考這趟旅行已兌換的服務。你可以繼續在下方微調。'});
         dirty.value = false;
         panel.value = null;
         drawing.value = false;
@@ -256,12 +279,16 @@ function generate() {
 function save() {
     if(!activeId.value || dirty.value || !draft.value.length)return;
     try {
-        localStorage.setItem(plannerStorageKey(activeId.value), JSON.stringify({ trip:activeId.value, poiCountry:poiCountry.value, poiRegionId:poiRegionId.value, ids: ids.value, rangeIds: rangeIds.value, boundary: selectionBoundary.value, passId: selectedPassId.value, passVariant:passVariant.value, bundleCity:bundleCity.value,bundleShuttle:bundleShuttle.value, extension: extension.value, pace: pace.value, saved: { stops: draft.value, preference: preferences.value, keywordIds: [...appliedKeywords.value], notes: planNotes.value } }));
+        let previous:{saved?:{day?:number};savedDays?:Record<string,unknown>}={};try{previous=JSON.parse(localStorage.getItem(plannerStorageKey(activeId.value)) || '{}') || {};}catch{}
+        const saved={ day:planningDay.value, stops: draft.value, preference: preferences.value, keywordIds: [...appliedKeywords.value], notes: planNotes.value };
+        const savedDays={...(previous.saved ? {[previous.saved.day ?? 0]:previous.saved} : {}),...previous.savedDays,[planningDay.value]:saved};
+        localStorage.setItem(plannerStorageKey(activeId.value), JSON.stringify({ trip:activeId.value, poiCountry:poiCountry.value, poiRegionId:poiRegionId.value, ids: ids.value, rangeIds: rangeIds.value, boundary: selectionBoundary.value, passId: selectedPassId.value, passVariant:passVariant.value, bundleCity:bundleCity.value,bundleShuttle:bundleShuttle.value, extension: extension.value, pace: pace.value, saved,savedDays }));
     }
     catch {
         notify('瀏覽器無法儲存，請保留這份預覽。');
         return;
     }
+    currentDays.value=plannedDay(currentDays.value,planningDay.value,draft.value);
     panel.value = 'saved';
     notify('草案已儲存到'+activeTrip.value?.title);
 }
@@ -271,19 +298,20 @@ onBeforeUnmount(() => {clearTimeout(generationTimer);clearTimeout(viewportTimer)
   <section v-if="activeTrip" class="screen active planner-screen">
     <div class="mascot-perch"><div class="page-heading">
       <span class="eyebrow">{{ activeTrip.english }} / DAY PLANNER</span>
-      <h1>圈出今天想玩的地方。</h1>
-      <p>移到想逛的地方，按「選這一區」。也可用清單挑景點，或自己圈選。</p>
+      <h1>AI 排行程</h1>
+      <p>第 {{planningDay+1}} 天，想怎麼玩？選擇規劃方式，再用下方對話補充需求。</p>
       <NuxtLink to="/places">探索日韓台更多景點與照片 →</NuxtLink>
     </div><PageMascot /></div>
+    <div class="range-choices" aria-label="選擇規劃方式"><button :aria-pressed="planningMode==='ai'" :class="{active:planningMode==='ai'}" @click="choosePlanningMode('ai')">✦ 自由規劃</button><button :aria-pressed="planningMode==='map'" :class="{active:planningMode==='map'}" @click="choosePlanningMode('map')">地圖圈選</button><button :aria-pressed="planningMode==='pass'" :class="{active:planningMode==='pass'}" @click="choosePlanningMode('pass')">周遊券規劃</button></div>
+    <section v-if="ownedServices.length" class="planner-owned"><div class="row"><b>這趟旅行已兌換 {{ownedServices.length}} 項服務</b><NuxtLink :to="tripHref('/points')">我的服務券 →</NuxtLink></div><p v-for="service in ownedServices" :key="service.product.id"><strong>{{service.product.brand}}</strong> · {{service.note}}</p></section>
+    <p v-else class="planner-shop-link">也可以先到 <NuxtLink :to="tripHref('/points')">和泰旅行商店</NuxtLink> 兌換交通、上網或體驗。</p>
+    <template v-if="planningMode!=='ai'">
+    <button v-if="planningMode==='map'" class="planner-draw-toggle" :aria-pressed="drawing" @click="beginDrawing">{{drawing?'取消手繪':'自己畫範圍'}}</button>
     <div class="planner-destinations">
       <label>景點國家<select v-model="poiCountry" aria-label="景點國家" @change="choosePoiCountry"><option v-for="country in poiCountries" :key="country.id" :value="country.id">{{ country.name }}</option></select></label>
       <label>景點地區<select v-model="poiRegionId" aria-label="景點地區" @change="choosePoiRegion()"><option v-for="region in poiRegions" :key="region.id" :value="region.id">{{ region.name }}</option></select></label>
     </div>
     <p class="small-note planner-poi-status" role="status">{{ poiLoading ? '正在載入附近景點與照片…' : `目前範圍 ${viewportPlaces.length.toLocaleString()} 個景點 · ${viewportPlaces.filter(p=>p.photo.src).length.toLocaleString()} 個有照片` }}<template v-if="poiError"> · {{ poiError }} <button @click="loadCatalog().then(()=>loadVisiblePois())">重試</button></template></p>
-    <div class="range-choices" aria-label="選擇遊玩範圍的方式">
-      <button :class="{ active: drawing }" :aria-pressed="drawing" @click="beginDrawing"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 4c5 3 5 13-2 15C8 22 1 17 3 10c1-4 5-7 9-6M14 8l6-6 2 2-6 6-3 1 1-3Z"/></svg>{{ drawing ? '取消圈選' : hasRange ? '自己重畫範圍' : '自己圈選' }}</button>
-      <button :class="{ active: selectedPass }" @click="panel = 'passes'"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v5a2 2 0 0 0 0 4v3H3v-3a2 2 0 0 0 0-4V6Zm12 0v3m0 3v3m0 1v2"/></svg>{{ selectedPass ? '更換票券範圍' : '用票券範圍' }}</button>
-    </div>
     <div v-if="selectedPass" class="selected-pass" aria-label="目前使用的票券範圍">
       <TravelPassArtwork :pass="selectedPass" />
       <span><b>{{ selectedPass.name }}</b><small>{{ selectedPass.region }} · {{ selectedPass.kind === 'stored-value' ? '合作服務・需儲值' : '路線／合作景點' }}</small></span>
@@ -321,23 +349,20 @@ onBeforeUnmount(() => {clearTimeout(generationTimer);clearTimeout(viewportTimer)
     </details>
     <p class="small-note">點選數字展開景點，放大可看名稱與照片。尚未圈選時，點選景點可查看詳情。<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">景點 © OpenStreetMap contributors（ODbL）</a> · 照片來源與授權見景點詳情。</p>
     <p v-if="selectedPass" class="pass-range-note">{{ selectedPass.exclusions }} <template v-if="selectedBenefits.length">已標示 {{ selectedBenefits.length }} 個有確認座標的合作設施；黃色標記與定位圈協助找景點，完整名單與方案限制見官網。</template></p>
+    </template>
     <div class="planning-next">
-      <span>{{ hasRange ? ids.length + ' 個景點已加入' : '先選一個想逛的範圍' }}</span>
-      <button class="primary" :disabled="!hasRange || !ids.length || drawing" @click="openPreferences">{{ draft.length ? '重新安排這一天' : '產生行程' }} <span aria-hidden="true">→</span></button>
+      <span>{{ planningMode==='ai' ? '第 '+(planningDay+1)+' 天 · 沿用目前旅程' : hasRange ? ids.length + ' 個景點已加入' : '先選一個想逛的範圍' }}</span>
+      <button class="primary" :disabled="busy || drawing || (planningMode!=='ai' && (!hasRange || !ids.length))" @click="generate">{{busy?'正在安排…':draft.length?'AI 重新安排':'AI 安排行程'}} <span aria-hidden="true">→</span></button>
     </div>
-    <p v-if="hasRange && !ids.length" class="small-note empty-selection">{{ rangeIds.length ? '從清單勾選想去的景點，再產生行程。' : poiLoading ? '正在找這個範圍內的景點…' : '這裡目前沒有景點。可以移動地圖或重畫範圍。' }}</p>
-    <details v-if="hasRange" class="text-refinement">
-      <summary>也可以用文字調整景點</summary>
-      <form @submit.prevent="applyRefinement"><label for="refinement" class="sr-only">用文字調整景點</label><textarea id="refinement" v-model="refinement" maxlength="300" :placeholder="'例如：加入' + (places[0]?.name || '景點名稱') + '，移除另一個景點'" /><button class="secondary" :disabled="!refinement.trim()">套用</button></form>
-      <p v-if="refinementStatus" role="status" aria-live="polite">{{ refinementStatus }}</p>
-    </details>
-    <section v-if="draft.length" class="planner-results" aria-label="行程草案">
+    <p v-if="planningMode!=='ai' && hasRange && !ids.length" class="small-note empty-selection">{{ rangeIds.length ? '從清單勾選想去的景點，再產生行程。' : poiLoading ? '正在找這個範圍內的景點…' : '這裡目前沒有景點。可以移動地圖或重畫範圍。' }}</p>
+    <section v-if="draft.length" ref="resultsBox" class="planner-results" aria-label="行程草案">
       <div class="row"><h2>這樣玩，你覺得呢？</h2><span class="planner-badge">{{ dirty ? '需求已變更' : '行程草案' }}</span></div>
       <p v-if="dirty" class="planner-error" role="status">需求已變更，重新安排後就能儲存。</p>
       <details class="plan-notes"><summary>時間與安排</summary><p v-for="note in planNotes" :key="note" class="small-note">{{ note }}</p></details>
-      <article v-for="s in draft" :key="s.id" class="planner-card">
+      <article v-for="(s,i) in draft" :key="s.id" class="planner-card">
         <time>{{ s.time }}</time><div><h3>{{ s.name }}</h3><small>{{ s.stay }}</small><p>{{ s.reason }}</p><RainPlanCard :text="s.rainPlan" :alternative="s.rainAlternative" /><small v-if="s.travelMinutes">前一站交通約 {{ s.travelMinutes }} 分鐘 · 示範估算</small></div>
         <img referrerpolicy="no-referrer" v-if="s.photo.src" :src="asset(s.photo.src)" :alt="s.photo.alt" width="48" height="48" style="object-fit:cover;border-radius:8px">
+        <ServiceRecommendations :stop="s" :next="draft[i+1]" class="planner-stop-services" />
       </article>
       <button class="primary" :disabled="dirty || busy" @click="save">儲存這份行程</button>
     </section>
@@ -351,7 +376,7 @@ onBeforeUnmount(() => {clearTimeout(generationTimer);clearTimeout(viewportTimer)
         <a v-if="inspectedPoi?.website" :href="inspectedPoi.website" target="_blank" rel="noopener">景點官網 ↗</a>
       </template>
     </AppSheet>
-    <AppSheet :model-value="!!panel" :title="panel === 'passes' ? '用票券選一個遊玩範圍' : panel === 'preferences' ? '這一天，想怎麼玩？' : '行程已儲存'" @update:model-value="panel = null">
+    <AppSheet :model-value="!!panel" :title="panel === 'passes' ? '選擇周遊券規劃範圍' : '行程已儲存'" @update:model-value="panel = null">
       <template v-if="panel === 'passes'">
         <p class="pass-intro">日本、韓國、台灣都能選，不受目前旅程限制。相同範圍的不同天數合併在同一張卡。</p>
         <div class="pass-filters">
@@ -368,17 +393,10 @@ onBeforeUnmount(() => {clearTimeout(generationTimer);clearTimeout(viewportTimer)
         <p v-if="!availablePasses.length" class="pass-empty">沒有符合的票券，試試其他名稱或地區。</p>
         <p class="small-note">交通券沿實際路線顯示，景點卡標示合作設施；沿線輪廓是步行規劃輔助。尚未核對的路線不畫推測邊界，可查看官方路網或自己圈選。</p>
       </template>
-      <template v-else-if="panel === 'preferences'">
-        <label class="planner-input-label" for="day-preferences">還有什麼想法？（選填）</label>
-        <textarea id="day-preferences" v-model="preferences" aria-label="旅行偏好" maxlength="300" placeholder="有四小時，想喝咖啡、逛老街，步調悠閒一點。" />
-        <div class="planner-fields"><label for="pace">旅行步調</label><select id="pace" v-model.number="pace"><option :value="2">悠閒 · 最多 2 個景點</option><option :value="3">剛好 · 最多 3 個景點</option><option :value="4">充實 · 最多 4 個景點</option></select></div>
-        <label class="memory-choice"><input v-model="useKeywords" type="checkbox">套用吉祥物記住的偏好</label><p v-if="useKeywords && appliedTitles.length" class="small-note">{{ appliedTitles.join('、') }}</p>
-        <p v-if="error" class="planner-error" role="alert">{{ error }}</p>
-        <p class="small-note">交通時間為估算，費用與票券優惠不會自動計入。</p>
-        <button class="primary" :disabled="busy" @click="generate">{{ busy ? '正在安排…' : '安排這一天與雨天備案 →' }}</button>
-      </template>
       <template v-else><ChictripMotion motion="happy" :size="112"/><p>已儲存到「{{ activeTrip.title }}」。</p><NuxtLink class="primary" :to="tripHref('/trip')" @click="panel = null">查看我的行程</NuxtLink></template>
     </AppSheet>
+    <p v-if="error" class="planner-error" role="alert">{{error}}</p>
+    <PlannerChat v-model="chatText" :busy="busy" :messages="messages" @submit="submitChat" @suggestion="suggestChat" />
   </section>
 </template>
 <style scoped>
@@ -422,4 +440,12 @@ onBeforeUnmount(() => {clearTimeout(generationTimer);clearTimeout(viewportTimer)
 
 <style>
 .planner-poi-detail-sheet::backdrop{backdrop-filter:none}
+</style>
+
+<style scoped>
+.planner-screen{padding-bottom:240px!important}.range-choices button{font-size:13px;gap:4px}.planner-owned{margin:14px 0;padding:14px;border:1px solid #d5e9ef;border-radius:14px;background:#f2fafd;color:#557c8c}.planner-owned b{font-size:13px}.planner-owned p{font-size:12px;line-height:1.7;margin:8px 0}.planner-owned a,.planner-shop-link a{font-size:12px;color:#008bad}.planner-shop-link{font-size:12px;line-height:1.7;color:#6e8d9b}.planner-draw-toggle{min-height:44px;margin:8px 0;padding:10px 14px;border:1px solid #cfe4e9;border-radius:10px;background:white;color:#38768c}.planner-results{scroll-margin-top:85px}.planner-owned .row{gap:8px;flex-wrap:wrap}
+</style>
+
+<style scoped>
+.planner-stop-services{grid-column:1/-1;margin:0 0 10px}
 </style>

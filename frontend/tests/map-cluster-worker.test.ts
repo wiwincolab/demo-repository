@@ -20,7 +20,11 @@ test('worker geometry preserves every POI, photo count and cluster expansion', (
     assert.equal(actual.reduce((n, f) => n + f.count, 0), pois.length);
     assert.equal(actual.reduce((n, f) => n + f.photoCount, 0), pois.filter(p => p.photo).length);
     if (zoom === 18) assert.deepEqual(new Set(actual.map(f => f.id)), new Set(pois.map(p => p.id)));
-    else for (const f of actual) if (f.clusterId !== undefined) assert.ok(f.expansionZoom! > zoom);
+    else for (const f of actual) if (f.clusterId !== undefined) {
+      assert.ok(f.expansionZoom! > zoom);
+      const preview=pois.find(p=>p.id===f.previewId);assert.ok(preview);
+      if(f.photoCount)assert.ok(preview.photo);
+    }
   }
   assert.ok(JSON.stringify(geometry).length < JSON.stringify(pois).length / 10);
 });

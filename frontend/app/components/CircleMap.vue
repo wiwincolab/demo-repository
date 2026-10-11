@@ -5,6 +5,8 @@ import { mapDetailLevel, visibleMapDetails, withinPlanningAreas, isUsableMapStro
 import { indexRing } from '~/utils/polygon-index';
 import { individualSelectionLimit } from '~/utils/planner-poi';
 import { createMapClusterClient } from '~/utils/map-cluster-client';
+import { createMapDetailClient } from '~/utils/map-detail-client';
+import type { DetailId } from '~/utils/map-detail-layout';
 import type { MapClusterFeature } from '~/utils/map-cluster-engine';
 import { loadScript } from '~/utils/loadScript';
 import { attachTransitMap, preparePlannerBasemap, type TransitLegendLine } from '~/utils/transit-map';
@@ -38,7 +40,12 @@ const focusedBenefit = ref('');
 const zoom = ref(10), fallback = ref(true), loading = ref(true);
 const transitLines = ref<TransitLegendLine[]>([]);
 const detailLevel = computed(() => mapDetailLevel(zoom.value));
-const details = computed(() => visibleMapDetails([...points.value].sort((a,b)=>Number(!!b.stop.photo.src)-Number(!!a.stop.photo.src)), props.selected, size.width, size.height, detailLevel.value));
+const detailIds = shallowRef<DetailId[]>([]), detailRenderer = ref('pending');
+let detailClient: ReturnType<typeof createMapDetailClient> | undefined;
+const details = computed(() => {
+  const byId = new Map(points.value.map(p => [p.stop.id, p]));
+  return visibleMapDetails(detailIds.value.flatMap(id => { const p = byId.get(Number(id)); return p ? [p] : []; }), props.selected, size.width, size.height, detailLevel.value);
+});
 const geographicAreas = computed(() => props.coverage ? coverageExtent(props.coverage) : props.areas?.length ? props.areas : props.boundary?.length ? [props.boundary] : []);
 const benefitDetails = computed(() => {
   const occupied = details.value.map(p => p.point), result: typeof benefitPoints.value = [];
@@ -143,8 +150,10 @@ function refresh() {
   if(!props.drawing)clusterClient?.query(bounds,zoom.value);
   groupedPoints.value=features.flatMap(f=>f.clusterId!==undefined ? [{id:f.clusterId,count:f.count,at:f.at,point:project(f.at),outside:props.hasRange && !f.inRange,selected:f.selectedCount>0,expansionZoom:f.expansionZoom!,revision:featureRevision}] : []).filter(p=>visibleMapTarget(p.point,size.width,size.height));
   const visibleIds=new Set(features.flatMap(f=>f.id===undefined ? [] : [Number(f.id)]));
+  if(detailLevel.value==='photos')for(const f of features)if(f.previewId!==undefined)visibleIds.add(Number(f.previewId));
   if(props.selected.length<=individualSelectionLimit)for(const id of props.selected) { const p=stopById.get(id);if(p && p.at[0]!>=bounds[0]! && p.at[0]!<=bounds[2]! && p.at[1]!>=bounds[1]! && p.at[1]!<=bounds[3]!)visibleIds.add(id); }
   points.value=[...visibleIds].flatMap(id=>{const stop=stopById.get(id);const point=stop ? project(stop.at) : [];return stop && visibleMapTarget(point,size.width,size.height) ? [{stop,point}] : [];});
+  detailClient?.query({key:`${clusterClient?.revision}:${detailLevel.value}:${size.width}:${size.height}`,level:props.drawing ? 'dots' : detailLevel.value,width:size.width,height:size.height,preferred:detailIds.value,points:points.value.map(p=>({id:p.stop.id,point:p.point,selected:selectedSet.value.has(p.stop.id),photo:!!p.stop.photo.src}))});
   polygons.value = props.coverage ? [] : geographicAreas.value.map(area => area.map(project));
   coveragePaths.value = fallback.value ? coveragePolygons(props.coverage).map(rings => rings.map(ring => ring.map((at,i) => `${i ? 'L' : 'M'}${project(at).join(',')}`).join(' ') + ' Z').join(' ')) : [];
   coverageTracks.value = fallback.value ? fallbackNetworks.value.filter(line=>line.bbox[2]!>=bounds[0]! && line.bbox[0]!<=bounds[2]! && line.bbox[3]!>=bounds[1]! && line.bbox[1]!<=bounds[3]!).slice(0,1000).map(line=>({points:line.coordinates.map(project),access:line.access})) : [];
@@ -276,6 +285,7 @@ watch(() => props.places, scheduleClusters);
 watch(() => [props.selected,props.rangeIds,props.hasRange], scheduleClusters);
 watch(() => props.bounds, () => { cancelStroke(); fit(); });
 onMounted(async () => {
+  detailClient=createMapDetailClient(()=>new Worker(new URL('../workers/poi-details.worker.ts',import.meta.url),{type:'module'}),ids=>{detailIds.value=ids;detailRenderer.value=detailClient?.mode || 'pending';});
   clusterClient=createMapClusterClient(()=>new Worker(new URL('../workers/poi-clusters.worker.ts',import.meta.url),{type:'module'}),(features,revision)=>{clusterFeatures=features;featureRevision=revision;clusterRenderer.value=clusterClient!.mode;scheduleRefresh();});
   rebuildClusters();
   observer = new ResizeObserver(() => { map?.resize(); scheduleClusters(); }); observer.observe(box.value!); refresh();
@@ -295,7 +305,7 @@ onMounted(async () => {
     });
   } catch { fallback.value = true; loading.value = false; refresh(); }
 });
-onBeforeUnmount(() => { disposed = true; cancelAnimationFrame(frame); cancelAnimationFrame(clusterFrame); cancelAnimationFrame(strokeFrame); observer?.disconnect(); pointers.clear(); disposeTransit?.(); clusterClient?.dispose(); map?.remove(); });
+onBeforeUnmount(() => { disposed = true; cancelAnimationFrame(frame); cancelAnimationFrame(clusterFrame); cancelAnimationFrame(strokeFrame); observer?.disconnect(); pointers.clear(); disposeTransit?.(); clusterClient?.dispose(); detailClient?.dispose(); map?.remove(); });
 </script>
 <template>
   <div class="planner-map-panel">
@@ -305,7 +315,7 @@ onBeforeUnmount(() => { disposed = true; cancelAnimationFrame(frame); cancelAnim
       <button type="button" aria-label="放大地圖" :disabled="drawing || zoom >= 18" @click="zoomBy(1)">＋</button>
       <button type="button" aria-label="縮小地圖" :disabled="drawing || zoom <= 2" @click="zoomBy(-1)">−</button>
     </div>
-  <div ref="box" class="route-map planner-map" :class="{ drawing }" :data-cluster-renderer="clusterRenderer" :data-map-paused="!!paused" @keydown="keyboard" @wheel="wheel" @pointerdown.capture="beginMapClick" @click.capture="chooseMapClick">
+  <div ref="box" class="route-map planner-map" :class="{ drawing }" :data-cluster-renderer="clusterRenderer" :data-detail-renderer="detailRenderer" :data-detail-level="detailLevel" :data-map-paused="!!paused" @keydown="keyboard" @wheel="wheel" @pointerdown.capture="beginMapClick" @click.capture="chooseMapClick">
     <div ref="geography" v-show="!fallback" class="planner-geography" aria-label="排行程地圖，可拖曳平移、滾輪或雙指縮放查看景點詳情" />
     <canvas v-show="fallback" ref="canvas" aria-hidden="true" />
     <svg class="planner-overlay" :viewBox="`0 0 ${size.width} ${size.height}`" aria-hidden="true">
@@ -316,13 +326,15 @@ onBeforeUnmount(() => { disposed = true; cancelAnimationFrame(frame); cancelAnim
       <template v-if="detailLevel !== 'dots'"><polygon v-for="p in benefitPoints" :key="p.place.id" :points="p.frame.map(at => at.join(',')).join(' ')" fill="#ffc50016" stroke="#e1ad00" stroke-width="1.5" /></template>
     </svg>
     <button v-for="group in drawing ? [] : groupedPoints" :key="`cluster-${group.id}`" class="planner-poi-cluster" :data-cluster-id="group.id" :class="{outside:group.outside,selected:group.selected}" :style="{left:group.point[0]+'px',top:group.point[1]+'px'}" :aria-label="group.count+' 個景點，點選放大'" :disabled="drawing" @click="expandCluster(group)">{{ group.count }}</button>
-    <button v-for="p in drawing ? [] : points" :key="p.stop.id" class="planner-location" :data-stop-id="p.stop.id" :class="state(p.stop.id)" :style="{ left: p.point[0] + 'px', top: p.point[1] + 'px' }" :aria-label="p.stop.name + (selectedSet.has(p.stop.id) ? '，已加入，再點移除' : hasRange ? '，點選加入行程' : '，查看景點照片')" :disabled="drawing" :aria-pressed="selectedSet.has(p.stop.id)" @click="toggle(p.stop.id)"><img referrerpolicy="no-referrer" v-if="p.stop.photo.src && !failedPhotos.includes(p.stop.photo.src)" :src="asset(p.stop.photo.src)" :alt="p.stop.photo.alt" loading="lazy" decoding="async" @error="photoFailed(p.stop.photo.src)"><i v-else class="planner-poi-dot" aria-hidden="true"/><span v-if="route?.includes(p.stop.id)">{{ route.indexOf(p.stop.id) + 1 }}</span></button>
-    <button v-for="p in drawing ? [] : details" :key="`detail-${p.stop.id}`" class="planner-place-detail" :data-stop-id="p.stop.id" :class="[state(p.stop.id), { photo: detailLevel === 'photos' }]" :style="{ left: p.point[0] + 'px', top: (p.point[1]! - 18) + 'px' }" :disabled="drawing" :aria-pressed="selectedSet.has(p.stop.id)" :aria-label="`${p.stop.name}，${p.stop.stay}${hasRange ? selectedSet.has(p.stop.id) ? '，點選移除' : '，點選加入' : '，查看景點照片'}`" @click="toggle(p.stop.id)">
-      <img referrerpolicy="no-referrer" v-if="p.stop.photo.src && !failedPhotos.includes(p.stop.photo.src)" :src="asset(p.stop.photo.src)" :alt="p.stop.photo.alt" loading="lazy" decoding="async" @error="photoFailed(p.stop.photo.src)">
+    <button v-for="p in drawing ? [] : points" :key="p.stop.id" class="planner-location" :data-stop-id="p.stop.id" :class="state(p.stop.id)" :style="{ left: p.point[0] + 'px', top: p.point[1] + 'px' }" :aria-label="p.stop.name + (selectedSet.has(p.stop.id) ? '，已加入，再點移除' : hasRange ? '，點選加入行程' : '，查看景點照片')" :disabled="drawing" :aria-pressed="selectedSet.has(p.stop.id)" @click="toggle(p.stop.id)"><img referrerpolicy="no-referrer" v-if="detailLevel !== 'photos' && p.stop.photo.src && !failedPhotos.includes(p.stop.photo.src)" :src="asset(p.stop.photo.src)" :alt="p.stop.photo.alt" loading="lazy" decoding="async" @error="photoFailed(p.stop.photo.src)"><i v-else class="planner-poi-dot" aria-hidden="true"/><span v-if="route?.includes(p.stop.id)">{{ route.indexOf(p.stop.id) + 1 }}</span></button>
+    <TransitionGroup name="map-detail">
+    <button v-for="p in drawing ? [] : details" :key="`detail-${detailLevel}-${p.stop.id}`" class="planner-place-detail" :data-stop-id="p.stop.id" :class="[state(p.stop.id), { photo: detailLevel === 'photos' }]" :style="{ left: p.point[0] + 'px', top: (p.point[1]! - 18) + 'px' }" :disabled="drawing" :aria-pressed="selectedSet.has(p.stop.id)" :aria-label="`${p.stop.name}，${p.stop.stay}${hasRange ? selectedSet.has(p.stop.id) ? '，點選移除' : '，點選加入' : '，查看景點照片'}`" @click="toggle(p.stop.id)">
+      <img referrerpolicy="no-referrer" v-if="p.stop.photo.src && !failedPhotos.includes(p.stop.photo.src)" :src="asset(p.stop.photo.src)" :alt="p.stop.photo.alt" loading="eager" decoding="async" width="150" height="78" @error="photoFailed(p.stop.photo.src)">
       <small v-else-if="detailLevel === 'photos'" class="planner-photo-placeholder">{{ p.stop.photo.src ? '照片暫時無法載入' : '景點照片待補' }}</small>
       <span><b>{{ p.stop.name }}</b><small v-if="detailLevel === 'photos'">{{ p.stop.stay }}</small><p v-if="detailLevel === 'photos'">{{ p.stop.note }}</p></span>
       <i v-if="selectedSet.has(p.stop.id)" aria-hidden="true">✓</i>
     </button>
+    </TransitionGroup>
     <button v-for="p in drawing ? [] : benefitPoints" :key="`benefit-${p.place.id}`" class="planner-benefit-point" :style="{left:p.point[0]+'px',top:p.point[1]+'px'}" :aria-label="p.place.name+'，'+benefitLabels[p.place.benefit]+(p.place.status === 'temporarily-closed' ? '，暫停開放' : '')" :disabled="drawing" @click="focusedBenefit = focusedBenefit === p.place.id ? '' : p.place.id"><span>{{ p.place.status === 'temporarily-closed' ? '×' : p.place.benefit === 'discount' ? '%' : '✓' }}</span></button>
     <template v-for="p in drawing ? [] : tourStops" :key="p.name">
       <button class="planner-tour-stop" :style="{left:p.point[0]+'px',top:p.point[1]+'px'}" :aria-label="p.name+'，指定停靠點'" :disabled="drawing" @click="focusedStop = focusedStop === p.name ? '' : p.name">●</button>
@@ -391,4 +403,11 @@ onBeforeUnmount(() => { disposed = true; cancelAnimationFrame(frame); cancelAnim
 
 <style scoped>
 .planner-benefit-point,.planner-tour-stop{width:44px;height:44px}.planner-benefit-detail.expanded{max-height:160px;overflow:auto}.planner-tour-label{max-height:100px;overflow:auto}
+</style>
+
+<style scoped>
+.map-detail-enter-active,.map-detail-leave-active{transition:opacity .14s ease,transform .14s ease;transform-origin:50% 100%}
+.map-detail-enter-from,.map-detail-leave-to{opacity:0;transform:translate(-50%,-90%) scale(.75)}
+.map-detail-leave-active{pointer-events:none}
+@media(prefers-reduced-motion:reduce){.map-detail-enter-active,.map-detail-leave-active{transition:none}}
 </style>

@@ -1,5 +1,5 @@
-import { applyPointsOrders } from '~/utils/points';
-import { tripItineraries, tripAlternatives, tripSummaries, type TripId } from '~/data/trips';
+import { restorePlannedDays } from '~/utils/planner-chat';
+import { tripItineraries, tripAlternatives, tripSummaries, plannerStorageKey, type TripId } from '~/data/trips';
 import { groupPrice, isMemberList } from '~/utils/commerce';
 import { esimPlan } from '~/utils/esim';
 import type { TripDay, Member, Usage } from '~/types/trip';
@@ -16,8 +16,7 @@ export function useDemo() {
     const empty=blankState();
     function field<K extends keyof TripDemoState>(key:K){return computed({get:()=>activeId.value?states.value[activeId.value][key]:empty[key],set:(value:TripDemoState[K])=>{if(activeId.value)states.value[activeId.value][key]=value;}});}
     const baseDays=field('days'), localMembers=field('members'), usage=field('usage'), adjusted=field('adjusted'), previousStop=field('previousStop'), generated=field('generated');
-    const {wallet:pointsWallet}=usePointsWallet();
-    const days=computed({get:()=>applyPointsOrders(baseDays.value,pointsWallet.value.orders,activeId.value||''),set:value=>{baseDays.value=value;}});
+    const days=baseDays;
     const esim=field('esim');
     // 有後端、而且這趟有真的旅伴群組時，名單來自伺服器（自己排第一，頁面照舊把 members[0] 當成你）；
     // 價格照各自買的方案、沒買的照目前選的方案估，跟原本的模擬同一套算法
@@ -42,6 +41,7 @@ export function useDemo() {
           target.members = target.members.map((m,i) => ({...m,price:esimPlan(i===0 ? target.esim.purchasedUsage || target.esim.selectedUsage || target.usage : 'normal',trip.dayCount).price}));
           target.generated=value?.generated===true;
           if(value?.adjusted===true && tripAlternatives[trip.id]){target.previousStop=structuredClone(tripItineraries[trip.id][0]!.stops[1]!);target.days[0]!.stops[1]=structuredClone(tripAlternatives[trip.id]!);target.adjusted=true;}
+          try{const restored=restorePlannedDays(target.days,JSON.parse(localStorage.getItem(plannerStorageKey(trip.id)) || 'null'));if(restored!==target.days){target.days=restored;target.adjusted=false;target.previousStop=null;}}catch{}
         }
         if(!cached){const legacy=JSON.parse(sessionStorage.getItem('chictrip-mobile-members')||'null');if(isMemberList(legacy))states.value.tokyo.members=legacy.map(m=>({...m,price:esimPlan('normal',5).price}));}
       }catch{}
@@ -52,7 +52,7 @@ export function useDemo() {
     // 每趟只問一次；好幾個元件同時呼叫 useDemo 時先記下再發請求，不會重複載入
     const savedTrips=useState<Partial<Record<TripId,SavedTrip|null>>>('saved-trips-v1',()=>({}));
     const api=useApi();
-    function rememberSaved(id:TripId,value:SavedTrip){savedTrips.value[id]=value;states.value[id].days=savedDays(id,value.stopIds);states.value[id].adjusted=false;states.value[id].previousStop=null;}
+    function rememberSaved(id:TripId,value:SavedTrip){savedTrips.value[id]=value;states.value[id].days=savedDays(id,value.stopIds);try{states.value[id].days=restorePlannedDays(states.value[id].days,JSON.parse(localStorage.getItem(plannerStorageKey(id)) || 'null'));}catch{}states.value[id].adjusted=false;states.value[id].previousStop=null;}
     async function loadSaved(id:TripId){
       if(id in savedTrips.value)return;
       savedTrips.value[id]=null;

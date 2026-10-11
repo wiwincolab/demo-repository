@@ -1,4 +1,4 @@
-import { initialWallet, readPointsWallet, redeemPoints, type PointsProduct, type Payment } from '~/utils/points';
+import { initialWallet, readPointsWallet, redeemPoints, cancelPointsOrder, type PointsProduct, type Payment } from '~/utils/points';
 import type { Stop } from '~/types/trip';
 const key='chictrip-points-demo-v1';
 export function usePointsWallet(){
@@ -13,5 +13,10 @@ export function usePointsWallet(){
    await navigator.locks.request(key,async()=>{const raw=localStorage.getItem(key);const fresh=raw?readPointsWallet(JSON.parse(raw)):initialWallet();const next=redeemPoints(fresh,p,payment,tripId,target,crypto.randomUUID());localStorage.setItem(key,JSON.stringify(next));wallet.value=next;});return true;
   }catch(e){error.value=e instanceof Error?e.message:'儲存失敗，未扣除示範點數。';return false;}finally{busy.value=false;}
  }
- return {wallet,ready,error,busy,redeem};
+ async function cancel(id:string){
+  if(!ready.value||busy.value)return false;busy.value=true;error.value='';
+  try{if(!navigator.locks)throw new Error('請使用支援安全儲存的新版瀏覽器。');await navigator.locks.request(key,async()=>{const raw=localStorage.getItem(key);const fresh=raw?readPointsWallet(JSON.parse(raw)):initialWallet();const next=cancelPointsOrder(fresh,id);localStorage.setItem(key,JSON.stringify(next));wallet.value=next;});return true;}
+  catch(e){error.value=e instanceof Error?e.message:'紀錄無法更新。';return false;}finally{busy.value=false;}
+ }
+ return {wallet,ready,error,busy,redeem,cancel};
 }

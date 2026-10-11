@@ -1,18 +1,13 @@
 <script setup lang="ts">
-import PointsMarket from '~/components/PointsMarket.vue';
 import { pointsProducts } from '~/utils/points';
-import ChictripMotion from '~/components/ChictripMotion.vue';
 import { kansaiReference } from '~/data/kansai';
 import { dayColors } from '~/utils/map';
 import { directionsUrl } from '~/utils/directions';
 import type { Stop } from '~/types/trip';
-import { rainPlanDetailsFor, type RainAlternative, type Recommendation } from '~/utils/planner';
-import { tripItineraries, tripAlternatives, plannerStorageKey } from '~/data/trips';
-const { days, members, adjusted, applyAdjustment, undoAdjustment, notify, saved: sharedTrip } = useDemo();
+const { days, members, saved: sharedTrip } = useDemo();
 const { activeId,activeTrip,tripHref }=useTripContext();
 const asset = useAsset();
 const route = useRoute();
-const pointsOpen=ref(false);
 const {wallet:pointsWallet}=usePointsWallet();
 const tripPointOrders=computed(()=>pointsWallet.value.orders.filter(o=>o.tripId===activeId.value));
 function requestedDay() { const value = Number(route.query.day); return Number.isInteger(value) && value >= 0 && value < days.value.length ? value : 0; }
@@ -57,53 +52,15 @@ watch(day, (next, previous) => {
     }
 }, { flush: 'post' });
 const groupOpen = ref(false);
-const sheet = ref<'info' | 'adjust' | 'compare' | 'done' | 'saved' | null>(null);
+const sheet = ref<'info' | null>(null);
 const stop = ref<Stop | null>(null);
-const adjustText = ref(''), lockPlan = ref(true);
 const shown = computed(() => day.value < 0 ? days.value.flatMap(d => d.stops) : days.value[day.value]?.stops || []);
 const activeStop = computed(() => shown.value.find(s => s.id === selected.value) || shown.value[0]!);
-const saved = ref<{
-    time: string;
-    name: string;
-    reason?: string;
-    rainPlan?: string;
-    rainAlternative?: RainAlternative | null;
-}[]>([]);
-const title = computed(() => ({ info: activeTrip.value?.title || '旅程資訊', adjust: 'AI 局部微調', compare: '只換一站，其他照舊', done: '已套用局部替換', saved: '圈選排程 · 已儲存' }[sheet.value || 'info']));
-const originalStop=computed(()=>activeId.value?tripItineraries[activeId.value][0]?.stops[1]:undefined);
-const alternative=computed(()=>activeId.value?tripAlternatives[activeId.value]:undefined);
-const keptStops=computed(()=>days.value[0]?.stops.filter(s=>s.id!==originalStop.value?.id).map(s=>s.name).join('與')||'其他景點');
+const title = computed(() => activeTrip.value?.title || '旅程資訊');
 function dayLabel(i:number){if(!activeTrip.value?.startDate)return '日期未定';const date=new Date((activeTrip.value?.startDate||'2026-01-01')+'T12:00:00');date.setDate(date.getDate()+i);return `${date.getMonth()+1}/${date.getDate()}`;}
 function chooseDay(n: number) { day.value = n; selected.value = days.value[Math.max(0,n)]?.stops[0]?.id||0; }
-watch(activeId,()=>{chooseDay(requestedDay());sheet.value=null;stop.value=null;groupOpen.value=false;adjustText.value='';saved.value=[];});
+watch(activeId,()=>{chooseDay(requestedDay());sheet.value=null;stop.value=null;groupOpen.value=false;});
 watch(()=>route.query.day,()=>chooseDay(requestedDay()));
-function preview() {
-    if (!lockPlan.value)
-        return notify('此示範請保留鎖定安排，再比較局部變更');
-    if (!adjustText.value.trim())
-        return notify('請先輸入改程需求');
-    if (!/下雨|雨天|室內/.test(adjustText.value))
-        return notify('這組示範支援雨天室內替換，請加入「下雨」或「室內」');
-    sheet.value = 'compare';
-}
-function apply() { applyAdjustment(); chooseDay(0); selected.value = 1; sheet.value = 'done'; }
-function savedPlan() {
-    if(!activeId.value)return;
-    try {
-        const stored=localStorage.getItem(plannerStorageKey(activeId.value))||(activeId.value==='tokyo'?localStorage.getItem('chictrip-circle-planner-v1'):null);
-        const plan = JSON.parse(stored || 'null')?.saved;
-        const places = tripItineraries[activeId.value].flatMap(d => d.stops);
-        saved.value = (plan?.stops || []).map((s: Recommendation) => {
-            if (s.rainAlternative !== undefined) return s;
-            const place = s.at?.length === 2 && s.photo ? s : places.find(p => p.name === s.name);
-            return place ? { ...s, ...rainPlanDetailsFor(place, places, plan.preference || '') } : s;
-        });
-    }
-    catch {
-        saved.value = [];
-    }
-    sheet.value = 'saved';
-}
 </script>
 <template>
   <section v-if="activeTrip && days.length" class="screen active trip-motion-page" aria-labelledby="trip-title">
@@ -128,11 +85,7 @@ function savedPlan() {
         <span>邀請旅伴 ＋</span>
       </button>
     </div>
-    <div class="trip-tools">
-      <NuxtLink class="ai-link" :to="tripHref('/planner')">✦ 圈選 AI 排程</NuxtLink>
-      <button v-if="alternative" @click="sheet = 'adjust'">AI 微調</button>
-      <button @click="savedPlan">已儲存</button><button @click="pointsOpen=true">用和泰點數改行程</button>
-    </div>
+    <div class="trip-tools"><NuxtLink class="ai-link" :to="tripHref('/planner',{day:Math.max(0,day)})">✦ AI 排行程 <span>規劃與微調 →</span></NuxtLink></div>
     <div ref="dayBar" class="day-bar" role="group" aria-label="選擇旅遊日期">
       <button :aria-pressed="day === -1" @click="chooseDay(-1)"><strong>全程</strong>{{ activeTrip.dayCount }} 天</button>
       <button v-for="(d, i) in days" :key="d.area" :style="{ '--day': dayColors[i] }" :aria-pressed="day === i" @click="chooseDay(i)"><strong>第 {{ i + 1 }} 天</strong><span class="day-dot" />{{ dayLabel(i) }}</button>
@@ -167,6 +120,7 @@ function savedPlan() {
           </div>
           <img :src="asset(s.photo.src)" :alt="s.photo.alt" loading="lazy" :style="{ objectPosition: s.photo.objectPosition }">
         </button>
+        <ServiceRecommendations :stop="s" :next="shown[i + 1]?.day===s.day ? shown[i + 1] : undefined" />
         <a v-if="shown[i + 1]" class="stop-route-link" :href="directionsUrl(s, shown[i + 1]!)" target="_blank" rel="noopener noreferrer">{{ s.day !== shown[i + 1]!.day ? '隔日移動' : '前往下一站' }} · {{ shown[i + 1]!.name }} <span>查看交通路線 ↗</span></a>
       </article>
     </div>
@@ -187,8 +141,7 @@ function savedPlan() {
     </Transition>
     </div>
     <p class="page-note">{{ activeId === 'kansai' ? '路線參考喜鴻五日行程；日期、時刻與車程為示範估算。' : '示範行程。' }} 流量依使用行為估算。</p>
-    <section v-if="tripPointOrders.length" class="panel"><h3>點數安排 · 示範</h3><p v-for="o in tripPointOrders" :key="o.id">{{pointsProducts.find(p=>p.id===o.productId)?.name}} · {{o.targetId===null?'旅後使用，不占用當日行程':'已替換第 '+((o.day||0)+1)+' 天景點'}}<small>（未實際預訂）</small></p></section>
-    <AppSheet v-model="pointsOpen" title="用和泰點數安排旅行" class="points-sheet"><PointsMarket v-if="pointsOpen" planning/></AppSheet>
+    <section class="trip-service-store"><div><h3>和泰旅行商店</h3><p>交通、上網、體驗與出發準備，先兌換再讓 AI 安排。</p></div><NuxtLink :to="tripHref('/points')">逛商店 →</NuxtLink><details v-if="tripPointOrders.length"><summary>這趟旅行已兌換 {{tripPointOrders.length}} 項服務</summary><p v-for="o in tripPointOrders" :key="o.id">{{pointsProducts.find(p=>p.id===o.productId)?.name}} · 示範服務券</p></details></section>
     <GroupSheet v-model="groupOpen" />
     <AppSheet :model-value="!!stop" :title="stop?.name || ''" @update:model-value="stop = null">
       <StopDetails v-if="stop" :stop="stop" />
@@ -200,45 +153,6 @@ function savedPlan() {
         <template v-if="activeTrip.reference"><p class="small-note">{{ activeTrip.reference.note }}</p><a :href="activeTrip.reference.url" target="_blank" rel="noopener">路線參考：{{ activeTrip.reference.name }} ↗</a></template>
         <template v-if="activeId === 'kansai'"><p class="small-note">{{ kansaiReference.note }}</p><a :href="kansaiReference.url" target="_blank" rel="noopener">路線參考：{{ kansaiReference.name }} ↗</a></template>
         <p v-else class="small-note">景點資訊與停留時間是展示資料，出發前需另行確認。</p>
-      </template>
-      <template v-if="sheet === 'adjust'">
-        <p>示範：把第 1 天的{{ originalStop?.name }}換成雨天也能去的安排。</p>
-        <label><input v-model="lockPlan" type="checkbox"> 保留{{ keptStops }}，不動已確定的安排</label>
-        <textarea v-model="adjustText" aria-label="改程需求" maxlength="200" :placeholder="'例如：下雨了，將'+originalStop?.name+'改成室內景點。'" />
-        <p class="small-note">這裡示範一組預設替換；尚未串接即時 AI。</p>
-        <button class="primary" @click="preview">看調整前後</button><button class="secondary" @click="sheet=null;pointsOpen=true">看看可用和泰點數的替代方案</button>
-        <button v-if="adjusted" class="secondary" @click="undoAdjustment(); sheet = null">復原這次調整</button>
-      </template>
-      <template v-if="sheet === 'compare'">
-        <div class="change-pair">
-          <div>
-            <small>原本</small>
-            <img v-if="originalStop?.photo.src" class="change-photo" :src="asset(originalStop.photo.src)" :alt="originalStop.photo.alt" :style="{ objectPosition: originalStop.photo.objectPosition }">
-            <strong>{{ originalStop?.time }} {{ originalStop?.name }}</strong>
-          </div>
-          <div>
-            <small>替換草案</small>
-            <img v-if="alternative?.photo.src" class="change-photo" :src="asset(alternative.photo.src)" :alt="alternative.photo.alt" :style="{ objectPosition: alternative.photo.objectPosition }">
-            <strong>{{ alternative?.time }} {{ alternative?.name }}</strong>
-            <small v-if="alternative?.photo.src" class="change-photo-credit"><a v-if="alternative.photo.source" :href="alternative.photo.source" target="_blank" rel="noopener">{{ alternative.photo.credit }} · {{ alternative.photo.license }} ↗</a><template v-else>{{ alternative.photo.credit }} · {{ alternative.photo.license }}</template></small>
-          </div>
-        </div>
-        <p>保留{{ keptStops }}。實際交通與營業時間待確認。</p>
-        <button class="primary" @click="apply">套用示範替換</button>
-        <button class="secondary" @click="sheet = null">保留原行程</button>
-      </template>
-      <template v-if="sheet === 'done'">
-        <ChictripMotion motion="happy" :size="100"/>
-        <p>只替換第 1 天的{{ originalStop?.name }}，其餘安排保留。</p>
-        <button class="secondary" @click="undoAdjustment(); sheet = null">復原這次調整</button>
-      </template>
-      <template v-if="sheet === 'saved'">
-        <p>{{ saved.length ? '來自你在圈選排程頁儲存的草案。' : '還沒有儲存圈選行程。先圈選想去的區域，輸入偏好後預覽並保存。' }}</p>
-        <div v-for="s in saved" :key="s.name" class="member-row">
-          <time>{{ s.time }}</time>
-          <div><strong>{{ s.name }}</strong><small v-if="s.reason">{{ s.reason }}</small><RainPlanCard v-if="s.rainPlan" :text="s.rainPlan" :alternative="s.rainAlternative" /></div>
-        </div>
-        <NuxtLink class="primary" :to="tripHref('/planner')" @click="sheet = null">{{ saved.length ? '繼續編輯' : '開始圈選排程' }}</NuxtLink>
       </template>
     </AppSheet>
   </section>
@@ -287,4 +201,8 @@ function savedPlan() {
 <style scoped>
 .stop-route-link { grid-column:2; display:flex; flex-wrap:wrap; gap:6px 12px; padding:10px 12px; margin:4px 0 8px; border-radius:9px; color:#286e80; background:#edf5f5; font-size:12px; line-height:1.6; }
 .stop-route-link span { margin-left:auto; font-weight:600; }
+</style>
+
+<style scoped>
+.trip-tools .ai-link{display:flex;align-items:center;justify-content:space-between;padding:16px;border-radius:14px;font-size:15px}.trip-tools .ai-link span{font-size:11px;font-weight:400}.trip-service-store{margin:20px 0;padding:18px;border-radius:16px;background:#eef8fb;display:flex;align-items:center;flex-wrap:wrap;gap:12px}.trip-service-store>div{flex:1;min-width:180px}.trip-service-store h3{margin:0;font-size:17px}.trip-service-store p{font-size:12px;color:#6a8998;line-height:1.7;margin:7px 0 0}.trip-service-store>a{min-height:44px;display:flex;align-items:center;text-decoration:none;color:#008bad;font-size:13px}.trip-service-store details{width:100%;font-size:12px}
 </style>

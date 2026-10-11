@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import PointsMarket from '~/components/PointsMarket.vue';
-const route=useRoute();
-useHead({title:'和泰點數・交通與旅行｜去趣'});
+const {tripHref}=useTripContext();
+useHead({title:'和泰旅行商店｜去趣'});
 </script>
-<template><section class="points-page"><NuxtLink to="/trips">← 我的行程</NuxtLink><div class="mascot-perch"><h1>點數，換下一段旅程。</h1><PageMascot /></div><PointsMarket :planning="route.query.mode==='plan'"/></section></template>
+<template><section class="points-page"><NuxtLink :to="tripHref('/trip')">← 我的行程</NuxtLink><div class="mascot-perch"><div><h1>和泰旅行商店</h1><p>把喜歡的服務，先放進這趟旅行。</p></div><PageMascot /></div><PointsMarket/></section></template>
