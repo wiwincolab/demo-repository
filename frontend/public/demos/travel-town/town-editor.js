@@ -34,7 +34,7 @@
       target.addEventListener(type, handler, options);
       cleanups.push(() => target.removeEventListener(type, handler, options));
     };
-    const say = (text) => { status.textContent = text; };
+    const say = (text) => { status.textContent = text; status.hidden = !text; };
     const loaded = await app.ready;
     if (!loaded || disposed || app.state.disposed) {
       say('模型載入完成後才能編輯；若載入失敗，請重新整理。');
@@ -305,7 +305,7 @@
     }
     drawGrid();
     edit.disabled = false;
-    say('試試重新排列，打造你的小鎮。');
+    say('');
     on(window, 'pagehide', (event) => {
       if (event.persisted) { stopGesture(false); return; }
       disposed = true;

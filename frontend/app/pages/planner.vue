@@ -149,17 +149,34 @@ watch([selectedPassId,bundleCity,bundleShuttle,passVariant], async ([id,city,shu
   finally { if (revision === coverageRevision) coverageLoading.value = false; }
 });
 const extension = ref(0), planNotes = ref<string[]>([]);
-const panel = ref<'passes' | null>(null);
+const panel = ref<'settings' | 'passes' | null>(null);
 const dirty = ref(false), error = ref('');
 const routeIds = computed(() => !dirty.value ? draft.value.map(s => s.id) : []);
 const busy = ref(false), draft = ref<Recommendation[]>([]);
 let generationRevision=0;
 const proposal = ref<{trip:string;day:number;before:Recommendation[];after:Recommendation[];notes:string[];preference:string} | null>(null);
 const planningMode=ref<'ai'|'map'|'pass'>('ai'), chatText=ref('');
+const planningModes = [
+  { id: 'ai', name: '自由規劃', description: '讓 AI 找附近景點，也能用對話調整' },
+  { id: 'map', name: '地圖規劃', description: '圈選想逛的範圍，再挑喜歡的景點' },
+  { id: 'pass', name: '周遊券規劃', description: '依交通券或景點卡的範圍安排' },
+] as const;
+const planningModeLabel = computed(() => planningModes.find(mode => mode.id === planningMode.value)!.name);
+const canGenerate = computed(() => !busy.value && !drawing.value && (planningMode.value === 'ai' || (hasRange.value && !!ids.value.length)));
+const chatSubmitLabel = computed(() => busy.value ? '正在處理行程' : chatText.value.trim() ? '送出行程需求' : draft.value.length && !dirty.value ? `確認第 ${planningDay.value+1} 天行程` : dirty.value ? '依新需求重新安排' : 'AI 安排行程');
+const chatSubmitDisabled = computed(() => busy.value || (!chatText.value.trim() && !(draft.value.length && !dirty.value) && !canGenerate.value));
+const chatPlaceholder = computed(() => draft.value.length && !dirty.value ? '輸入需求，或按 ↑ 確認' : dirty.value ? '輸入需求，或按 ↑ 重新安排' : '想怎麼玩？按 ↑ 開始安排');
 const messages=ref<{role:'user'|'assistant';text:string}[]>([]);
 const ownedServices=computed(()=>redeemedPlanningContext(pointsWallet.value.orders,activeId.value || '',activeTrip.value?.country || 'japan',draft.value.length?draft.value:currentDays.value[planningDay.value]?.stops || []));
 const resultsBox=ref<HTMLElement>();
-function choosePlanningMode(mode:'ai'|'map'|'pass'){planningMode.value=mode;drawing.value=false;if(mode==='pass')panel.value='passes';}
+function choosePlanningMode(mode:'ai'|'map'|'pass'){planningMode.value=mode;drawing.value=false;panel.value=mode==='pass'?'passes':null;}
+function requestGeneration(){panel.value=null;void generate();}
+function submitPlannerChat(){
+  if(busy.value || drawing.value)return;
+  if(chatText.value.trim())submitChat();
+  else if(draft.value.length && !dirty.value)compareDraft();
+  else if(canGenerate.value)requestGeneration();
+}
 function initialDraft(){if(!draft.value.length)draft.value=initialConversationStops(currentDays.value[planningDay.value]?.stops || [],places.value);}
 onMounted(initialDraft);
 let autoPlannedTrip='';
@@ -317,13 +334,13 @@ onBeforeUnmount(() => {generationRevision++;clearTimeout(viewportTimer);coverage
     <div class="mascot-perch"><div class="page-heading">
       <span class="eyebrow">{{ activeTrip.english }} / DAY PLANNER</span>
       <h1>AI 排行程</h1>
-      <p>第 {{planningDay+1}} 天，想怎麼玩？選擇規劃方式，再用下方對話補充需求。</p>
-      <NuxtLink to="/places">探索日韓台更多景點與照片 →</NuxtLink>
+      <p>第 {{planningDay+1}} 天，先看看安排，再聊聊想怎麼玩。</p>
     </div><PageMascot /></div>
-    <label class="planner-major-transport">主要交通<select :value="transportSettings.major" aria-label="主要交通方式" @change="changeMajor(($event.target as HTMLSelectElement).value)"><option v-for="(label,id) in transportLabels" :key="id" :value="id">{{label}}</option></select></label>
-    <div class="range-choices" aria-label="選擇規劃方式"><button :aria-pressed="planningMode==='ai'" :class="{active:planningMode==='ai'}" @click="choosePlanningMode('ai')">✦ 自由規劃</button><button :aria-pressed="planningMode==='map'" :class="{active:planningMode==='map'}" @click="choosePlanningMode('map')">地圖規劃</button><button :aria-pressed="planningMode==='pass'" :class="{active:planningMode==='pass'}" @click="choosePlanningMode('pass')">周遊券規劃</button></div>
-    <section v-if="ownedServices.length" class="planner-owned"><div class="row"><b>這趟旅行已兌換 {{ownedServices.length}} 項服務</b><NuxtLink :to="tripHref('/points')">我的服務券 →</NuxtLink></div><p v-for="service in ownedServices" :key="service.product.id"><strong>{{service.product.brand}}</strong> · {{service.note}}</p></section>
-    <p v-else class="planner-shop-link">也可以先到 <NuxtLink :to="tripHref('/points')">和泰旅行商店</NuxtLink> 兌換交通、上網或體驗。</p>
+    <div class="planner-toolbar">
+      <span>{{planningModeLabel}} · {{transportLabels[transportSettings.major]}}</span>
+      <button type="button" aria-haspopup="dialog" @click="panel='settings'">規劃設定 <span aria-hidden="true">⌄</span></button>
+    </div>
+    <details v-if="ownedServices.length" class="planner-owned"><summary>這趟旅行已兌換 {{ownedServices.length}} 項服務</summary><p v-for="service in ownedServices" :key="service.product.id"><strong>{{service.product.brand}}</strong> · {{service.note}}</p><NuxtLink :to="tripHref('/points')">我的服務券 →</NuxtLink></details>
     <p v-if="planningMode==='ai'&&!draft.length" class="planner-empty-start">從 {{activeTrip.location}} 開始，AI 會找附近的景點安排這一天。也可以先在下方輸入想玩的內容。</p>
     <template v-if="planningMode!=='ai'">
 
@@ -370,15 +387,12 @@ onBeforeUnmount(() => {generationRevision++;clearTimeout(viewportTimer);coverage
     <p class="small-note">點選數字展開景點，放大可看名稱與照片。尚未圈選時，點選景點可查看詳情。<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">景點 © OpenStreetMap contributors（ODbL）</a> · 照片來源與授權見景點詳情。</p>
     <p v-if="selectedPass" class="pass-range-note">{{ selectedPass.exclusions }} <template v-if="selectedBenefits.length">已標示 {{ selectedBenefits.length }} 個有確認座標的合作設施；黃色標記與定位圈協助找景點，完整名單與方案限制見官網。</template></p>
     </template>
-    <div class="planning-next">
-      <span>{{ planningMode==='ai' ? '第 '+(planningDay+1)+' 天 · '+(draft.length?'重新找附近景點':'從目的地開始') : hasRange ? ids.length + ' 個景點已加入' : '先選一個想逛的範圍' }}</span>
-      <button class="primary" :disabled="busy || drawing || (planningMode!=='ai' && (!hasRange || !ids.length))" @click="generate()">{{busy?'正在安排…':draft.length?'AI 重新安排':'AI 安排行程'}} <span aria-hidden="true">→</span></button>
-    </div>
+    <p v-if="planningMode!=='ai'" class="small-note planner-selection-status" role="status">{{ hasRange ? ids.length + ' 個景點已加入' : '先選一個想逛的範圍，再讓 AI 安排。' }}</p>
     <p v-if="planningMode!=='ai' && hasRange && !ids.length" class="small-note empty-selection">{{ rangeIds.length ? '從清單勾選想去的景點，再產生行程。' : poiLoading ? '正在找這個範圍內的景點…' : '這裡目前沒有景點。可以移動地圖或重畫範圍。' }}</p>
     <section v-if="draft.length" ref="resultsBox" class="planner-results" aria-label="行程草案">
-      <div class="row"><h2>這樣玩，你覺得呢？</h2><span class="planner-badge">{{ dirty ? '需求已變更' : '行程草案' }}</span></div>
-      <p v-if="dirty" class="planner-error" role="status">需求已變更，重新安排後就能儲存。</p>
-      <details class="plan-notes"><summary>時間與安排</summary><p v-for="note in planNotes" :key="note" class="small-note">{{ note }}</p></details>
+      <div class="row"><h2>第 {{planningDay+1}} 天的安排</h2><span class="planner-badge">{{ dirty ? '需求已變更' : draft.length+' 站' }}</span></div>
+      <p v-if="dirty" class="planner-error" role="status">需求已變更，點下方「依新需求重新安排」更新行程。</p>
+      <details v-if="planNotes.length" class="plan-notes"><summary>時間與安排</summary><p v-for="note in planNotes" :key="note" class="small-note">{{ note }}</p></details>
       <article v-for="(s,i) in draft" :key="s.id" class="planner-card">
         <time>{{ s.time }}</time><div><h3>{{ s.name }}</h3><small>{{ s.stay }}</small><p>{{ s.reason }}</p><RainPlanCard :text="s.rainPlan" :alternative="s.rainAlternative" /><small v-if="s.travelMinutes">前一站交通約 {{ s.travelMinutes }} 分鐘 · 示範估算</small></div>
         <img referrerpolicy="no-referrer" v-if="s.photo.src" :src="asset(s.photo.src)" :alt="s.photo.alt" width="48" height="48" style="object-fit:cover;border-radius:8px">
@@ -395,6 +409,16 @@ onBeforeUnmount(() => {generationRevision++;clearTimeout(viewportTimer);coverage
         <a v-if="inspectedPoi" :href="inspectedPoi.source.url" target="_blank" rel="noopener">OpenStreetMap 景點來源 ↗</a>
         <a v-if="inspectedPoi?.website" :href="inspectedPoi.website" target="_blank" rel="noopener">景點官網 ↗</a>
       </template>
+    </AppSheet>
+    <AppSheet class="planner-settings-sheet" :model-value="panel === 'settings'" title="規劃設定" @update:model-value="panel = null">
+      <p class="planner-settings-intro">依你的玩法調整，想好了再重新安排。</p>
+      <label class="planner-major-transport">主要交通<select :value="transportSettings.major" aria-label="主要交通方式" @change="changeMajor(($event.target as HTMLSelectElement).value)"><option v-for="(label,id) in transportLabels" :key="id" :value="id">{{label}}</option></select></label>
+      <h3 class="planner-settings-label">規劃方式</h3>
+      <div class="planner-mode-options" aria-label="選擇規劃方式">
+        <button v-for="mode in planningModes" :key="mode.id" type="button" :aria-pressed="planningMode===mode.id" @click="choosePlanningMode(mode.id)"><span><b>{{mode.name}}</b><small>{{mode.description}}</small></span><span aria-hidden="true">{{planningMode===mode.id?'✓':'→'}}</span></button>
+      </div>
+      <div class="planner-settings-links"><NuxtLink to="/places">探索更多景點與照片 <span aria-hidden="true">→</span></NuxtLink><NuxtLink :to="tripHref('/points')">{{ownedServices.length?'我的服務券':'和泰旅行商店'}} <span aria-hidden="true">→</span></NuxtLink></div>
+      <button class="secondary planner-regenerate" :disabled="!canGenerate" @click="requestGeneration">{{busy?'正在安排…':draft.length?'重新安排這一天':'AI 安排行程'}} <span aria-hidden="true">→</span></button>
     </AppSheet>
     <AppSheet :model-value="panel === 'passes'" title="選擇周遊券規劃範圍" @update:model-value="panel = null">
       <template v-if="panel === 'passes'">
@@ -416,7 +440,7 @@ onBeforeUnmount(() => {generationRevision++;clearTimeout(viewportTimer);coverage
     </AppSheet>
     <PlannerComparison :model-value="!!proposal" :before="proposal?.before || []" :after="proposal?.after || []" :notes="proposal?.notes || []" :day="proposal?.day ?? planningDay" @update:model-value="closeComparison" @adopt="adoptProposal" />
     <p v-if="error" class="planner-error" role="alert">{{error}}</p>
-    <PlannerChat v-show="!drawing" v-model="chatText" :busy="busy" :messages="messages" @submit="submitChat" @suggestion="suggestChat"><template #actions><button v-if="draft.length" class="planner-confirm-action" :disabled="dirty || busy" @click="compareDraft">確認行程 · 第 {{planningDay+1}} 天 {{draft.length}} 站 <span aria-hidden="true">→</span></button></template></PlannerChat>
+    <PlannerChat v-show="!drawing" v-model="chatText" :busy="busy" :messages="messages" :submit-label="chatSubmitLabel" :submit-disabled="chatSubmitDisabled" :placeholder="chatPlaceholder" @submit="submitPlannerChat" @suggestion="suggestChat" />
   </section>
 </template>
 <style scoped>
@@ -464,7 +488,7 @@ onBeforeUnmount(() => {generationRevision++;clearTimeout(viewportTimer);coverage
 </style>
 
 <style scoped>
-.planner-screen{padding-bottom:240px!important}.range-choices button{font-size:13px;gap:4px}.planner-owned{margin:14px 0;padding:14px;border:1px solid #d5e9ef;border-radius:14px;background:#f2fafd;color:#557c8c}.planner-owned b{font-size:13px}.planner-owned p{font-size:12px;line-height:1.7;margin:8px 0}.planner-owned a,.planner-shop-link a{font-size:12px;color:#008bad}.planner-shop-link{font-size:12px;line-height:1.7;color:#6e8d9b}.planner-draw-toggle{min-height:44px;margin:8px 0;padding:10px 14px;border:1px solid #cfe4e9;border-radius:10px;background:white;color:#38768c}.planner-results{scroll-margin-top:85px}.planner-owned .row{gap:8px;flex-wrap:wrap}
+.planner-screen{padding-bottom:160px!important}.range-choices button{font-size:13px;gap:4px}.planner-owned{margin:14px 0;padding:14px;border:1px solid #d5e9ef;border-radius:14px;background:#f2fafd;color:#557c8c}.planner-owned b{font-size:13px}.planner-owned p{font-size:12px;line-height:1.7;margin:8px 0}.planner-owned a,.planner-shop-link a{font-size:12px;color:#008bad}.planner-shop-link{font-size:12px;line-height:1.7;color:#6e8d9b}.planner-draw-toggle{min-height:44px;margin:8px 0;padding:10px 14px;border:1px solid #cfe4e9;border-radius:10px;background:white;color:#38768c}.planner-results{scroll-margin-top:85px}.planner-owned .row{gap:8px;flex-wrap:wrap}
 </style>
 
 <style scoped>
@@ -472,9 +496,10 @@ onBeforeUnmount(() => {generationRevision++;clearTimeout(viewportTimer);coverage
 </style>
 
 <style scoped>
-.planner-confirm-action{display:flex;justify-content:center;align-items:center;gap:12px;width:100%;min-height:48px;margin:0 0 10px;padding:10px 12px;border:0;border-radius:14px;background:#008bad;color:white;font-size:16px;font-weight:700;box-shadow:0 4px 12px #008bad24;cursor:pointer}.planner-confirm-action:disabled{opacity:.5}.planner-confirm-action:focus-visible{outline:3px solid #ffc500;outline-offset:2px}
+.planner-major-transport{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;font-size:13px;color:#416e7e}.planner-major-transport select{width:auto;min-width:0;min-height:44px;max-width:60%;font-size:16px;padding:8px 12px;border:1px solid #cee4eb;border-radius:10px;background:#f6fbfd;color:#356e82}
 </style>
 
 <style scoped>
-.planner-major-transport{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;font-size:13px;color:#416e7e}.planner-major-transport select{width:auto;min-width:0;min-height:44px;max-width:60%;font-size:16px;padding:8px 12px;border:1px solid #cee4eb;border-radius:10px;background:#f6fbfd;color:#356e82}
+.planner-screen{box-sizing:border-box;padding-inline:max(12px,env(safe-area-inset-left)) max(12px,env(safe-area-inset-right))}.planner-screen .mascot-perch{align-items:center;margin-bottom:8px}.planner-screen .page-heading{padding:18px 0 8px;margin-inline:0}.planner-screen .page-heading p{margin-bottom:0}.planner-screen .mascot-perch>.page-mascot{margin-bottom:0}
+.planner-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 0 12px;border-bottom:1px solid #e5edef;color:#6e8d9b;font-size:12px}.planner-toolbar>span{min-width:0}.planner-toolbar button{display:flex;align-items:center;gap:6px;flex-shrink:0;min-height:44px;padding:8px 12px;border:0;border-radius:10px;background:#f2f8fa;color:#416e7e;font:inherit;font-size:13px;cursor:pointer}.planner-toolbar button:focus-visible,.planner-mode-options button:focus-visible,.planner-regenerate:focus-visible{outline:3px solid #ffc500;outline-offset:2px}.planner-owned{padding:10px 12px;font-size:12px}.planner-owned summary{min-height:28px;cursor:pointer}.planner-results{margin-inline:0}.planner-results h2{font-size:20px}.planner-selection-status{margin:12px 0}.planner-settings-intro{color:#6e8d9b;font-size:13px;line-height:1.7}.planner-settings-label{margin:24px 0 10px;font-size:13px;color:#416e7e}.planner-mode-options{display:grid;gap:8px}.planner-mode-options button{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:64px;padding:12px 14px;border:1px solid #dcebef;border-radius:12px;background:white;color:#416e7e;text-align:left;cursor:pointer}.planner-mode-options button[aria-pressed=true]{background:#eef9fc;border-color:#a8dce8;color:#008bad}.planner-mode-options b{display:block;font-size:14px;font-weight:600}.planner-mode-options small{display:block;margin-top:5px;font-size:12px;line-height:1.6;color:#6e8d9b}.planner-settings-links{display:grid;margin:16px 0;border-top:1px solid #e5edef}.planner-settings-links a{display:flex;align-items:center;justify-content:space-between;min-height:44px;font-size:13px;color:#527a8a;text-decoration:none;border-bottom:1px solid #e5edef}.planner-regenerate{display:flex;justify-content:center;align-items:center;gap:12px;width:100%;min-height:48px;padding:12px;border:1px solid #cee4eb;border-radius:12px;background:#f2f8fa;color:#416e7e;font-size:14px;cursor:pointer}.planner-regenerate:disabled{opacity:.45;cursor:default}
 </style>

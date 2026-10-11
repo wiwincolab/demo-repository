@@ -39,11 +39,12 @@ onBeforeUnmount(() => window.removeEventListener('message', onTownMessage));
       <PageMascot />
       <button class="town-help" aria-label="操作說明" @click="help = true">?</button>
     </header>
-    <iframe ref="townFrame" class="town-frame" :src="`${base}demos/travel-town/index.html`" title="東北亞九景：可拖移重組、旋轉、縮放與切換日夜的 3D 小鎮" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox" />
+    <iframe ref="townFrame" class="town-frame" :src="`${base}demos/travel-town/index.html`" title="東北亞九景：可拖移重組、旋轉、縮放，並依景點與時間呈現太陽和月亮的 3D 小鎮" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox" />
     <AppSheet v-model="help" title="逛逛你的小鎮">
       <div class="town-instructions">
-        <p>九段風景，透過街道連成一座小鎮。</p>
-        <dl><dt>換個角度</dt><dd>單指或滑鼠拖曳旋轉；雙指或滾輪縮放。</dd><dt>走近景點</dt><dd>打開「九景地圖」，選一個街區。按「全景」回到整座小鎮。</dd><dt>重組小鎮</dt><dd>按「編輯小鎮」，拖動景點方塊交換位置，也可依序點選九宮格中的兩格。支援上一步、原始排列，完成後恢復旋轉。</dd><dt>等路燈亮起</dt><dd>拖曳光線滑桿，或點選白天、黃昏、夜晚。</dd></dl>
+        <p>九段風景，透過街道連成一座小鎮。六位去趣小旅伴會沿步道散步，戴著不同顏色的小帽子。</p>
+        <dl><dt>換個角度</dt><dd>單指或滑鼠拖曳旋轉；雙指或滾輪縮放。</dd><dt>走近景點</dt><dd>打開「九景地圖」，選一個街區，天空會跟著切換到該景點的觀測位置。按「全景」回到整座小鎮，天空沿用目前顯示的觀測地點。</dd><dt>重組小鎮</dt><dd>按「編輯小鎮」，拖動景點方塊交換位置，也可依序點選九宮格中的兩格。支援上一步、原始排列，完成後恢復旋轉。</dd><dt>看真實的天空</dt><dd>預設跟隨景點的現在時間。選擇日期、拖曳當地時間，或點選日出、正午、日落、月出、月落，查看當天的升落與月相。按「現在」回到即時天空；太陽或月亮在地平線上時，可按「看太陽」或「看月亮」仰望。</dd><dt>觀測基準</dt><dd>位置依景點座標與天文計算，採海平面和標準大氣折射。天空色與曝光為晴空近似；未納入山地遮擋、雲量及即時天氣。富士山街區以河口湖大石公園為觀測地點。</dd></dl>
+        <p>按「暫停散步」讓小旅伴停下來；編輯小鎮時會暫時收起角色，完成後繼續散步。若裝置開啟減少動態效果，角色預設靜止，可手動按「開始散步」。</p>
         <p class="town-demo-note">九個預製景點可在固定九宮格內交換位置，排列會保存在這個瀏覽器。建築尚不能拆開或旋轉，個人照片收藏尚未匯入小鎮。<NuxtLink :to="tripHref('/memory', { style: 'scene' })">想把自己的照片做成場景積木？到 AI 創作 ↗</NuxtLink></p>
       </div>
     </AppSheet>

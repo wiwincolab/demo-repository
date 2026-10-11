@@ -1,0 +1,216 @@
+{
+  "source": "NASA JPL Horizons API, DE441; retrieved 2026-10-11",
+  "url": "https://ssd.jpl.nasa.gov/api/horizons.api",
+  "observer": {
+    "latitude": 35.713454,
+    "longitude": 139.7959524,
+    "elevationKm": 0
+  },
+  "settings": {
+    "COMMAND": [
+      "10",
+      "301"
+    ],
+    "CENTER": "coord@399",
+    "COORD_TYPE": "GEODETIC",
+    "QUANTITIES": "4,10,13",
+    "APPARENT": "AIRLESS",
+    "TIME_TYPE": "UT",
+    "CSV_FORMAT": "YES",
+    "EXTRA_PREC": "YES"
+  },
+  "samples": [
+    {
+      "body": "sun",
+      "date": "2026-10-11T00:00:00Z",
+      "azimuth": 133.274356642,
+      "altitude": 35.012225143,
+      "illuminatedFraction": 1.0,
+      "diameterArcseconds": 1921.367
+    },
+    {
+      "body": "sun",
+      "date": "2026-10-11T03:00:00Z",
+      "azimuth": 191.730436587,
+      "altitude": 46.620058412,
+      "illuminatedFraction": 1.0,
+      "diameterArcseconds": 1921.448
+    },
+    {
+      "body": "sun",
+      "date": "2026-10-11T06:00:00Z",
+      "azimuth": 240.588626494,
+      "altitude": 24.350465471,
+      "illuminatedFraction": 1.0,
+      "diameterArcseconds": 1921.491
+    },
+    {
+      "body": "sun",
+      "date": "2026-10-11T09:00:00Z",
+      "azimuth": 268.920598865,
+      "altitude": -10.697881961,
+      "illuminatedFraction": 1.0,
+      "diameterArcseconds": 1921.511
+    },
+    {
+      "body": "sun",
+      "date": "2026-10-11T12:00:00Z",
+      "azimuth": 301.32045081,
+      "altitude": -45.797511687,
+      "illuminatedFraction": 1.0,
+      "diameterArcseconds": 1921.536
+    },
+    {
+      "body": "sun",
+      "date": "2026-10-11T15:00:00Z",
+      "azimuth": 16.539959993,
+      "altitude": -60.514143093,
+      "illuminatedFraction": 1.0,
+      "diameterArcseconds": 1921.593
+    },
+    {
+      "body": "sun",
+      "date": "2026-10-11T18:00:00Z",
+      "azimuth": 72.822174264,
+      "altitude": -33.834551462,
+      "illuminatedFraction": 1.0,
+      "diameterArcseconds": 1921.687
+    },
+    {
+      "body": "sun",
+      "date": "2026-10-11T21:00:00Z",
+      "azimuth": 100.655207155,
+      "altitude": 2.293372319,
+      "illuminatedFraction": 1.0,
+      "diameterArcseconds": 1921.805
+    },
+    {
+      "body": "sun",
+      "date": "2026-10-12T00:00:00Z",
+      "azimuth": 133.609337977,
+      "altitude": 34.746877729,
+      "illuminatedFraction": 1.0,
+      "diameterArcseconds": 1921.918
+    },
+    {
+      "body": "moon",
+      "date": "2026-10-11T00:00:00Z",
+      "azimuth": 134.880939551,
+      "altitude": 28.587209125,
+      "illuminatedFraction": 0.0033027,
+      "diameterArcseconds": 1857.574
+    },
+    {
+      "body": "moon",
+      "date": "2026-10-11T03:00:00Z",
+      "azimuth": 185.769773946,
+      "altitude": 40.440646815,
+      "illuminatedFraction": 0.0043453,
+      "diameterArcseconds": 1860.442
+    },
+    {
+      "body": "moon",
+      "date": "2026-10-11T06:00:00Z",
+      "azimuth": 231.738897811,
+      "altitude": 22.068390598,
+      "illuminatedFraction": 0.005455799999999999,
+      "diameterArcseconds": 1849.826
+    },
+    {
+      "body": "moon",
+      "date": "2026-10-11T09:00:00Z",
+      "azimuth": 259.264868048,
+      "altitude": -10.553485607,
+      "illuminatedFraction": 0.0068864,
+      "diameterArcseconds": 1830.706
+    },
+    {
+      "body": "moon",
+      "date": "2026-10-11T12:00:00Z",
+      "azimuth": 285.748055091,
+      "altitude": -45.740266986,
+      "illuminatedFraction": 0.0089859,
+      "diameterArcseconds": 1812.591
+    },
+    {
+      "body": "moon",
+      "date": "2026-10-11T15:00:00Z",
+      "azimuth": 356.964985197,
+      "altitude": -70.160888276,
+      "illuminatedFraction": 0.011969700000000002,
+      "diameterArcseconds": 1803.758
+    },
+    {
+      "body": "moon",
+      "date": "2026-10-11T18:00:00Z",
+      "azimuth": 73.96544139,
+      "altitude": -48.152598042,
+      "illuminatedFraction": 0.015679000000000002,
+      "diameterArcseconds": 1807.324
+    },
+    {
+      "body": "moon",
+      "date": "2026-10-11T21:00:00Z",
+      "azimuth": 101.664043535,
+      "altitude": -13.712257617,
+      "illuminatedFraction": 0.0195712,
+      "diameterArcseconds": 1820.117
+    },
+    {
+      "body": "moon",
+      "date": "2026-10-12T00:00:00Z",
+      "azimuth": 129.213704098,
+      "altitude": 17.777381345,
+      "illuminatedFraction": 0.0230515,
+      "diameterArcseconds": 1834.005
+    },
+    {
+      "body": "moon",
+      "date": "2026-10-18T12:00:00Z",
+      "azimuth": 226.762771167,
+      "altitude": 12.016879896,
+      "illuminatedFraction": 0.4787409,
+      "diameterArcseconds": 1783.936
+    },
+    {
+      "body": "moon",
+      "date": "2026-10-20T12:00:00Z",
+      "azimuth": 212.531562961,
+      "altitude": 30.280599093,
+      "illuminatedFraction": 0.6689615999999999,
+      "diameterArcseconds": 1821.225
+    },
+    {
+      "body": "moon",
+      "date": "2026-10-22T12:00:00Z",
+      "azimuth": 191.052406077,
+      "altitude": 47.347699445,
+      "illuminatedFraction": 0.8416621999999999,
+      "diameterArcseconds": 1875.599
+    },
+    {
+      "body": "moon",
+      "date": "2026-10-24T12:00:00Z",
+      "azimuth": 152.144517936,
+      "altitude": 57.609246118,
+      "illuminatedFraction": 0.9633647999999999,
+      "diameterArcseconds": 1933.549
+    },
+    {
+      "body": "moon",
+      "date": "2026-10-26T12:00:00Z",
+      "azimuth": 106.336698348,
+      "altitude": 51.10651984,
+      "illuminatedFraction": 0.9969553000000001,
+      "diameterArcseconds": 1975.357
+    },
+    {
+      "body": "moon",
+      "date": "2026-10-28T12:00:00Z",
+      "azimuth": 79.164576285,
+      "altitude": 31.812671995,
+      "illuminatedFraction": 0.9216015,
+      "diameterArcseconds": 1985.216
+    }
+  ]
+}
