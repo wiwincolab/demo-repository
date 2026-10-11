@@ -4,7 +4,7 @@
 .esim-view-tabs button[aria-pressed=true]:after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:3px;background:var(--blue)}
 .esim-store{padding:24px 20px 112px;background:white;color:var(--ink);letter-spacing:0}
 .esim-store-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px}
-.esim-store-heading h1{font-size:28px;letter-spacing:0;line-height:1.4}
+.esim-store-heading h2{font-size:28px;letter-spacing:0;line-height:1.4}
 .esim-store-heading p{font-size:15px;color:var(--muted);margin-top:6px}
 .esim-store-help{display:grid;place-items:center;width:44px;height:44px;flex-shrink:0;color:var(--blue-dark);border:1px solid var(--line);border-radius:50%}
 .esim-store-search{display:block;margin-bottom:14px}

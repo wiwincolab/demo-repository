@@ -11,7 +11,7 @@ const filters = [{id:'all',label:'全部'},{id:'japan',label:'日本'},{id:'kore
 const countTrips = (id:string) => tripSummaries.value.filter(t=>id==='all'||(t.country||'japan')===id).length;
 const visibleTrips = computed(()=>tripSummaries.value.filter(t=>country.value==='all'||(t.country||'japan')===country.value));
 const { activeId, ready, selectTrip } = useTripContext();
-const nextPath = computed(() => typeof route.query.next === 'string' && /^\/(trip|esim|planner|memory|collection)(\/|\?|$)/.test(route.query.next) ? route.query.next : '/trip');
+const nextPath = computed(() => typeof route.query.next === 'string' && /^\/(trip|esim|planner|memory|collection|points|store)(\/|\?|$)/.test(route.query.next) ? route.query.next : '/trip');
 const actionName = computed(() => nextPath.value.startsWith('/collection') ? '翻開這趟收集冊' : nextPath.value.startsWith('/memory') ? '開啟這趟 AI 創作' : nextPath.value.startsWith('/esim') ? '查看這趟上網準備' : '開啟行程');
 function openTrip(id: TripId, dayIndex?: number) {
   selectTrip(id);
@@ -27,6 +27,7 @@ useHead({ title: '我的行程 · 去趣 chicTrip' });
     <div class="trips-heading"><div><p class="trips-eyebrow">MY JOURNEYS</p><h1 class="journeys-title">我的行程<PageMascot /></h1><p>{{ route.query.next ? '選擇一趟旅行，繼續剛才的操作。' : '從出發前的安排，到回家後的收藏。' }}</p></div><NuxtLink to="/atlas" class="trips-atlas-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2V5Z"/><path d="M9 3v16M15 5v16"/></svg>回憶地圖<span aria-hidden="true">↗</span></NuxtLink></div>
     <div class="trips-view-toggle" aria-label="行程顯示方式"><button :aria-pressed="view==='calendar'" @click="view='calendar'">日曆</button><button :aria-pressed="view==='list'" @click="view='list'">所有行程 {{ tripSummaries.length }}</button></div>
     <NuxtLink class="trips-create" to="/trips/new"><span aria-hidden="true">＋</span><strong>建立新行程</strong><small>從目的地與日期開始</small><span aria-hidden="true">→</span></NuxtLink>
+    <NuxtLink class="trips-store-link" to="/store"><StoreIcon name="bag" /><span><strong>和泰商城</strong><small>eSIM、機票與行程，一次準備好</small></span><span aria-hidden="true">→</span></NuxtLink>
     <Transition name="journeys-view" mode="out-in">
     <div :key="view" class="journeys-view">
     <TripCalendar v-if="view==='calendar'" :trips="tripSummaries" :ready="ready" @open="openTrip" @show-list="view='list'"/>

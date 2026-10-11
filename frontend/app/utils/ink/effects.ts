@@ -12,7 +12,7 @@ export const INK_DURATION: Record<InkEffect, number> = {
 }
 
 // 去趣的主要分頁使用墨暈；進出旅程列表使用潑墨，深入內容使用刷痕。
-const TABS = new Set(["/trip", "/esim", "/memory", "/atlas"])
+const TABS = new Set(["/trip", "/store", "/esim", "/memory", "/atlas"])
 function trim(path: string) { return path.replace(/\/+$/, "") || "/" }
 export function pickEffect(from: string, to: string): InkEffect | null {
   const a = trim(from), b = trim(to)

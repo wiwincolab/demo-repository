@@ -1,0 +1,58 @@
+.app-shell.store-shell{max-width:1040px;background:#fbfcfc}
+.travel-store{padding:34px 32px 130px;color:#284c59}
+.store-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:24px}
+.store-eyebrow{margin:0 0 5px;font-size:10px;letter-spacing:.18em;font-weight:700;color:#2387a5}
+.store-heading h1{display:flex;align-items:center;gap:8px;margin:0;font-size:30px;letter-spacing:-.03em}
+.store-heading>div>p:last-child{margin:8px 0 0;font-size:14px;line-height:1.7;color:#72878f}
+.store-journey-link{display:flex;align-items:center;gap:12px;min-height:44px;flex-shrink:0;color:#247d9b;font-size:13px}
+.store-welcome{display:flex;align-items:center;gap:18px;padding:24px;background:#edf8fd;border:1px solid #d7edf6;border-radius:20px;margin-bottom:26px}
+.store-welcome-icon{display:grid;place-items:center;width:58px;height:58px;background:white;border-radius:18px;color:#2393b8;flex-shrink:0}
+.store-welcome-icon svg{width:29px;height:29px}
+.store-welcome strong{font-size:20px;letter-spacing:-.02em}
+.store-welcome p{margin:7px 0 0;font-size:13px;color:#62818f;line-height:1.7}
+.store-categories{display:flex;flex-wrap:wrap;gap:9px;margin:0 0 27px}
+.store-categories button{min-height:44px;padding:10px 17px;border:1px solid #dce7ec;border-radius:24px;background:white;color:#607985;font-size:14px}
+.store-categories button[aria-pressed=true]{background:#246c88;color:white;border-color:#246c88}
+.store-results-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:15px}
+.travel-store h2{font-size:18px;letter-spacing:-.02em;margin:0}
+.store-results-heading>span{font-size:12px;color:#80939c;flex-shrink:0}
+.store-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.store-card{display:flex;flex-direction:column;min-width:0;padding:24px;background:white;border:1px solid #e0eaee;border-radius:18px}
+.store-card-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:21px}
+.store-service-icon{display:grid;place-items:center;width:50px;height:50px;border-radius:16px;background:#eaf6ff;color:#228dc1}
+.store-service-icon svg{width:27px;height:27px}
+.store-card-tours .store-service-icon{background:#eef6ee;color:#588775}
+.store-card-shopping .store-service-icon{background:#fff5da;color:#9b7b30}
+.store-provider{font-size:12px;font-weight:600;color:#738992;border:1px solid #e2ebef;border-radius:20px;padding:5px 10px}
+.store-card h3{font-size:19px;line-height:1.5;letter-spacing:-.02em;margin:0 0 9px}
+.store-card>p{font-size:13px;line-height:1.8;margin:0 0 23px;color:#738992;flex:1}
+.store-purchase{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:46px;padding:11px 15px;border-radius:12px;background:#eef8fc;color:#167fa2;font-size:14px;font-weight:600}
+.store-purchase>span{font-size:18px}
+.store-card>small{font-size:11px;color:#82959d;margin-top:10px}
+.store-booking-note{font-size:12px;line-height:1.8;color:#82939c;margin:16px 0 30px}
+.store-preparation-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:16px}
+.store-preparation-links>:is(a,button){display:flex;align-items:center;gap:12px;min-width:0;min-height:82px;padding:16px;background:white;border:1px solid #e0eaee;border-radius:15px}
+.store-prep-icon{display:grid;place-items:center;flex-shrink:0;width:40px;height:40px;background:#eef8fc;color:#2489af;border-radius:12px}
+.store-prep-points{background:#fff5da;color:#9b7b30}
+.store-prep-icon svg{width:22px;height:22px}
+.store-preparation-links strong{font-size:14px;display:block}
+.store-preparation-links small{display:block;font-size:11px;color:#81949d;margin-top:5px;line-height:1.5}
+.store-preparation-links>:is(a,button)>span:last-child{margin-left:auto;color:#6298ad}
+.store-offer-link{display:inline-flex;align-items:center;gap:8px;min-height:44px;font-size:12px;color:#51869b;margin-top:18px;line-height:1.7}
+.travel-store a:focus-visible,.travel-store button:focus-visible,.trip-store-entry:focus-visible,.trips-store-link:focus-visible{outline:3px solid #e4b942;outline-offset:3px}
+.trip-store-entry{display:flex;align-items:center;gap:12px;margin:0 20px 18px;padding:14px 16px;background:#eef8fc;border:1px solid #cfe7f1;border-radius:14px;color:#28718a}
+.trip-store-entry>svg,.trips-store-link>svg{width:24px;height:24px;flex-shrink:0}
+.trip-store-entry strong,.trips-store-link strong{display:block;font-size:14px}
+.trip-store-entry small,.trips-store-link small{display:block;font-size:11px;color:#72909d;margin-top:5px;line-height:1.5}
+.trip-store-entry>span:last-child,.trips-store-link>span:last-child{margin-left:auto;font-size:19px}
+.trips-store-link{display:flex;align-items:center;gap:13px;padding:14px 16px;border:1px solid #dce7ec;background:white;border-radius:15px;color:#28718a;margin:-10px 0 24px}
+.points-store-link{display:inline-flex;align-items:center;gap:8px;min-height:44px;font-size:13px;color:#167fa2;margin:0 0 15px}
+@media(max-width:600px){.app-shell.store-shell{max-width:480px}.travel-store{padding:25px 20px 130px}.store-heading{align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:20px}.store-heading h1{font-size:28px}.store-heading>div>p:last-child{font-size:13px}.store-journey-link{font-size:12px}.store-welcome{padding:18px 16px;gap:13px}.store-welcome-icon{width:44px;height:44px;border-radius:14px}.store-welcome-icon svg{width:25px;height:25px}.store-welcome strong{font-size:18px}.store-welcome p{font-size:12px}.store-categories{gap:8px;margin-bottom:23px}.store-categories button{font-size:12px;padding:10px 12px}.store-grid{grid-template-columns:1fr;gap:14px}.store-card{padding:21px}.store-card-top{margin-bottom:17px}.store-card h3{font-size:19px}.store-preparation-links{grid-template-columns:1fr;gap:10px}}
+@media(max-width:350px){.travel-store{padding-inline:16px}.store-heading h1{font-size:26px}.store-categories{gap:6px}.store-categories button{padding-inline:10px}.store-welcome{padding:16px 13px}.store-welcome strong{font-size:17px}}
+
+.store-preparation-links>button{text-align:left;width:100%;font:inherit}
+.store-card-esim .store-service-icon{background:#edf4ff;color:#3783bb}
+button.store-purchase{width:100%;text-align:left}
+.store-esim-panel .esim-store{padding:0 0 20px}
+.store-esim-panel .esim-view-tabs{padding:0;margin-bottom:22px;background:transparent}
+.store-esim-panel .esim-page{padding:24px 20px 140px;border-radius:18px}

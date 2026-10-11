@@ -3,6 +3,7 @@ import type { TripId } from '~/data/trips';
 const {trips:tripSummaries}=useTripLibrary();
 import '~/assets/css/trips.css';
 import '~/assets/css/app-chrome.css';
+import '~/assets/css/travel-store.css';
 const route = useRoute();
 const { toast, reset } = useDemo();
 // 旅伴群組（有後端時）：每趟先問一次；有群組才每 4 秒更新，朋友加入、購買幾秒內就出現。
@@ -28,10 +29,10 @@ const isScoped = computed(() => /^\/(trip|planner|memory|collection)(\/|$)/.test
 const isTripList = computed(() => path.value.startsWith('/trips'));
 const isRevisit = computed(() => path.value === '/atlas' && route.query.view === 'cities');
 const isAtlasPlaza = computed(() => path.value === '/atlas' && !['cities', 'journey'].includes(String(route.query.view)) && !route.query.journey && !route.query.scope);
-const tabs = [{ to: '/trip', name: '行程', icon: 'trip' }, { to: '/esim', name: 'eSIM', icon: 'sim' }, { to: '/memory', name: 'AI 創作', icon: 'memory' }, { to: '/atlas', name: '回憶地圖', icon: 'atlas' }];
+const tabs = [{ to: '/trip', name: '行程', icon: 'trip' }, { to: '/store', name: '商城', icon: 'store' }, { to: '/memory', name: 'AI 創作', icon: 'memory' }, { to: '/atlas', name: '回憶地圖', icon: 'atlas' }];
 function tabLink(to: string) {
   if (to === '/atlas') return to;
-  if (to === '/esim' && !activeId.value) return to;
+  if (to === '/store') return tripHref(to);
   return activeId.value ? tripHref(to) : { path: '/trips', query: { next: to } };
 }
 async function changeTrip(id: TripId) {
@@ -42,13 +43,13 @@ async function changeTrip(id: TripId) {
 }
 </script>
 <template>
-  <div class="app-shell" :class="{ 'revisit-shell': isRevisit, 'creation-shell': path === '/memory', 'journey-shell': path.startsWith('/memory/usj') || path.startsWith('/atlas') || path === '/wardrobe' || path === '/collection', 'trips-shell': isTripList, 'plaza-shell': isAtlasPlaza }">
+  <div class="app-shell" :class="{ 'revisit-shell': isRevisit, 'creation-shell': path === '/memory', 'journey-shell': path.startsWith('/memory/usj') || path.startsWith('/atlas') || path === '/wardrobe' || path === '/collection', 'trips-shell': isTripList, 'store-shell': path === '/store', 'plaza-shell': isAtlasPlaza }">
     <header v-if="!isRevisit" class="app-bar">
       <NuxtLink class="wordmark" to="/trips" aria-label="去趣，我的行程">去趣 <i>chicTrip</i><span aria-hidden="true" /></NuxtLink>
       <MascotBadge />
       <button class="icon-button" aria-label="查看原型說明" @click="help = true">?</button>
     </header>
-    <div v-if="(isScoped || path === '/esim') && ready && activeTrip" class="trip-context">
+    <div v-if="(isScoped || path === '/esim' || path === '/store') && ready && activeTrip" class="trip-context">
       <NuxtLink to="/trips" class="trip-context-back" aria-label="返回我的行程">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg>
       </NuxtLink>

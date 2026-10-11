@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useAsset } from '~/composables/useDemo';
 import type { Usage } from '~/types/trip';
 import { esimPlan } from '~/utils/esim';
 import { esimPriceSource } from '~/data/esim-catalog';

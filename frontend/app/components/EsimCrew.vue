@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useAsset } from '~/composables/useDemo';
 import type { Member } from '~/types/trip';
 import { mascots } from '~/data/mascots';
 const asset = useAsset();

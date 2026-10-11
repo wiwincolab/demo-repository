@@ -125,3 +125,10 @@ body:not(.town-is-editing):has(.detail:not([hidden])) .town-editor{bottom:calc(v
 #town-walkers-toggle{border:1px solid var(--line);text-decoration:none}
 #town-walkers-toggle[aria-pressed=true]{background:color-mix(in srgb,var(--accent) 8%,transparent)}
 .town-is-editing #town-walkers-toggle{display:none}
+
+#sky-play{border:1px solid var(--line);border-radius:8px;text-decoration:none;padding:4px 8px}
+#sky-play[aria-pressed=true]{background:var(--accent);color:var(--panel)}
+@media(max-height:520px) and (min-width:721px){
+  .sky-controls .sky-look{display:flex}
+  .sky-controls .sky-look #sky-phase,.sky-controls .sky-look #sky-sun-view,.sky-controls .sky-look #sky-moon-view{display:none}
+}

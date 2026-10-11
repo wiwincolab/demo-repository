@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useAsset } from '~/composables/useDemo';
 import { esimProducts, esimDestinations, esimKindLabels, esimProductSpecs, esimStoreSource, type EsimProduct, type EsimProductKind } from '~/data/esim-store';
 import '~/assets/css/esim-store.css';
 
@@ -43,7 +44,7 @@ function resetFilters() { search.value = ''; destination.value = 'all'; kind.val
 <template>
   <section class="esim-store" aria-labelledby="esim-store-title">
     <header class="esim-store-heading">
-      <div><h1 id="esim-store-title">eSIM 商城</h1><p>旅行上網，選好再出發</p></div>
+      <div><h2 id="esim-store-title">eSIM 商城</h2><p>旅行上網，選好再出發</p></div>
       <a :href="esimStoreSource.help" target="_blank" rel="noopener noreferrer" class="esim-store-help" aria-label="eSIM 常見問題" title="eSIM 常見問題"><EsimIcon name="info" :size="23"/></a>
     </header>
 

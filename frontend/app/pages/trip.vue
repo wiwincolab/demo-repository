@@ -88,6 +88,7 @@ watch(()=>route.query.day,()=>chooseDay(requestedDay()));
     </div>
     <div class="trip-major-transport"><div><b>主要交通</b><small>各路段也可以另外選擇</small></div><label><span class="transport-hidden">主要交通方式</span><select :value="transportSettings.major" aria-label="主要交通方式" @change="changeMajor(($event.target as HTMLSelectElement).value)"><option v-for="(label,id) in transportLabels" :key="id" :value="id">{{label}}</option></select></label></div>
     <div class="trip-tools"><NuxtLink class="ai-link" :to="tripHref('/planner',{day:Math.max(0,day)})">✦ 排行程 <span>規劃與微調 →</span></NuxtLink></div>
+    <NuxtLink class="trip-store-entry" :to="tripHref('/store')"><StoreIcon name="bag" /><span><strong>和泰商城</strong><small>eSIM・機票・旅遊行程</small></span><span aria-hidden="true">→</span></NuxtLink>
     <div ref="dayBar" class="day-bar" role="group" aria-label="選擇旅遊日期">
       <button :aria-pressed="day === -1" @click="chooseDay(-1)"><strong>全程</strong>{{ activeTrip.dayCount }} 天</button>
       <button v-for="(d, i) in days" :key="d.area" :style="{ '--day': dayColors[i] }" :aria-pressed="day === i" @click="chooseDay(i)"><strong>第 {{ i + 1 }} 天</strong><span class="day-dot" />{{ dayLabel(i) }}</button>

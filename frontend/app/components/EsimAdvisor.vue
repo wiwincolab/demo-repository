@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useTripContext } from '~/composables/useTripContext';
 import {isTripId} from '~/data/trips';
 import ChictripMotion from '~/components/ChictripMotion.vue';
 import { advisorMemoryKey, readAdvisorMemory, journeyQuestions, interpretAdvisorAnswer, recommendUsage, type AdvisorAnswer, type AnswerLevel, type AdvisorMemory } from '~/utils/esim-advisor';
