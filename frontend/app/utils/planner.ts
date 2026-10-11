@@ -37,7 +37,7 @@ export function rainPlanDetailsFor(place: Stop, places: Stop[], text = ''): { ra
 }
 export function rainPlanFor(place: Stop, places: Stop[]): string { return rainPlanDetailsFor(place, places).rainPlan; }
 
-export function recommendPlaces(places: Stop[], ids: number[], text: string, limit: number, extension: number, keywordIds: string[] = [], selectedOnly = false) {
+export function recommendPlaces(places: Stop[], ids: number[], text: string, limit: number, extension: number, keywordIds: string[] = [], selectedOnly = false, options: {preserveOrder?: boolean} = {}) {
   const numerals: Record<string, number> = { 一: 1, 二: 2, 兩: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9 };
   const number = (value: string): number => {
     if (value === '半') return .5;
@@ -62,11 +62,11 @@ export function recommendPlaces(places: Stop[], ids: number[], text: string, lim
   };
   const matches = (p: Stop) => interests.filter(i => i.place.test(p.name)).map(i => i.id === 'food' ? '美食與甜點' : i.title);
   if (!anchors.length) return { stops: [], notes: ['請先圈選主要遊玩範圍'] };
-  const candidates = places.filter(p => !selectedOnly || selectedIds.has(p.id)).filter(p => !excluded.some(k => k.place.test(p.name))).filter(p => !indoor || /博物館|美術館|咖啡|晴空塔|商場|室內/.test(p.name + p.note)).map(p => ({
+  const candidates = places.filter(p => !selectedOnly || selectedIds.has(p.id)).filter(p => !excluded.some(k => k.place.test(p.name))).filter(p => !indoor || /博物館|美術館|水族館|咖啡|晴空塔|商場|室內/.test(p.name + p.note)).map(p => ({
     place: p, outside: !ids.includes(p.id), matched: matches(p), profileMatches: profile.filter(k => k.place.test(p.name)).map(k => k.title),
     nearby: selectedIds.has(p.id) ? 0 : anchors.length ? Math.min(...anchors.map(a => travel(a, p))) : Infinity,
   })).filter(p => !p.outside || (!selectedOnly && outsideLimit > 0 && p.nearby <= outsideLimit && (p.matched.length > 0 || p.profileMatches.length > 0)))
-    .sort((a,b) => (b.matched.length * 6 + b.profileMatches.length * 2 - Number(b.outside)) - (a.matched.length * 6 + a.profileMatches.length * 2 - Number(a.outside)) || a.nearby - b.nearby);
+    .sort((a,b) => options.preserveOrder ? 0 : (b.matched.length * 6 + b.profileMatches.length * 2 - Number(b.outside)) - (a.matched.length * 6 + a.profileMatches.length * 2 - Number(a.outside)) || a.nearby - b.nearby);
   const stops: Recommendation[] = [];
   const rainCandidates = places.filter(q => !excluded.some(k => k.place.test(q.name)));
   let elapsed = 0;

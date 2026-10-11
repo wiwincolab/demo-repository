@@ -8,12 +8,15 @@ import { kansaiDays, kansaiRainAlternative } from './kansai.ts';
 import type { Stop, TripDay } from '../types/trip';
 
 export const classicRoutes = [...japanClassicRoutes, ...koreaClassicRoutes, ...taiwanClassicRoutes];
-export type TripId = 'tokyo' | 'kansai' | 'fuji' | 'hokkaido' | 'tohoku' | 'kanto' | 'shoryudo' | 'kansai-classic' | 'shikoku' | 'kyushu' | 'okinawa' | 'seoul' | 'busan' | 'jeju' | 'round-taiwan' | 'sun-moon-lake' | 'alishan' | 'taroko' | 'kenting' | 'penghu' | 'kinmen' | 'matsu';
+export type TripId = 'tokyo' | 'kansai' | 'fuji' | 'hokkaido' | 'tohoku' | 'kanto' | 'shoryudo' | 'kansai-classic' | 'shikoku' | 'kyushu' | 'okinawa' | 'seoul' | 'busan' | 'jeju' | 'round-taiwan' | 'sun-moon-lake' | 'alishan' | 'taroko' | 'kenting' | 'penghu' | 'kinmen' | 'matsu' | `custom-${string}`;
+export type TripTransport = 'public-transit' | 'driving' | 'walking';
 export interface TripSummary {
   id: TripId; title: string; location: string; dateLabel: string; startDate: string;
   country?: ClassicCountry; reference?: { name: string; url: string; note: string };
   status: 'upcoming' | 'completed' | 'draft'; statusLabel: string; cover: string; coverSource?: string; coverCredit?: string;
   companions: string[]; dayCount: number; summary: string; english: string;
+  endDate?: string; transport?: TripTransport;
+  destination?: { regionId: string; center: [number, number]; bounds: number[] };
 }
 export const tripSummaries: TripSummary[] = [
   { id:'tokyo',title:'東京，慢慢玩。',location:'東京',dateLabel:'2026.10.12 — 10.16',startDate:'2026-10-12',status:'upcoming',statusLabel:'即將出發',cover:'assets/photos/sensoji.jpg',companions:['小宇','小庭','阿哲'],dayCount:5,summary:'淺草、原宿與上野，留一點時間慢慢逛。',english:'TOKYO' },

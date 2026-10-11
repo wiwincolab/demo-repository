@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import {isTripId} from '~/data/trips';
 import ChictripMotion from '~/components/ChictripMotion.vue';
 import { advisorMemoryKey, readAdvisorMemory, journeyQuestions, interpretAdvisorAnswer, recommendUsage, type AdvisorAnswer, type AnswerLevel, type AdvisorMemory } from '~/utils/esim-advisor';
 import { plannerKeywords, plannerPreferenceStorageKey, validPlannerKeywords } from '~/data/planner-preferences';
@@ -60,7 +61,7 @@ async function personalReason() {
   const controller = new AbortController();
   reasonController = controller;
   aiReason.value = '';
-  if (!live.value || !activeId.value) return;
+  if (!live.value || !isTripId(activeId.value)) return;
   writing.value = true;
   try {
     const response = await $fetch<{ reason: string; ai: boolean }>('/api/esim/recommend', { method: 'POST', signal: controller.signal, body: { tripId: activeId.value, answers: answers.value } });

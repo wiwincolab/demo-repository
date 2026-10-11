@@ -12,7 +12,7 @@ export function restorePlannedDays(days: TripDay[], stored: {saved?:{day?:number
   return restored;
 }
 const distance = (a: Stop, b: Stop) => Math.hypot((a.at[0]! - b.at[0]!) * 90, (a.at[1]! - b.at[1]!) * 111);
-export function conversationPlan(pool: Stop[], current: Stop[], text: string, keywordIds: string[] = []) {
+export function conversationPlan(pool: Stop[], current: Stop[], text: string, keywordIds: string[] = [], previousPreference = '') {
   const all = [...new Map([...pool, ...current].map(p => [p.id, p])).values()];
   let edited = current.map(s => ({ ...s })), changes: string[] = [];
   const explicit = refineSelection(all, current.map(s => s.id), text);
@@ -40,7 +40,8 @@ export function conversationPlan(pool: Stop[], current: Stop[], text: string, ke
   if (!edited.length) return { stops: current as Recommendation[], notes: [], changed: false, message: '這樣會移除所有景點，請留一站或告訴我想加入哪裡。' };
   if (!supported) return { stops: current as Recommendation[], notes: [], changed: false, message: '可以告訴我想加入或移除哪個景點、改室內、下午出發，或一天玩幾小時。' };
   const editedIds = new Set(edited.map(s=>s.id));
-  const result = recommendPlaces([...edited,...all.filter(s=>!editedIds.has(s.id))], edited.map(s => s.id), /晚.*出發|晚.*開始/.test(text) ? text + '，下午出發' : text, limit, 0, keywordIds, true);
+  const preference=[previousPreference,text].filter(Boolean).join('，');
+  const result = recommendPlaces([...edited,...all.filter(s=>!editedIds.has(s.id))], edited.map(s => s.id), /晚.*出發|晚.*開始/.test(preference) ? preference + '，下午出發' : preference, limit, 0, keywordIds, true);
   if (!result.stops.length) return { ...result, changed: false, message: '目前資料沒有能符合這次需求的安排，原草案已保留。' };
   return { ...result, changed: true, message: `${changes.join('、') || '依照你的需求調整時間與偏好'}。請先查看前後比較，採用後回到行程主頁。` };
 }

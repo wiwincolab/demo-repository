@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {tripItineraries,plannerStorageKey} from '~/data/trips';
+import {plannerStorageKey} from '~/data/trips';
 import type { Stop } from '~/types/trip';
 import type { PoiCountry } from '~/types/poi';
 import { mergePlannerPlaces, poiRegionsInBounds } from '~/utils/planner-poi';
@@ -9,18 +9,21 @@ import { travelPasses, filterTravelPasses, findTravelPass, passCountries, passKi
 import { benefitsForPass } from '~/data/pass-benefits';
 import { passCoverageIndex, coverageExtent, withinPassCoverage, coverageStatus, displayCoverageGap, isTaiwanBundle, taiwanBundleOptions, mergeBundleCoverage, type PassCoverage } from '~/utils/pass-coverage';
 import { plannerKeywords } from '~/data/planner-preferences';
-import { recommendPlaces, rainPlanDetailsFor, type Recommendation } from '~/utils/planner';
+import { rainPlanDetailsFor, type Recommendation } from '~/utils/planner';
+import {regeneratePlan} from '~/utils/planner-regenerate';
 import { conversationPlan, initialConversationStops, plannedDay } from '~/utils/planner-chat';
 import { redeemedPlanningContext, type PointsProduct } from '~/utils/points';
 const asset = useAsset();
 const { notify, days: currentDays } = useDemo();
+const {settings:transportSettings,labels:transportLabels,changeMajor}=useTripTransport();
+const {initialDays}=useTripLibrary();
 const {activeId,activeTrip,tripHref}=useTripContext();
 const route=useRoute();
 const planningDay=computed(()=>{const n=Number(route.query.day || 0);return Number.isInteger(n)&&n>=0&&n<currentDays.value.length?n:0;});
 const {wallet:pointsWallet,ready:pointsReady}=usePointsWallet();
 const itineraryPlaces = computed<Stop[]>(()=>{
   if(!activeId.value)return [];
-  const trip=tripItineraries[activeId.value];
+  const trip=initialDays(activeId.value);
   return trip.flatMap(d=>d.stops).filter((s,i,all)=>all.findIndex(p=>p.name===s.name)===i);
 });
 const { catalog: poiCatalog, snapshots: poiSnapshots, loading: poiLoading, error: poiError, loadCatalog, loadRegions } = usePlannerPois();
@@ -64,7 +67,7 @@ function initializePoiDestination() {
   try { stored = JSON.parse(localStorage.getItem(plannerStorageKey(activeId.value)) || 'null'); } catch {}
   poiCountry.value = stored?.poiCountry && poiCountries.some(c => c.id === stored!.poiCountry) ? stored.poiCountry : itineraryCountry.value;
   const first = itineraryPlaces.value[0]?.at;
-  const initial = poiRegions.value.find(r => r.id === stored?.poiRegionId) || (first && poiRegions.value.find(r => first[0]! >= r.bbox[0]! && first[0]! <= r.bbox[2]! && first[1]! >= r.bbox[1]! && first[1]! <= r.bbox[3]!)) || poiRegions.value[0];
+  const initial = poiRegions.value.find(r => r.id === stored?.poiRegionId) || poiRegions.value.find(r => r.id === activeTrip.value?.destination?.regionId) || (first && poiRegions.value.find(r => first[0]! >= r.bbox[0]! && first[0]! <= r.bbox[2]! && first[1]! >= r.bbox[1]! && first[1]! <= r.bbox[3]!)) || poiRegions.value[0];
   if (initial) { poiRegionId.value = initial.id; choosePoiRegion(false); }
 }
 watch(poiCatalog, initializePoiDestination);
@@ -150,6 +153,7 @@ const panel = ref<'passes' | null>(null);
 const dirty = ref(false), error = ref('');
 const routeIds = computed(() => !dirty.value ? draft.value.map(s => s.id) : []);
 const busy = ref(false), draft = ref<Recommendation[]>([]);
+let generationRevision=0;
 const proposal = ref<{trip:string;day:number;before:Recommendation[];after:Recommendation[];notes:string[];preference:string} | null>(null);
 const planningMode=ref<'ai'|'map'|'pass'>('ai'), chatText=ref('');
 const messages=ref<{role:'user'|'assistant';text:string}[]>([]);
@@ -160,18 +164,18 @@ function initialDraft(){if(!draft.value.length)draft.value=initialConversationSt
 onMounted(initialDraft);
 let autoPlannedTrip='';
 watch([activeId,pointsReady,()=>route.query.redeemed],async ([trip,ready,redeemed])=>{if(!import.meta.client||!trip||!ready||redeemed!=='1'||autoPlannedTrip===trip)return;autoPlannedTrip=trip;await nextTick();initialDraft();generate();},{immediate:true});
-watch(planningDay,()=>{clearTimeout(generationTimer);busy.value=false;proposal.value=null;draft.value=[];dirty.value=false;messages.value=[];void nextTick(initialDraft);});
+watch(planningDay,()=>{generationRevision++;busy.value=false;proposal.value=null;draft.value=[];dirty.value=false;messages.value=[];void nextTick(initialDraft);});
 function serviceStop(p:PointsProduct):Stop{const code=[...p.id].reduce((n,c)=>(n*31+c.charCodeAt(0))%10000000,0);return {id:-2100000000-code,day:planningDay.value,name:p.name,short:p.brand,at:[...p.at],time:'10:00',stay:`體驗 ${p.minutes} 分鐘`,note:'已兌換的示範服務；日期、預約與使用條件待確認。',range:[p.minutes,p.minutes],photo:{src:p.image,alt:p.name+'情境參考照片',source:p.source,credit:p.credit,license:'情境參考照片',licenseUrl:p.source,objectPosition:'center'}};}
 function submitChat(){
  const text=chatText.value.trim();if(!text||busy.value)return;initialDraft();messages.value.push({role:'user',text});chatText.value='';
- const result=conversationPlan(places.value,draft.value,text,appliedKeywords.value);
+ if(!draft.value.length || /重新安排|重排|換.*安排/.test(text)){void generate([preferences.value,text].filter(Boolean).join('，'));return;}
+ const result=conversationPlan(places.value,draft.value,text,appliedKeywords.value,preferences.value);
  if(result.changed && activeId.value){proposal.value={trip:activeId.value,day:planningDay.value,before:draft.value.map(s=>({...s})),after:result.stops,notes:[...result.notes,...ownedServices.value.map(s=>s.note)],preference:[preferences.value,text].filter(Boolean).join('，').slice(-300)};drawing.value=false;}
  messages.value.push({role:'assistant',text:result.message});messages.value=messages.value.slice(-12);
  if(!result.changed)void nextTick(()=>resultsBox.value?.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'}));
 }
 function suggestChat(text:string){chatText.value=text;submitChat();}
-let generationTimer: ReturnType<typeof setTimeout> | undefined;
-watch(activeId,()=>{proposal.value=null;planningMode.value='ai';messages.value=[];chatText.value='';selectAllForPass=false;clearTimeout(generationTimer);ids.value=[];rangeIds.value=[];selectionBoundary.value=[];selectedPassId.value='';hasRange.value=false;drawing.value=false;mapRevision.value++;refinement.value='';refinementStatus.value='';draft.value=[];preferences.value='';extension.value=0;dirty.value=false;error.value='';planNotes.value=[];panel.value=null;busy.value=false;savedPoiStops.value=[];pickedPoiStops.value=[];inspectedId.value=null;pendingSavedIds.clear();initializePoiDestination();void nextTick(initialDraft);});
+watch(activeId,()=>{proposal.value=null;planningMode.value='ai';messages.value=[];chatText.value='';selectAllForPass=false;generationRevision++;ids.value=[];rangeIds.value=[];selectionBoundary.value=[];selectedPassId.value='';hasRange.value=false;drawing.value=false;mapRevision.value++;refinement.value='';refinementStatus.value='';draft.value=[];preferences.value='';extension.value=0;dirty.value=false;error.value='';planNotes.value=[];panel.value=null;busy.value=false;savedPoiStops.value=[];pickedPoiStops.value=[];inspectedId.value=null;pendingSavedIds.clear();initializePoiDestination();void nextTick(initialDraft);});
 watch(places, () => {
   if (!hasRange.value) return;
   rangeIds.value = places.value.filter(p => selectedPassId.value ? withinPassCoverage(p.at, passCoverage.value) : withinPlanningAreas(p.at, [selectionBoundary.value])).map(p => p.id);
@@ -180,7 +184,7 @@ watch(places, () => {
   if(restored.length){const wasDirty=dirty.value;restored.forEach(id=>pendingSavedIds.delete(id));ids.value=[...new Set([...ids.value,...restored])];dirty.value=wasDirty;}
 });
 function markDraftDirty() {
-  clearTimeout(generationTimer);
+  generationRevision++;
   busy.value = false;
   dirty.value = !!draft.value.length;
   error.value = '';
@@ -251,31 +255,34 @@ function beginDrawing() {
   if (drawing.value) { drawing.value = false; return; }
   drawing.value = true;
 }
-function generate() {
+async function generate(preference=preferences.value) {
+    if(busy.value || !activeId.value)return;
     initialDraft();
-    const baseline=planningMode.value==='ai' ? (draft.value.length?draft.value:currentDays.value[planningDay.value]?.stops || []) : places.value.filter(p=>ids.value.includes(p.id));
-    if(!baseline.length){error.value='請先選擇景點或告訴我想去哪裡。';return;}
-    const activities=ownedServices.value.filter(s=>s.usable && s.product.kind==='activity' && (planningMode.value==='ai' || (selectedPassId.value ? withinPassCoverage(s.product.at,passCoverage.value) : withinPlanningAreas(s.product.at,[selectionBoundary.value])))).map(s=>serviceStop(s.product));
-    const pool=[...new Map([...activities,...baseline,...places.value].map(s=>[s.id,s])).values()];
-    const chosen=[...activities.map(s=>s.id),...baseline.map(s=>s.id)];
-    if (busy.value || !activeId.value) return;
-    const trip=activeId.value, day=planningDay.value, before=draft.value.map(s=>({...s}));
-    busy.value = true;
-    generationTimer = setTimeout(() => {
-        if(trip!==activeId.value || day!==planningDay.value){busy.value=false;return;}
-        const result = recommendPlaces(pool, chosen, preferences.value, pace.value, 0, appliedKeywords.value, true);
-        if (!result.stops.length) {
-            busy.value = false;
-            error.value = '目前沒有符合條件的景點，試試增加時間、擴大範圍或調整喜好。';
-            return;
-        }
-        busy.value = false;
-        proposal.value = {trip,day,before,after:result.stops,notes:[...result.notes,...ownedServices.value.map(s=>s.note)],preference:preferences.value};
-        messages.value.push({role:'assistant',text:'已備妥前後比較，並參考這趟旅行已兌換的服務。採用後會儲存並回到行程主頁。'});
-        messages.value = messages.value.slice(-12);
-        panel.value = null;
-        drawing.value = false;
-    }, 500);
+    const trip=activeId.value, day=planningDay.value, revision=++generationRevision, mode=planningMode.value;
+    const before=draft.value.map(s=>({...s}));
+    busy.value=true;error.value='';
+    try {
+        if(!poiCatalog.value)await loadCatalog();
+        if(!poiRegionId.value)initializePoiDestination();
+        const region=poiRegions.value.find(r=>r.id===poiRegionId.value);
+        if(region)await loadRegions([region]);
+        if(revision!==generationRevision || trip!==activeId.value || day!==planningDay.value)return;
+        const activities=ownedServices.value.filter(s=>s.usable && s.product.kind==='activity' && (mode==='ai' || (selectedPassId.value ? withinPassCoverage(s.product.at,passCoverage.value) : withinPlanningAreas(s.product.at,[selectionBoundary.value])))).map(s=>serviceStop(s.product));
+        const baseline=mode==='ai' ? before : places.value.filter(p=>ids.value.includes(p.id));
+        const pool=[...new Map([...places.value,...itineraryPlaces.value,...baseline,...activities].map(s=>[s.id,s])).values()];
+        const result=regeneratePlan(pool,before,preference,pace.value,appliedKeywords.value,{
+            center:activeTrip.value?.destination?.center,
+            bounds:mode==='ai'&&!before.length?(activeTrip.value?.destination?.bounds || region?.bbox):undefined,
+            selectedIds:mode==='ai'?undefined:ids.value,
+            requiredIds:activities.map(s=>s.id),
+            otherDayIds:currentDays.value.flatMap((d,i)=>i===day?[]:d.stops.map(s=>s.id)),
+        });
+        if(!result.changed){error.value=result.message;return;}
+        proposal.value={trip,day,before,after:result.stops,notes:[...result.notes,...ownedServices.value.map(s=>s.note)],preference};
+        messages.value.push({role:'assistant',text:result.message});messages.value=messages.value.slice(-12);
+        panel.value=null;drawing.value=false;
+    }catch{if(revision===generationRevision)error.value='景點暫時無法載入，請稍後再試。';}
+    finally{if(revision===generationRevision)busy.value=false;}
 }
 function compareDraft() {
     if(!activeId.value || dirty.value || !draft.value.length)return;
@@ -298,12 +305,12 @@ async function adoptProposal() {
         return;
     }
     currentDays.value=updatedDays;
-    preferences.value=chosen.preference;draft.value=chosen.after;planNotes.value=chosen.notes;dirty.value=false;
+    preferences.value=chosen.preference;pace.value=chosen.after.length;draft.value=chosen.after;planNotes.value=chosen.notes;dirty.value=false;
     proposal.value=null;
     notify('已採用第 '+(chosen.day+1)+' 天的新安排。');
     await navigateTo(tripHref('/trip',{day:chosen.day}));
 }
-onBeforeUnmount(() => {clearTimeout(generationTimer);clearTimeout(viewportTimer);coverageController?.abort();});
+onBeforeUnmount(() => {generationRevision++;clearTimeout(viewportTimer);coverageController?.abort();});
 </script>
 <template>
   <section v-if="activeTrip" class="screen active planner-screen">
@@ -313,11 +320,13 @@ onBeforeUnmount(() => {clearTimeout(generationTimer);clearTimeout(viewportTimer)
       <p>第 {{planningDay+1}} 天，想怎麼玩？選擇規劃方式，再用下方對話補充需求。</p>
       <NuxtLink to="/places">探索日韓台更多景點與照片 →</NuxtLink>
     </div><PageMascot /></div>
-    <div class="range-choices" aria-label="選擇規劃方式"><button :aria-pressed="planningMode==='ai'" :class="{active:planningMode==='ai'}" @click="choosePlanningMode('ai')">✦ 自由規劃</button><button :aria-pressed="planningMode==='map'" :class="{active:planningMode==='map'}" @click="choosePlanningMode('map')">地圖圈選</button><button :aria-pressed="planningMode==='pass'" :class="{active:planningMode==='pass'}" @click="choosePlanningMode('pass')">周遊券規劃</button></div>
+    <label class="planner-major-transport">主要交通<select :value="transportSettings.major" aria-label="主要交通方式" @change="changeMajor(($event.target as HTMLSelectElement).value)"><option v-for="(label,id) in transportLabels" :key="id" :value="id">{{label}}</option></select></label>
+    <div class="range-choices" aria-label="選擇規劃方式"><button :aria-pressed="planningMode==='ai'" :class="{active:planningMode==='ai'}" @click="choosePlanningMode('ai')">✦ 自由規劃</button><button :aria-pressed="planningMode==='map'" :class="{active:planningMode==='map'}" @click="choosePlanningMode('map')">地圖規劃</button><button :aria-pressed="planningMode==='pass'" :class="{active:planningMode==='pass'}" @click="choosePlanningMode('pass')">周遊券規劃</button></div>
     <section v-if="ownedServices.length" class="planner-owned"><div class="row"><b>這趟旅行已兌換 {{ownedServices.length}} 項服務</b><NuxtLink :to="tripHref('/points')">我的服務券 →</NuxtLink></div><p v-for="service in ownedServices" :key="service.product.id"><strong>{{service.product.brand}}</strong> · {{service.note}}</p></section>
     <p v-else class="planner-shop-link">也可以先到 <NuxtLink :to="tripHref('/points')">和泰旅行商店</NuxtLink> 兌換交通、上網或體驗。</p>
+    <p v-if="planningMode==='ai'&&!draft.length" class="planner-empty-start">從 {{activeTrip.location}} 開始，AI 會找附近的景點安排這一天。也可以先在下方輸入想玩的內容。</p>
     <template v-if="planningMode!=='ai'">
-    <button v-if="planningMode==='map'" class="planner-draw-toggle" :aria-pressed="drawing" @click="beginDrawing">{{drawing?'取消手繪':'自己畫範圍'}}</button>
+
     <div class="planner-destinations">
       <label>景點國家<select v-model="poiCountry" aria-label="景點國家" @change="choosePoiCountry"><option v-for="country in poiCountries" :key="country.id" :value="country.id">{{ country.name }}</option></select></label>
       <label>景點地區<select v-model="poiRegionId" aria-label="景點地區" @change="choosePoiRegion()"><option v-for="region in poiRegions" :key="region.id" :value="region.id">{{ region.name }}</option></select></label>
@@ -341,7 +350,7 @@ onBeforeUnmount(() => {clearTimeout(generationTimer);clearTimeout(viewportTimer)
       <ul><li v-for="gap in coverageMetadata.missingComponents" :key="gap">{{ displayCoverageGap(gap) }}</li></ul>
       <a :href="coverageMetadata.officialUrl" target="_blank" rel="noopener">核對官方區段與方案 ↗</a>
     </details>
-    <CircleMap :key="activeId || ''" :places="places" :paused="!!inspectedPlace || !!proposal" :selected="ids" :drawing="drawing" :has-range="hasRange" :range-ids="rangeIds" :boundary="selectionBoundary" :coverage="passCoverage" :benefits="selectedBenefits" :reset-key="mapRevision" :route="routeIds" :bounds="mapBounds" @viewport="onViewport" @inspect="inspectedId=$event" @select="select" @range="selectRange" @cancel="drawing = false" />
+    <CircleMap :key="activeId || ''" :places="places" :paused="!!inspectedPlace || !!proposal" :selected="ids" :drawing="drawing" :has-range="hasRange" :range-ids="rangeIds" :boundary="selectionBoundary" :coverage="passCoverage" :benefits="selectedBenefits" :reset-key="mapRevision" :route="routeIds" :bounds="mapBounds" @viewport="onViewport" @inspect="inspectedId=$event" @select="select" @range="selectRange" @cancel="drawing = false" @draw="beginDrawing" />
     <details ref="placeList" class="planner-place-list" :open="placeListOpen" @toggle="placeListOpen = ($event.target as HTMLDetailsElement).open">
       <summary>用清單挑景點 <span>{{ viewportPlaces.length.toLocaleString() }} 個</span></summary>
       <div v-if="placeListOpen" class="planner-place-picker">
@@ -362,8 +371,8 @@ onBeforeUnmount(() => {clearTimeout(generationTimer);clearTimeout(viewportTimer)
     <p v-if="selectedPass" class="pass-range-note">{{ selectedPass.exclusions }} <template v-if="selectedBenefits.length">已標示 {{ selectedBenefits.length }} 個有確認座標的合作設施；黃色標記與定位圈協助找景點，完整名單與方案限制見官網。</template></p>
     </template>
     <div class="planning-next">
-      <span>{{ planningMode==='ai' ? '第 '+(planningDay+1)+' 天 · 沿用目前旅程' : hasRange ? ids.length + ' 個景點已加入' : '先選一個想逛的範圍' }}</span>
-      <button class="primary" :disabled="busy || drawing || (planningMode!=='ai' && (!hasRange || !ids.length))" @click="generate">{{busy?'正在安排…':draft.length?'AI 重新安排':'AI 安排行程'}} <span aria-hidden="true">→</span></button>
+      <span>{{ planningMode==='ai' ? '第 '+(planningDay+1)+' 天 · '+(draft.length?'重新找附近景點':'從目的地開始') : hasRange ? ids.length + ' 個景點已加入' : '先選一個想逛的範圍' }}</span>
+      <button class="primary" :disabled="busy || drawing || (planningMode!=='ai' && (!hasRange || !ids.length))" @click="generate()">{{busy?'正在安排…':draft.length?'AI 重新安排':'AI 安排行程'}} <span aria-hidden="true">→</span></button>
     </div>
     <p v-if="planningMode!=='ai' && hasRange && !ids.length" class="small-note empty-selection">{{ rangeIds.length ? '從清單勾選想去的景點，再產生行程。' : poiLoading ? '正在找這個範圍內的景點…' : '這裡目前沒有景點。可以移動地圖或重畫範圍。' }}</p>
     <section v-if="draft.length" ref="resultsBox" class="planner-results" aria-label="行程草案">
@@ -375,7 +384,7 @@ onBeforeUnmount(() => {clearTimeout(generationTimer);clearTimeout(viewportTimer)
         <img referrerpolicy="no-referrer" v-if="s.photo.src" :src="asset(s.photo.src)" :alt="s.photo.alt" width="48" height="48" style="object-fit:cover;border-radius:8px">
         <ServiceRecommendations :stop="s" :next="draft[i+1]" class="planner-stop-services" />
       </article>
-      <button class="primary" :disabled="dirty || busy" @click="compareDraft">查看比較並儲存</button>
+
     </section>
     <AppSheet class="planner-poi-detail-sheet" :model-value="!!inspectedPlace" :title="inspectedPlace?.name || '景點詳情'" @update:model-value="inspectedId=null">
       <template v-if="inspectedPlace">
@@ -407,10 +416,11 @@ onBeforeUnmount(() => {clearTimeout(generationTimer);clearTimeout(viewportTimer)
     </AppSheet>
     <PlannerComparison :model-value="!!proposal" :before="proposal?.before || []" :after="proposal?.after || []" :notes="proposal?.notes || []" :day="proposal?.day ?? planningDay" @update:model-value="closeComparison" @adopt="adoptProposal" />
     <p v-if="error" class="planner-error" role="alert">{{error}}</p>
-    <PlannerChat v-model="chatText" :busy="busy" :messages="messages" @submit="submitChat" @suggestion="suggestChat" />
+    <PlannerChat v-show="!drawing" v-model="chatText" :busy="busy" :messages="messages" @submit="submitChat" @suggestion="suggestChat"><template #actions><button v-if="draft.length" class="planner-confirm-action" :disabled="dirty || busy" @click="compareDraft">確認行程 · 第 {{planningDay+1}} 天 {{draft.length}} 站 <span aria-hidden="true">→</span></button></template></PlannerChat>
   </section>
 </template>
 <style scoped>
+.planner-empty-start{padding:16px;border-radius:12px;background:#f0f8fc;font-size:13px;line-height:1.8;color:#668795}
 .planner-destinations{display:grid;grid-template-columns:1fr 1.5fr;gap:10px;margin:18px 0 8px}.planner-destinations label{display:flex;flex-direction:column;gap:6px;color:#476d7b;font-size:12px}.planner-destinations select{width:100%;min-width:0;min-height:44px;padding:10px;border:1px solid #cfe4e9;border-radius:10px;background:#fff;color:#315869}.planner-poi-status{margin:8px 0}.planner-inspected-photo{width:100%;max-height:340px;object-fit:cover;border-radius:12px}
 .bundle-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:14px;color:#476d7b;font-size:12px}.bundle-choices select{display:block;width:100%;margin-top:6px;padding:10px;border:1px solid #cfe4e9;border-radius:10px;background:#fff;color:#315869}
 .coverage-gaps{font-size:12px;color:#476d7b;background:#f5fafb;border-radius:10px;padding:12px;margin:0 0 12px;line-height:1.8}.coverage-gaps summary{cursor:pointer}.coverage-gaps ul{padding-left:20px;margin:8px 0}.coverage-gaps a{color:#0085a6}.coverage-status{margin-top:8px;color:#0085a6}.pass-choice:disabled{opacity:.6;cursor:default}
@@ -459,4 +469,12 @@ onBeforeUnmount(() => {clearTimeout(generationTimer);clearTimeout(viewportTimer)
 
 <style scoped>
 .planner-stop-services{grid-column:1/-1;margin:0 0 10px}
+</style>
+
+<style scoped>
+.planner-confirm-action{display:flex;justify-content:center;align-items:center;gap:12px;width:100%;min-height:48px;margin:0 0 10px;padding:10px 12px;border:0;border-radius:14px;background:#008bad;color:white;font-size:16px;font-weight:700;box-shadow:0 4px 12px #008bad24;cursor:pointer}.planner-confirm-action:disabled{opacity:.5}.planner-confirm-action:focus-visible{outline:3px solid #ffc500;outline-offset:2px}
+</style>
+
+<style scoped>
+.planner-major-transport{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;font-size:13px;color:#416e7e}.planner-major-transport select{width:auto;min-width:0;min-height:44px;max-width:60%;font-size:16px;padding:8px 12px;border:1px solid #cee4eb;border-radius:10px;background:#f6fbfd;color:#356e82}
 </style>

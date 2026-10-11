@@ -1,28 +1,30 @@
-import { isTripId, tripSummaries, type TripId } from '~/data/trips';
+import type { TripId } from '~/data/trips';
 import type { LocationQueryRaw } from 'vue-router';
 
 export function useTripContext() {
   const route=useRoute();
+  const {findTrip,hasTrip,load}=useTripLibrary();
   const activeId=useState<TripId|null>('active-trip-v1',()=>null);
   const ready=useState('active-trip-ready-v1',()=>false);
-  const activeTrip=computed(()=>tripSummaries.find(trip=>trip.id===activeId.value));
+  const activeTrip=computed(()=>findTrip(activeId.value));
   const storageKey='chictrip-active-trip-v1';
   function selectTrip(id:TripId) {
-    if(!isTripId(id))return;
+    if(!hasTrip(id))return;
     activeId.value=id;
     if(import.meta.client)try{localStorage.setItem(storageKey,id);}catch{}
   }
   function fromRoute():TripId|null {
     if(route.path.startsWith('/memory/usj'))return 'kansai';
-    if(isTripId(route.query.trip))return route.query.trip;
+    if(hasTrip(route.query.trip))return route.query.trip;
     if(route.query.journey==='kansai'&&!route.path.startsWith('/atlas'))return 'kansai';
     return null;
   }
   onMounted(()=>{
+    load();
     if(ready.value)return;
     const requested=fromRoute();
     if(requested)selectTrip(requested);
-    else try{const cached=localStorage.getItem(storageKey);if(isTripId(cached))activeId.value=cached;}catch{}
+    else try{const cached=localStorage.getItem(storageKey);if(hasTrip(cached))activeId.value=cached;}catch{}
     ready.value=true;
   });
   watch(()=>route.fullPath,()=>{if(ready.value){const requested=fromRoute();if(requested)selectTrip(requested);}});

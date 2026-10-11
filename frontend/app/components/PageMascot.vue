@@ -34,7 +34,7 @@ onBeforeUnmount(() => {
     <button type="button" aria-label="摸摸吉祥物" @click="greet" @pointerenter="greet">
       <span class="mascot-pose">
         <img :src="asset('assets/memory/motion/mascot-seated.png')" alt="" width="128" height="128" decoding="async" />
-        <img ref="blinkImage" class="mascot-blink" :class="{ 'is-ready': blinkReady }" :src="asset('assets/memory/motion/mascot-seated-blink.png')" alt="" width="128" height="128" decoding="async" @load="blinkReady = true" @error="blinkReady = false" />
+        <img data-photo-loading="off" ref="blinkImage" class="mascot-blink" :class="{ 'is-ready': blinkReady }" :src="asset('assets/memory/motion/mascot-seated-blink.png')" alt="" width="128" height="128" decoding="async" @load="blinkReady = true" @error="blinkReady = false" />
       </span>
     </button>
     <span class="mascot-seat" aria-hidden="true" />

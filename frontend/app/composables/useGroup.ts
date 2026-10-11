@@ -1,4 +1,4 @@
-import type { TripId } from '~/data/trips';
+import {isTripId, type TripId} from '~/data/trips';
 import type { Usage } from '~/types/trip';
 import { buyInGroup, ensureGroup, getMyGroup, joinGroup, type GroupSummary } from '~/utils/group-api';
 
@@ -8,6 +8,7 @@ export function useGroup() {
     const api = useApi();
     const groups = useState<Partial<Record<TripId, GroupSummary | null>>>('groups-v1', () => ({}));
     async function refresh(tripId: TripId) {
+        if(!isTripId(tripId)){groups.value[tripId]=null;return null;}
         if (!(await api.check())) return null;
         try { groups.value[tripId] = await getMyGroup(tripId); } catch { /* 網路一時不通：下一輪再試 */ }
         return groups.value[tripId] ?? null;

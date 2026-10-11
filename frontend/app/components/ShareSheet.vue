@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { tripItineraries, type TripId } from '~/data/trips';
+import type { TripId } from '~/data/trips';
 import { renderStoryCard } from '~/utils/story-card';
 import { blobFrom, createShare, getMe, requestCaption, setNickname, shareStory, uploadShareImage } from '~/utils/share-api';
 import '~/assets/css/share.css';
@@ -8,9 +8,9 @@ import '~/assets/css/share.css';
 // 朋友掃 QR 進 /s/短碼，可以存成自己的行程、自己也做一張。只有 GCP 版（有後端）會打開這個面板
 const open = defineModel<boolean>({ default: false });
 const props = defineProps<{ tripId: TripId; image: string; location: string; styleId?: string; kind?: 'creation' | 'trip' }>();
-const { notify } = useDemo();
+const { notify, itineraryFor } = useDemo();
 
-const stops = computed(() => tripItineraries[props.tripId].flatMap(day => day.stops));
+const stops = computed(() => itineraryFor(props.tripId).flatMap(day => day.stops));
 const picked = ref<number[]>([]);
 const nickname = ref(''), savedNickname = ref(''), caption = ref('');
 const writing = ref(false), sharing = ref(false), error = ref('');

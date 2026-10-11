@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { tripItineraries, type TripSummary, type TripId } from '~/data/trips';
+import type { TripSummary, TripId } from '~/data/trips';
+const {itineraryFor}=useDemo();
 import { scheduledTrips, tripsOnDate, tripEnd, tripDayIndex, monthWeeks, weekSegments, shiftMonth } from '~/utils/trip-calendar';
 import '~/assets/css/trip-calendar.css';
 const props = defineProps<{ trips: TripSummary[]; ready: boolean }>();
@@ -28,7 +29,7 @@ function color(trip:TripSummary){let code=0;for(const char of trip.id)code+=char
 function selectDate(date:string){selected.value=date;month.value=date.slice(0,7);}
 function move(delta:number){month.value=shiftMonth(month.value,delta);selected.value=month.value+'-01';}
 function setMonth(event:Event){const value=(event.target as HTMLInputElement).value;if(/^\d{4}-\d{2}$/.test(value)){month.value=value;selected.value=value+'-01';}}
-function schedule(trip:TripSummary){return tripItineraries[trip.id]?.[tripDayIndex(trip,selected.value)];}
+function schedule(trip:TripSummary){return itineraryFor(trip.id)[tripDayIndex(trip,selected.value)];}
 </script>
 <template>
   <section class="trip-calendar" aria-label="所有行程日曆">

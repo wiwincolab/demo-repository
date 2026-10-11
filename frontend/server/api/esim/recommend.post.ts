@@ -14,7 +14,7 @@ export default defineEventHandler(async event => {
     const trip = tripSummaries.find(item => item.id === body.tripId)!;
     const usage = recommendUsage(answers);
     const plan = esimPlan(usage, trip.dayCount);
-    const stops = tripItineraries[trip.id].flatMap(day => day.stops).map(stop => stop.name);
+    const stops = (tripItineraries[trip.id] || []).flatMap(day => day.stops).map(stop => stop.name);
     const started = Date.now();
     try {
         const prompt = reasonPrompt({ tripTitle: trip.title, stops, answers: answers.map(a => a.text.slice(0, 120)), tier: plan.label, unlimited: plan.unlimited });

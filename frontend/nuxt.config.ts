@@ -2,7 +2,7 @@ export default defineNuxtConfig({
     compatibilityDate: '2026-06-01',
     devtools: { enabled: false },
     typescript: { tsConfig: { compilerOptions: { allowImportingTsExtensions: true } } },
-    css: ['~/assets/css/base.css', '~/assets/css/memory.css', '~/assets/css/nuxt.css'],
+    css: ['~/assets/css/base.css', '~/assets/css/memory.css', '~/assets/css/nuxt.css', '~/assets/css/photo-loading.css'],
     app: {
         baseURL: process.env.NUXT_APP_BASE_URL || '/',
         head: {
@@ -17,7 +17,7 @@ export default defineNuxtConfig({
         }
     },
     nitro: {
-        prerender: { routes: ['/trips', '/trip', '/esim', '/points', '/memory', '/memory/usj', '/planner', '/places', '/atlas', '/memory-graph', '/town', '/wardrobe', '/collection', '/journal'] },
+        prerender: { routes: ['/trips', '/trips/new', '/trip', '/esim', '/points', '/memory', '/memory/usj', '/planner', '/places', '/atlas', '/memory-graph', '/town', '/wardrobe', '/collection', '/journal'] },
         // 跟 app 一樣允許 import 寫 .ts：測試用 node --test 直接載入 server/utils，Node 需要完整副檔名
         typescript: { tsConfig: { compilerOptions: { allowImportingTsExtensions: true } } }
     }

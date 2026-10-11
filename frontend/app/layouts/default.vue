@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { tripSummaries, type TripId } from '~/data/trips';
+import type { TripId } from '~/data/trips';
+const {trips:tripSummaries}=useTripLibrary();
 import '~/assets/css/trips.css';
 import '~/assets/css/app-chrome.css';
 const route = useRoute();
@@ -24,7 +25,7 @@ const switcher = ref(false);
 const asset = useAsset();
 const path = computed(() => route.path.replace(/\/$/, '') || '/');
 const isScoped = computed(() => /^\/(trip|planner|memory|collection)(\/|$)/.test(path.value));
-const isTripList = computed(() => path.value === '/trips');
+const isTripList = computed(() => path.value.startsWith('/trips'));
 const isRevisit = computed(() => path.value === '/atlas' && route.query.view === 'cities');
 const isAtlasPlaza = computed(() => path.value === '/atlas' && !['cities', 'journey'].includes(String(route.query.view)) && !route.query.journey && !route.query.scope);
 const tabs = [{ to: '/trip', name: '行程', icon: 'trip' }, { to: '/esim', name: 'eSIM', icon: 'sim' }, { to: '/memory', name: 'AI 創作', icon: 'memory' }, { to: '/atlas', name: '回憶地圖', icon: 'atlas' }];

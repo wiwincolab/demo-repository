@@ -1,8 +1,11 @@
 <script setup lang="ts">
+import {isTripId} from '~/data/trips';
 const open = defineModel<boolean>({ default: false });
 const { members, group, addMember } = useDemo();
 // 有後端（GCP 版）：旅伴用真的邀請連結加入、各自在自己的手機上購買；Pages 版維持本機模擬
-const { available: live } = useApi();
+const { available } = useApi();
+const {activeId}=useTripContext();
+const live=computed(()=>available.value&&isTripId(activeId.value));
 </script>
 <template>
   <AppSheet v-model="open" title="旅伴一起排行程">

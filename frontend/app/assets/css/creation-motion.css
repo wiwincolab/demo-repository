@@ -75,7 +75,7 @@
 .pin-reverse small { font-size:8px;letter-spacing:.13em; }.pin-reverse h4 { font-size:22px;margin-top:10px;font-weight:500; }.pin-reverse p { font-size:11px;margin-top:10px; }.pin-reverse span { font-size:9px;margin-top:8px; }.pin-reverse b { margin-top:12px; }
 .pin-mounted-label { position:absolute;bottom:20px;left:0;right:0;text-align:center;font-size:11px;color:#577066; }
 .companion-world { position:relative;height:375px;overflow:hidden;border-radius:16px;background:#bbdce5; }
-.companion-landscape { position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(2px) saturate(.7);opacity:.65; }
+.companion-landscape { position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;filter:blur(2px) saturate(.7);opacity:.65; }
 .companion-world:after { content:'';position:absolute;inset:0;background:linear-gradient(0deg,#f8efd900,transparent 40%,#eef6f799);pointer-events:none; }
 .companion-platform { position:absolute;bottom:-70px;left:-10%;width:120%;height:155px;background:#eee0b9;border-top:7px solid #cad8a6;border-radius:50%;box-shadow:0 -2px 0 #96ac6b; }
 .companion-speech { position:absolute;left:24px;top:20px;right:24px;width:fit-content;max-width:calc(100% - 48px);background:#fffef4eb;border:1px solid white;padding:12px 17px;border-radius:17px 17px 17px 3px;font-size:12px;z-index:3; }

@@ -16,7 +16,12 @@ const props = defineProps<{
   places: Stop[]; paused?: boolean; selected: number[]; drawing: boolean; hasRange: boolean; rangeIds: number[];
   boundary?: Point[]; areas?: Point[][]; benefits?: PassBenefitPlace[]; resetKey?: number; route?: number[]; coverage?: PassCoverage | null; bounds?: number[] | null;
 }>();
-const emit = defineEmits<{ range: [ids: number[], boundary: Point[], selectAll?: boolean]; select: [ids: number[]]; cancel: []; viewport: [bounds: number[], zoom: number]; inspect: [id: number] }>();
+const emit = defineEmits<{ range: [ids: number[], boundary: Point[], selectAll?: boolean]; select: [ids: number[]]; cancel: []; draw: []; viewport: [bounds: number[], zoom: number]; inspect: [id: number] }>();
+const rangeMenu = ref(false);
+function chooseRange(method: 'view' | 'draw') {
+  rangeMenu.value = false;
+  if (method === 'view') selectVisibleArea(); else emit('draw');
+}
 const asset = useAsset();
 useHead({ link: [{ rel: 'stylesheet', href: asset('vendor/maplibre-gl.css') }] });
 const box = ref<HTMLElement>(), geography = ref<HTMLElement>(), canvas = ref<HTMLCanvasElement>(), gesture = ref<SVGSVGElement>();
@@ -310,7 +315,7 @@ onBeforeUnmount(() => { disposed = true; cancelAnimationFrame(frame); cancelAnim
 <template>
   <div class="planner-map-panel">
     <div class="planner-map-actions" aria-label="地圖操作" @pointerdown.stop @wheel.stop>
-      <button type="button" class="planner-select-view" :disabled="!places.length" @click="selectVisibleArea()">選這一區</button>
+      <button type="button" class="planner-select-view" :disabled="!places.length" @click="drawing ? emit('cancel') : rangeMenu=true">{{drawing?'取消圈選':'選擇範圍'}}</button>
       <button type="button" aria-label="重新置中地圖" :disabled="drawing" @click="fit(!!geographicAreas.length)">置中</button>
       <button type="button" aria-label="放大地圖" :disabled="drawing || zoom >= 18" @click="zoomBy(1)">＋</button>
       <button type="button" aria-label="縮小地圖" :disabled="drawing || zoom <= 2" @click="zoomBy(-1)">−</button>
@@ -347,13 +352,19 @@ onBeforeUnmount(() => { disposed = true; cancelAnimationFrame(frame); cancelAnim
     <svg v-if="drawing || fallback" ref="gesture" class="planner-gesture" :viewBox="`0 0 ${size.width} ${size.height}`" tabindex="0" role="group" :aria-label="drawing ? '拖曳畫出範圍；Enter 選取目前可見區域，Escape 取消圈選' : '地圖可拖曳平移，加減鍵、滾輪或雙指縮放'" @pointerdown="start" @pointermove="move" @pointerup="finish" @pointercancel="finish">
       <polygon v-if="stroke.length > 2" :points="stroke.map(p => p.join(',')).join(' ')" fill="#009fc51a" stroke="#009fc5" stroke-width="2" stroke-dasharray="5 4" />
     </svg>
-    <span v-if="drawing" class="planner-map-hint">畫出範圍，放開即完成；也可按「選這一區」</span>
+    <span v-if="drawing" class="planner-map-hint">畫出想逛的範圍，放開即完成</span>
     <span v-if="loading && fallback" class="planner-map-credit">正在載入道路地圖…</span>
     <a v-else-if="fallback && isTokyo" class="planner-map-credit" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>
     <span v-else-if="fallback" class="planner-map-credit">景點位置示意</span>
   </div>
     <span v-if="!drawing" class="planner-map-legend"><span v-for="access in accessTypes" :key="access"><i :style="{background:accessColours[access],borderTopColor:accessColours[access]}" :class="{limited:access !== 'unlimited'}" />{{ passAccessLabels[access] }}</span><span v-if="coverage"><i class="contour" />沿線／景點規劃輪廓</span><span v-if="benefits?.length"><i class="venue" />合作景點定位圈</span><template v-if="!fallback"><span><i class="line-colours" />地鐵依路線標色</span><span><i class="high-speed" />新幹線／高鐵</span></template></span>
     <details v-if="!drawing && !fallback && transitLines.length" class="planner-transit-legend" @wheel.stop @keydown.stop><summary>地鐵路線顏色 · {{ transitLines.length }} 條</summary><ul><li v-for="line in transitLines" :key="line.key" :class="{ excluded: line.covered === false }"><i :style="{ background: line.colour }" /><b v-if="line.ref">{{ line.ref }}</b>{{ line.name }}<small v-if="line.covered !== undefined">{{ line.covered ? '券內適用' : '未包含' }}{{ line.colour === '#778896' ? '・色彩待查核' : '' }}</small><small v-else-if="line.colour === '#778896'">色彩待查核</small></li></ul></details>
+    <AppSheet v-model="rangeMenu" title="選擇規劃範圍">
+      <div class="planner-range-methods">
+        <button @click="chooseRange('view')"><b>使用目前地圖範圍</b><small>把畫面中的區域設為規劃範圍</small></button>
+        <button @click="chooseRange('draw')"><b>在地圖畫出範圍</b><small>用手指或滑鼠圈出想逛的地方</small></button>
+      </div>
+    </AppSheet>
   </div>
 </template>
 <style scoped>
@@ -410,4 +421,8 @@ onBeforeUnmount(() => { disposed = true; cancelAnimationFrame(frame); cancelAnim
 .map-detail-enter-from,.map-detail-leave-to{opacity:0;transform:translate(-50%,-90%) scale(.75)}
 .map-detail-leave-active{pointer-events:none}
 @media(prefers-reduced-motion:reduce){.map-detail-enter-active,.map-detail-leave-active{transition:none}}
+</style>
+
+<style scoped>
+.planner-range-methods{display:grid;gap:12px}.planner-range-methods button{display:grid;gap:8px;min-height:82px;padding:16px;text-align:left;border:1px solid #cee5ee;border-radius:14px;background:#f2faff;color:#28647a}.planner-range-methods small{font-size:12px;font-weight:400;color:#668696}
 </style>

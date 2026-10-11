@@ -6,6 +6,7 @@ import { directionsUrl } from '~/utils/directions';
 import type { Stop } from '~/types/trip';
 const { days, members, saved: sharedTrip } = useDemo();
 const { activeId,activeTrip,tripHref }=useTripContext();
+const {settings:transportSettings,labels:transportLabels,changeMajor,changeLeg,modeFor,keyFor}=useTripTransport();
 const asset = useAsset();
 const route = useRoute();
 const {wallet:pointsWallet}=usePointsWallet();
@@ -85,7 +86,8 @@ watch(()=>route.query.day,()=>chooseDay(requestedDay()));
         <span>邀請旅伴 ＋</span>
       </button>
     </div>
-    <div class="trip-tools"><NuxtLink class="ai-link" :to="tripHref('/planner',{day:Math.max(0,day)})">✦ AI 排行程 <span>規劃與微調 →</span></NuxtLink></div>
+    <div class="trip-major-transport"><div><b>主要交通</b><small>各路段也可以另外選擇</small></div><label><span class="transport-hidden">主要交通方式</span><select :value="transportSettings.major" aria-label="主要交通方式" @change="changeMajor(($event.target as HTMLSelectElement).value)"><option v-for="(label,id) in transportLabels" :key="id" :value="id">{{label}}</option></select></label></div>
+    <div class="trip-tools"><NuxtLink class="ai-link" :to="tripHref('/planner',{day:Math.max(0,day)})">✦ 排行程 <span>規劃與微調 →</span></NuxtLink></div>
     <div ref="dayBar" class="day-bar" role="group" aria-label="選擇旅遊日期">
       <button :aria-pressed="day === -1" @click="chooseDay(-1)"><strong>全程</strong>{{ activeTrip.dayCount }} 天</button>
       <button v-for="(d, i) in days" :key="d.area" :style="{ '--day': dayColors[i] }" :aria-pressed="day === i" @click="chooseDay(i)"><strong>第 {{ i + 1 }} 天</strong><span class="day-dot" />{{ dayLabel(i) }}</button>
@@ -99,13 +101,14 @@ watch(()=>route.query.day,()=>chooseDay(requestedDay()));
         <button :aria-pressed="view === 'map'" @click="view = 'map'">地圖</button>
       </div>
     </div>
-    <div v-if="day >= 0 && days[day]?.transport" class="day-context">
+    <div v-if="day >= 0 && days[day]?.transport && !days[day]?.transport?.startsWith('主要交通：')" class="day-context">
       <p>{{ days[day]?.transport }}</p>
       <span v-if="days[day]?.lodging">今晚住 {{ days[day]?.lodging }}</span>
     </div>
     <Transition name="itinerary-view" mode="out-in">
     <div :key="view" class="itinerary-view">
-    <div v-if="view === 'list'" :key="`${activeId}-${day}`" class="stop-list">
+    <div v-if="!shown.length" class="trip-empty-day"><span aria-hidden="true">＋</span><h3>這一天，從想去的地方開始</h3><p>交給 AI 安排，也可以圈選景點或選周遊券，再用對話補充需求。</p><NuxtLink class="primary" :to="tripHref('/planner',{day:Math.max(0,day)})">✦ 安排{{day<0?'第一天':'這一天'}}行程</NuxtLink></div>
+    <div v-else-if="view === 'list'" :key="`${activeId}-${day}`" class="stop-list">
       <article v-for="(s, i) in shown" :key="s.id" class="stop-row" :style="{ '--day': dayColors[s.day], '--stop-delay': `${Math.min(i, 6) * 45}ms` }">
         <div class="stop-track">
           <span class="stop-number">{{ i + 1 }}</span>
@@ -115,13 +118,15 @@ watch(()=>route.query.day,()=>chooseDay(requestedDay()));
             <time>第 {{ s.day + 1 }} 天 · {{ s.time }}</time>
             <h3>{{ s.name }}</h3>
             <p>{{ s.note }}</p>
-            <small v-if="s.transit" class="stop-transit">{{ s.transit }}</small>
             <small>{{ s.stay }} · 看詳情 ›</small>
           </div>
           <img :src="asset(s.photo.src)" :alt="s.photo.alt" loading="lazy" :style="{ objectPosition: s.photo.objectPosition }">
         </button>
         <ServiceRecommendations :stop="s" :next="shown[i + 1]?.day===s.day ? shown[i + 1] : undefined" />
-        <a v-if="shown[i + 1]" class="stop-route-link" :href="directionsUrl(s, shown[i + 1]!)" target="_blank" rel="noopener noreferrer">{{ s.day !== shown[i + 1]!.day ? '隔日移動' : '前往下一站' }} · {{ shown[i + 1]!.name }} <span>查看交通路線 ↗</span></a>
+        <div v-if="shown[i + 1]" class="stop-transport">
+          <p>{{s.day!==shown[i+1]!.day?'隔日移動':'前往下一站'}} · {{shown[i+1]!.name}}</p>
+          <div><label><span class="transport-hidden">{{s.name}}到{{shown[i+1]!.name}}的交通方式</span><select :value="transportSettings.legs[keyFor(s,shown[i+1]!)] || ''" :aria-label="s.name+'到'+shown[i+1]!.name+'的交通方式'" @change="changeLeg(s,shown[i+1]!,($event.target as HTMLSelectElement).value)"><option value="">跟隨主要交通 · {{transportLabels[transportSettings.major]}}</option><option v-for="(label,id) in transportLabels" :key="id" :value="id">{{label}}</option></select></label><a :href="directionsUrl(s,shown[i+1]!,modeFor(s,shown[i+1]!))" target="_blank" rel="noopener noreferrer">查看{{transportLabels[modeFor(s,shown[i+1]!) ]}}路線 ↗</a></div>
+        </div>
       </article>
     </div>
     <template v-else>
@@ -132,8 +137,9 @@ watch(()=>route.query.day,()=>chooseDay(requestedDay()));
           <small>第 {{ s.day + 1 }} 天 · {{ s.time }}</small>
         </button>
       </div>
-      <article v-if="day >= 0" class="spot-info">
+      <article v-if="day >= 0 && activeStop" class="spot-info">
         <StopDetails :stop="activeStop" />
+        <div v-if="shown[shown.indexOf(activeStop)+1]" class="stop-transport map-transport"><p>前往 {{shown[shown.indexOf(activeStop)+1]!.name}}</p><label><span class="transport-hidden">下一站交通方式</span><select :value="transportSettings.legs[keyFor(activeStop,shown[shown.indexOf(activeStop)+1]!)] || ''" aria-label="下一站交通方式" @change="changeLeg(activeStop,shown[shown.indexOf(activeStop)+1]!,($event.target as HTMLSelectElement).value)"><option value="">跟隨主要交通 · {{transportLabels[transportSettings.major]}}</option><option v-for="(label,id) in transportLabels" :key="id" :value="id">{{label}}</option></select></label><a :href="directionsUrl(activeStop,shown[shown.indexOf(activeStop)+1]!,modeFor(activeStop,shown[shown.indexOf(activeStop)+1]!))" target="_blank" rel="noopener noreferrer">查看交通路線 ↗</a></div>
       </article>
       <p v-else class="page-note">各色實線為單日行程，虛線為日間移動。選一天，看每站照片與流量。</p>
     </template>
@@ -205,4 +211,8 @@ watch(()=>route.query.day,()=>chooseDay(requestedDay()));
 
 <style scoped>
 .trip-tools .ai-link{display:flex;align-items:center;justify-content:space-between;padding:16px;border-radius:14px;font-size:15px}.trip-tools .ai-link span{font-size:11px;font-weight:400}.trip-service-store{margin:20px 0;padding:18px;border-radius:16px;background:#eef8fb;display:flex;align-items:center;flex-wrap:wrap;gap:12px}.trip-service-store>div{flex:1;min-width:180px}.trip-service-store h3{margin:0;font-size:17px}.trip-service-store p{font-size:12px;color:#6a8998;line-height:1.7;margin:7px 0 0}.trip-service-store>a{min-height:44px;display:flex;align-items:center;text-decoration:none;color:#008bad;font-size:13px}.trip-service-store details{width:100%;font-size:12px}
+</style>
+
+<style scoped>
+.transport-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}.trip-major-transport{display:flex;align-items:center;gap:12px;margin:0 20px 16px;padding:14px;border:1px solid #d8e8ed;border-radius:14px;background:#f8fcfd}.trip-major-transport>div{flex:1;min-width:0}.trip-major-transport b{font-size:13px}.trip-major-transport small{display:block;font-size:10px;color:#79939d;margin-top:4px}.trip-major-transport select,.stop-transport select{max-width:100%;min-width:0;min-height:44px;padding:8px;border:1px solid #c9e0e8;border-radius:9px;background:white;color:#356c80;font-size:16px}.trip-major-transport label{max-width:55%}.stop-transport{grid-column:2;min-width:0;padding:12px;margin:4px 0 10px;background:#f0f7fa;border:1px solid #dceaf0;border-radius:12px}.stop-transport p{font-size:12px;color:#537582;line-height:1.7;margin:0 0 10px;overflow-wrap:anywhere}.stop-transport>div{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.stop-transport label{min-width:0;flex:1 1 100%;display:block}.stop-transport select{width:100%;box-sizing:border-box}.stop-transport a{font-size:12px;min-height:44px;display:flex;align-items:center;color:#0083a8;font-weight:600}.map-transport{margin-top:16px}.stop-transport select:focus-visible,.trip-major-transport select:focus-visible{outline:2px solid #009fc5;outline-offset:2px}
 </style>

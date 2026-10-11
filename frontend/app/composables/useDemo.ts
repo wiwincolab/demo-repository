@@ -1,5 +1,5 @@
 import { restorePlannedDays } from '~/utils/planner-chat';
-import { tripItineraries, tripAlternatives, tripSummaries, plannerStorageKey, type TripId } from '~/data/trips';
+import { tripItineraries, tripAlternatives, tripSummaries, plannerStorageKey, isTripId, type TripId, type TripSummary } from '~/data/trips';
 import { groupPrice, isMemberList } from '~/utils/commerce';
 import { esimPlan } from '~/utils/esim';
 import type { TripDay, Member, Usage } from '~/types/trip';
@@ -7,14 +7,16 @@ import { getSavedTrip, type SavedTrip } from '~/utils/share-api';
 import { savedDays } from '~/utils/saved-trip';
 interface TripDemoState { days: TripDay[]; members: Member[]; usage: Usage; adjusted: boolean; previousStop: TripDay['stops'][0] | null; generated: boolean; esim: { selectedUsage: Usage | null; purchasedUsage: Usage | null; installed: boolean; claimed: boolean } }
 const blankState = (): TripDemoState => ({days:[],members:[],usage:'normal',adjusted:false,previousStop:null,generated:false,esim:{selectedUsage:null,purchasedUsage:null,installed:false,claimed:false}});
-function initialState(id:TripId):TripDemoState { return {...blankState(),days:structuredClone(tripItineraries[id]),members:[{name:'Scott（你）',paid:false,price:esimPlan('normal',tripSummaries.find(t=>t.id===id)?.dayCount||5).price}]}; }
+function initialState(trip:TripSummary,days:TripDay[]):TripDemoState { return {...blankState(),days:structuredClone(days),members:[{name:'Scott（你）',paid:false,price:esimPlan('normal',trip.dayCount).price}]}; }
 export function useDemo() {
     const {activeId,activeTrip}=useTripContext();
-    const states=useState<Record<TripId,TripDemoState>>('trip-demo-v2',()=>Object.fromEntries(tripSummaries.map(trip=>[trip.id,initialState(trip.id)])) as Record<TripId,TripDemoState>);
-    for (const trip of tripSummaries) if (!states.value[trip.id]) states.value[trip.id] = initialState(trip.id);
+    const {trips,initialDays}=useTripLibrary();
+    const states=useState<Record<TripId,TripDemoState>>('trip-demo-v2',()=>Object.fromEntries(tripSummaries.map(trip=>[trip.id,initialState(trip,tripItineraries[trip.id] || [])])) as Record<TripId,TripDemoState>);
+    function ensureStates(){for(const trip of trips.value)if(!states.value[trip.id])states.value[trip.id]=initialState(trip,initialDays(trip.id));}
+    watch(()=>trips.value.map(t=>t.id).join(','),ensureStates,{immediate:true,flush:'sync'});
     const storageReady=useState('trip-demo-ready-v2',()=>false);
     const empty=blankState();
-    function field<K extends keyof TripDemoState>(key:K){return computed({get:()=>activeId.value?states.value[activeId.value][key]:empty[key],set:(value:TripDemoState[K])=>{if(activeId.value)states.value[activeId.value][key]=value;}});}
+    function field<K extends keyof TripDemoState>(key:K){return computed({get:()=>activeId.value?states.value[activeId.value]?.[key] ?? empty[key]:empty[key],set:(value:TripDemoState[K])=>{const state=activeId.value?states.value[activeId.value]:null;if(state)state[key]=value;}});}
     const baseDays=field('days'), localMembers=field('members'), usage=field('usage'), adjusted=field('adjusted'), previousStop=field('previousStop'), generated=field('generated');
     const days=baseDays;
     const esim=field('esim');
@@ -30,8 +32,9 @@ export function useDemo() {
       if(storageReady.value)return;
       try{
         const cached=JSON.parse(sessionStorage.getItem('chictrip-demo-by-trip-v2')||'null');
-        for(const trip of tripSummaries){
-          const value=cached?.[trip.id], target=states.value[trip.id];
+        ensureStates();
+        for(const trip of trips.value){
+          const value=cached?.[trip.id], target=states.value[trip.id]!;
           if(isMemberList(value?.members))target.members=value.members;
           if(['light','normal','heavy'].includes(value?.usage))target.usage=value.usage;
           if (['light','normal','heavy'].includes(value?.esim?.selectedUsage)) target.esim.selectedUsage=value.esim.selectedUsage;
@@ -40,7 +43,7 @@ export function useDemo() {
           }
           target.members = target.members.map((m,i) => ({...m,price:esimPlan(i===0 ? target.esim.purchasedUsage || target.esim.selectedUsage || target.usage : 'normal',trip.dayCount).price}));
           target.generated=value?.generated===true;
-          if(value?.adjusted===true && tripAlternatives[trip.id]){target.previousStop=structuredClone(tripItineraries[trip.id][0]!.stops[1]!);target.days[0]!.stops[1]=structuredClone(tripAlternatives[trip.id]!);target.adjusted=true;}
+          if(value?.adjusted===true && tripAlternatives[trip.id]){target.previousStop=structuredClone(tripItineraries[trip.id]![0]!.stops[1]!);target.days[0]!.stops[1]=structuredClone(tripAlternatives[trip.id]!);target.adjusted=true;}
           try{const restored=restorePlannedDays(target.days,JSON.parse(localStorage.getItem(plannerStorageKey(trip.id)) || 'null'));if(restored!==target.days){target.days=restored;target.adjusted=false;target.previousStop=null;}}catch{}
         }
         if(!cached){const legacy=JSON.parse(sessionStorage.getItem('chictrip-mobile-members')||'null');if(isMemberList(legacy))states.value.tokyo.members=legacy.map(m=>({...m,price:esimPlan('normal',5).price}));}
@@ -52,8 +55,14 @@ export function useDemo() {
     // 每趟只問一次；好幾個元件同時呼叫 useDemo 時先記下再發請求，不會重複載入
     const savedTrips=useState<Partial<Record<TripId,SavedTrip|null>>>('saved-trips-v1',()=>({}));
     const api=useApi();
-    function rememberSaved(id:TripId,value:SavedTrip){savedTrips.value[id]=value;states.value[id].days=savedDays(id,value.stopIds);try{states.value[id].days=restorePlannedDays(states.value[id].days,JSON.parse(localStorage.getItem(plannerStorageKey(id)) || 'null'));}catch{}states.value[id].adjusted=false;states.value[id].previousStop=null;}
+    function rememberSaved(id:TripId,value:SavedTrip){
+      const target=states.value[id];if(!target)return;
+      savedTrips.value[id]=value;target.days=savedDays(id,value.stopIds);
+      try{target.days=restorePlannedDays(target.days,JSON.parse(localStorage.getItem(plannerStorageKey(id)) || 'null'));}catch{}
+      target.adjusted=false;target.previousStop=null;
+    }
     async function loadSaved(id:TripId){
+      if(!isTripId(id))return;
       if(id in savedTrips.value)return;
       savedTrips.value[id]=null;
       if(!(await api.check()))return;
@@ -132,7 +141,8 @@ export function useDemo() {
         esim.value = {selectedUsage:null,purchasedUsage:null,installed:false,claimed:false};
         notify('組隊模擬已重設為 1 人共編、0 人購買');
     }
-    return { days, members, usage, adjusted, generated, group, plan, eligible, esim, toast, saved, serverGroup, notify, addMember, buy, invite, applyAdjustment, undoAdjustment, reset, rememberSaved };
+    function itineraryFor(id:TripId){return states.value[id]?.days || initialDays(id);}
+    return { days, itineraryFor, members, usage, adjusted, generated, group, plan, eligible, esim, toast, saved, serverGroup, notify, addMember, buy, invite, applyAdjustment, undoAdjustment, reset, rememberSaved };
 }
 export function useAsset() {
     const base = useRuntimeConfig().app.baseURL;

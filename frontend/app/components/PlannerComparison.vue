@@ -7,7 +7,7 @@ defineEmits<{ adopt: [] }>();
 const asset = useAsset();
 const changes = computed(() => planChanges(props.before, props.after));
 const failedPhotos = ref<string[]>([]);
-const columns = computed(() => [{ title: '調整前', stops: props.before }, { title: 'AI 調整後', stops: props.after }]);
+const columns = computed(() => [{ title: '調整前', stops: props.before }, { title: '調整後', stops: props.after }]);
 const labels = { added: '新增', removed: '移除', adjusted: '調整' };
 </script>
 <template>
@@ -31,7 +31,7 @@ const labels = { added: '新增', removed: '移除', adjusted: '調整' };
       </div>
       <details v-if="notes.length" class="comparison-notes"><summary>安排說明與已兌換服務</summary><p v-for="note in notes" :key="note">{{ note }}</p></details>
     </div>
-    <div class="comparison-actions"><button class="secondary" @click="open=false">保留原行程</button><button class="primary" @click="$emit('adopt')">採用並返回行程</button></div>
+    <div class="comparison-actions"><button class="secondary" @click="open=false">保留原行程</button><button class="primary" @click="$emit('adopt')">確認行程並返回</button></div>
   </AppSheet>
 </template>
 <style scoped>

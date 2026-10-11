@@ -25,7 +25,7 @@ export const tripTitle = (id: TripId) => tripSummaries.find(trip => trip.id === 
 // 分享出去的只有分享者勾選的景點，依原行程順序；住宿與旅伴名單本來就不在景點裡，不會跟著公開（US-07）
 export function publicStops(tripId: TripId, stopIds: number[]) {
     const wanted = new Set(stopIds);
-    return tripItineraries[tripId].flatMap(day => day.stops)
+    return (tripItineraries[tripId] || []).flatMap(day => day.stops)
         .filter(stop => wanted.has(stop.id))
         .filter((stop, index, all) => all.findIndex(other => other.id === stop.id) === index)
         .map(stop => ({ id: stop.id, day: stop.day, name: stop.name, short: stop.short, at: stop.at, photo: stop.photo.src }));
