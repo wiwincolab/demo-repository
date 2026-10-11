@@ -42,7 +42,7 @@ export function conversationPlan(pool: Stop[], current: Stop[], text: string, ke
   const editedIds = new Set(edited.map(s=>s.id));
   const result = recommendPlaces([...edited,...all.filter(s=>!editedIds.has(s.id))], edited.map(s => s.id), /晚.*出發|晚.*開始/.test(text) ? text + '，下午出發' : text, limit, 0, keywordIds, true);
   if (!result.stops.length) return { ...result, changed: false, message: '目前資料沒有能符合這次需求的安排，原草案已保留。' };
-  return { ...result, changed: true, message: `${changes.join('、') || '依照你的需求調整時間與偏好'}。已更新下方草案。` };
+  return { ...result, changed: true, message: `${changes.join('、') || '依照你的需求調整時間與偏好'}。請先查看前後比較，採用後回到行程主頁。` };
 }
 export function initialConversationStops(stops: Stop[], pool: Stop[]): Recommendation[] {
   return stops.map(s => ({ ...s, outside: false, reason: '沿用目前旅程，可在下方對話調整。', travelMinutes: 0, ...rainPlanDetailsFor(s, pool) }));

@@ -2,9 +2,20 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import type { Stop } from '../app/types/trip.ts';
 import { conversationPlan, plannedDay, restorePlannedDays } from '../app/utils/planner-chat.ts';
+import { planChanges } from '../app/utils/planner-comparison.ts';
 import { pointsProducts, initialWallet, redeemPoints, cancelPointsOrder, readPointsWallet, redeemedPlanningContext, serviceRecommendations } from '../app/utils/points.ts';
 const stop=(id:number,name:string,x=139.7):Stop=>({id,day:0,name,short:name,at:[x,35.7],time:'10:00',stay:'60 分鐘',note:'',range:[60,60],photo:{src:'photo.jpg',alt:name,credit:'test',source:'',license:'',licenseUrl:'',objectPosition:'center'}});
 const a=stop(1,'老街'),b=stop(2,'公園'),museum=stop(3,'室內美術館'),coffee=stop(4,'咖啡店');
+test('comparison reports additions, removals, time, order and stay changes without mutating either plan',()=>{
+ const before=[a,b,museum],after=[{...b,time:'13:00',stay:'90 分鐘'},coffee,a];
+ const original=structuredClone({before,after});
+ const changes=planChanges(before,after);
+ assert.deepEqual(changes.find(c=>c.id===b.id)?.details,['時間 10:00 → 13:00','順序 第 2 站 → 第 1 站','停留 60 分鐘 → 90 分鐘']);
+ assert.equal(changes.find(c=>c.id===coffee.id)?.kind,'added');assert.equal(changes.find(c=>c.id===museum.id)?.kind,'removed');
+ assert.equal(changes.find(c=>c.id===a.id)?.kind,'adjusted');assert.deepEqual({before,after},original);
+ assert.deepEqual(planChanges(before,structuredClone(before)),[]);
+ assert.deepEqual(planChanges([],after).map(c=>c.kind),['added','added','added']);
+});
 test('conversation adjusts the draft while keeping the source itinerary and map selection intact',()=>{
  const current=[b,a],selected=[1,2,3,4],before=structuredClone(current);
  const late=conversationPlan([a,b,museum,coffee],current,'晚一點出發');
