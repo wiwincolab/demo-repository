@@ -3,7 +3,7 @@ import { createPoiRepository, createVisiblePoiLoader } from '~/utils/planner-poi
 
 export function usePlannerPois() {
   const asset = useAsset();
-  const repository = createPoiRepository((url,signal) => $fetch(url, { timeout: 8000, signal }), asset);
+  const repository = createPoiRepository((url,signal) => $fetch<unknown>(url, { timeout: 8000, signal }), asset);
   const catalog = shallowRef<PoiCatalog | null>(null), snapshots = shallowRef<PoiSnapshot[]>([]);
   const loading = ref(false), error = ref('');
   let disposed = false, revision=0;

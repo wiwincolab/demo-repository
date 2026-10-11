@@ -3,13 +3,15 @@ import type { Stop } from '~/types/trip';
 import { paintBase, projection, type BaseMap, type Point } from '~/utils/map';
 import { mapDetailLevel, visibleMapDetails, withinPlanningAreas, isUsableMapStroke, visibleMapTarget, sampleMapStroke } from '~/utils/planner-map';
 import { indexRing } from '~/utils/polygon-index';
-import { plannerStopClusters, individualSelectionLimit } from '~/utils/planner-poi';
+import { individualSelectionLimit } from '~/utils/planner-poi';
+import { createMapClusterClient } from '~/utils/map-cluster-client';
+import type { MapClusterFeature } from '~/utils/map-cluster-engine';
 import { loadScript } from '~/utils/loadScript';
 import { attachTransitMap, preparePlannerBasemap, type TransitLegendLine } from '~/utils/transit-map';
 import { benefitLabels, benefitLocationFrame, type PassBenefitPlace } from '~/data/pass-benefits';
 import { coveragePolygons, coverageExtent, coverageAccess, passAccessLabels, type PassAccess, type PassCoverage } from '~/utils/pass-coverage';
 const props = defineProps<{
-  places: Stop[]; selected: number[]; drawing: boolean; hasRange: boolean; rangeIds: number[];
+  places: Stop[]; paused?: boolean; selected: number[]; drawing: boolean; hasRange: boolean; rangeIds: number[];
   boundary?: Point[]; areas?: Point[][]; benefits?: PassBenefitPlace[]; resetKey?: number; route?: number[]; coverage?: PassCoverage | null; bounds?: number[] | null;
 }>();
 const emit = defineEmits<{ range: [ids: number[], boundary: Point[], selectAll?: boolean]; select: [ids: number[]]; cancel: []; viewport: [bounds: number[], zoom: number]; inspect: [id: number] }>();
@@ -17,10 +19,11 @@ const asset = useAsset();
 useHead({ link: [{ rel: 'stylesheet', href: asset('vendor/maplibre-gl.css') }] });
 const box = ref<HTMLElement>(), geography = ref<HTMLElement>(), canvas = ref<HTMLCanvasElement>(), gesture = ref<SVGSVGElement>();
 const size = reactive({ width: 720, height: 480 });
-const points = ref<{ stop: Stop; point: Point }[]>([]), stroke = ref<Point[]>([]);
+const points = shallowRef<{ stop: Stop; point: Point }[]>([]), stroke = ref<Point[]>([]);
+const clusterRenderer=ref('pending');
 const selectedSet = computed(() => new Set(props.selected)), rangeSet = computed(() => new Set(props.rangeIds));
-const groupedPoints = ref<{id:number;count:number;at:Point;point:Point;outside:boolean;selected:boolean}[]>([]), failedPhotos = ref<string[]>([]);
-let clusterIndex = plannerStopClusters([]), stopById = new Map<number,Stop>();
+const groupedPoints = shallowRef<{id:number;count:number;at:Point;point:Point;outside:boolean;selected:boolean;expansionZoom:number;revision:number}[]>([]), failedPhotos = ref<string[]>([]);
+let clusterClient:ReturnType<typeof createMapClusterClient>|undefined, clusterFeatures:MapClusterFeature[]=[], featureRevision=0, clusterRadius=0, stopById = new Map<number,Stop>();
 const polygons = ref<Point[][]>([]), routePoints = ref<Point[]>([]);
 const coveragePaths = ref<string[]>([]), coverageTracks = ref<{points:Point[];access:PassAccess}[]>([]);
 const tourStops = ref<{name:string;point:Point;source?:string}[]>([]), focusedStop = ref('');
@@ -74,7 +77,18 @@ function chooseMapClick(event:MouseEvent) {
   else {const group=groupedPoints.value.find(g=>g.id===Number(hit.dataset.clusterId));if(group)expandCluster(group);}
 }
 function photoFailed(src:string) { if (!failedPhotos.value.includes(src)) failedPhotos.value.push(src); }
-function rebuildClusters() { stopById = new Map(props.places.map(p=>[p.id,p])); clusterIndex = plannerStopClusters(props.places,props.selected,props.rangeIds,props.hasRange,(box.value?.clientWidth || size.width) <= 600 ? 60 : 44); refresh(); }
+function rebuildClusters() {
+  if(!clusterClient)return;
+  const radius=(box.value?.clientWidth || size.width)<=600 ? 60 : 44;
+  const geometryChanged=radius!==clusterRadius || stopById.size!==props.places.length || props.places.some(p=>{const before=stopById.get(p.id);return !before || before.at[0]!==p.at[0] || before.at[1]!==p.at[1] || !!before.photo.src!==!!p.photo.src;});
+  stopById=new Map(props.places.map(p=>[p.id,p]));
+  const selection={selected:[...props.selected],rangeIds:[...props.rangeIds],hasRange:props.hasRange};
+  if(geometryChanged){
+    clusterRadius=radius;clusterFeatures=[];
+    clusterClient.load(props.places.map(p=>({id:p.id,at:[...p.at],photo:!!p.photo.src})),{mode:'planner',radius},selection);
+  }else clusterClient.select(selection);
+  scheduleRefresh();
+}
 function scheduleClusters() { if (clusterFrame) return; clusterFrame=requestAnimationFrame(()=>{clusterFrame=0;rebuildClusters();}); }
 function currentBounds() {
   if (!fallback.value && map) { const b=map.getBounds(); return [b.getWest(),b.getSouth(),b.getEast(),b.getNorth()]; }
@@ -94,7 +108,8 @@ function selectVisibleArea(selectAll = false) {
 }
 function expandCluster(group:typeof groupedPoints.value[number]) {
   if (props.drawing) return;
-  const nextZoom=clusterIndex.getClusterExpansionZoom(group.id);
+  if(group.revision!==clusterClient?.revision)return;
+  const nextZoom=group.expansionZoom;
   if (!fallback.value && map) map.easeTo({center:group.at,zoom:nextZoom,duration:matchMedia('(prefers-reduced-motion: reduce)').matches?0:350});
   else { fallbackZoom(2 ** (nextZoom-zoom.value),group.point); reportViewport(); }
 }
@@ -120,13 +135,14 @@ function invert(point: Point): Point {
   return fallbackProject().invert(point);
 }
 function refresh() {
-  if (!box.value || disposed) return;
+  if (!box.value || disposed || props.paused) return;
   size.width = box.value.clientWidth; size.height = box.value.clientHeight;
   zoom.value = !fallback.value && map ? map.getZoom() : 10 + Math.log2(camera.scale);
   const bounds=currentBounds();
-  const features=clusterIndex.getClusters(bounds as [number,number,number,number], Math.max(0,Math.floor(zoom.value)));
-  groupedPoints.value=features.flatMap(f=>'cluster' in f.properties ? [{id:f.properties.cluster_id,count:f.properties.point_count,at:f.geometry.coordinates,point:project(f.geometry.coordinates),outside:props.hasRange && !f.properties.inRange,selected:f.properties.selectedCount>0}] : []).filter(p=>visibleMapTarget(p.point,size.width,size.height));
-  const visibleIds=new Set(features.flatMap(f=>'cluster' in f.properties ? [] : [f.properties.id]));
+  const features=clusterFeatures;
+  if(!props.drawing)clusterClient?.query(bounds,zoom.value);
+  groupedPoints.value=features.flatMap(f=>f.clusterId!==undefined ? [{id:f.clusterId,count:f.count,at:f.at,point:project(f.at),outside:props.hasRange && !f.inRange,selected:f.selectedCount>0,expansionZoom:f.expansionZoom!,revision:featureRevision}] : []).filter(p=>visibleMapTarget(p.point,size.width,size.height));
+  const visibleIds=new Set(features.flatMap(f=>f.id===undefined ? [] : [Number(f.id)]));
   if(props.selected.length<=individualSelectionLimit)for(const id of props.selected) { const p=stopById.get(id);if(p && p.at[0]!>=bounds[0]! && p.at[0]!<=bounds[2]! && p.at[1]!>=bounds[1]! && p.at[1]!<=bounds[3]!)visibleIds.add(id); }
   points.value=[...visibleIds].flatMap(id=>{const stop=stopById.get(id);const point=stop ? project(stop.at) : [];return stop && visibleMapTarget(point,size.width,size.height) ? [{stop,point}] : [];});
   polygons.value = props.coverage ? [] : geographicAreas.value.map(area => area.map(project));
@@ -165,7 +181,7 @@ function updateCoverage() {
 function coveredTransitWays() {
   return props.coverage?.metadata.mode === 'network' ? props.coverage.features.filter(f=>f.properties.role==='network').flatMap(f=>f.properties.osmIds || (Number.isInteger(f.properties.osmId) ? [f.properties.osmId!] : [])) : null;
 }
-function scheduleRefresh() { cancelAnimationFrame(frame); frame = requestAnimationFrame(refresh); }
+function scheduleRefresh() { if(frame || props.paused)return;frame=requestAnimationFrame(()=>{frame=0;refresh();}); }
 function fit(areas = false) {
   const b=props.bounds;
   const coordinates = areas && geographicAreas.value.length ? geographicAreas.value.flat() : b ? [[b[0]!,b[1]!],[b[2]!,b[3]!]] : props.places.map(s => s.at);
@@ -249,7 +265,8 @@ function toggle(id: number) {
   if (!props.hasRange) { emit('inspect',id); return; }
   emit('select', props.selected.includes(id) ? props.selected.filter(n => n !== id) : [...props.selected, id]);
 }
-watch(() => props.drawing, drawingMode, { flush: 'post' });
+watch(() => props.drawing,()=>{drawingMode();scheduleRefresh();}, { flush: 'post' });
+watch(() => props.paused, paused=>{if(paused){map?.stop();cancelAnimationFrame(frame);frame=0;}else scheduleRefresh();});
 watch(() => props.boundary, () => { cancelStroke(); refresh(); }, { deep: true });
 watch(() => [props.areas, props.coverage], () => { cancelStroke(); updateCoverage(); if (props.coverage || props.areas?.length) fit(true); else refresh(); });
 watch(() => props.route, scheduleRefresh, { deep: true });
@@ -259,6 +276,7 @@ watch(() => props.places, scheduleClusters);
 watch(() => [props.selected,props.rangeIds,props.hasRange], scheduleClusters);
 watch(() => props.bounds, () => { cancelStroke(); fit(); });
 onMounted(async () => {
+  clusterClient=createMapClusterClient(()=>new Worker(new URL('../workers/poi-clusters.worker.ts',import.meta.url),{type:'module'}),(features,revision)=>{clusterFeatures=features;featureRevision=revision;clusterRenderer.value=clusterClient!.mode;scheduleRefresh();});
   rebuildClusters();
   observer = new ResizeObserver(() => { map?.resize(); scheduleClusters(); }); observer.observe(box.value!); refresh();
   if (isTokyo.value) $fetch<BaseMap>(asset('assets/tokyo-map.json')).then(value => { if (!disposed) { base = value; refresh(); } }).catch(() => {});
@@ -277,7 +295,7 @@ onMounted(async () => {
     });
   } catch { fallback.value = true; loading.value = false; refresh(); }
 });
-onBeforeUnmount(() => { disposed = true; cancelAnimationFrame(frame); cancelAnimationFrame(clusterFrame); cancelAnimationFrame(strokeFrame); observer?.disconnect(); pointers.clear(); disposeTransit?.(); map?.remove(); });
+onBeforeUnmount(() => { disposed = true; cancelAnimationFrame(frame); cancelAnimationFrame(clusterFrame); cancelAnimationFrame(strokeFrame); observer?.disconnect(); pointers.clear(); disposeTransit?.(); clusterClient?.dispose(); map?.remove(); });
 </script>
 <template>
   <div class="planner-map-panel">
@@ -287,7 +305,7 @@ onBeforeUnmount(() => { disposed = true; cancelAnimationFrame(frame); cancelAnim
       <button type="button" aria-label="放大地圖" :disabled="drawing || zoom >= 18" @click="zoomBy(1)">＋</button>
       <button type="button" aria-label="縮小地圖" :disabled="drawing || zoom <= 2" @click="zoomBy(-1)">−</button>
     </div>
-  <div ref="box" class="route-map planner-map" :class="{ drawing }" @keydown="keyboard" @wheel="wheel" @pointerdown.capture="beginMapClick" @click.capture="chooseMapClick">
+  <div ref="box" class="route-map planner-map" :class="{ drawing }" :data-cluster-renderer="clusterRenderer" :data-map-paused="!!paused" @keydown="keyboard" @wheel="wheel" @pointerdown.capture="beginMapClick" @click.capture="chooseMapClick">
     <div ref="geography" v-show="!fallback" class="planner-geography" aria-label="排行程地圖，可拖曳平移、滾輪或雙指縮放查看景點詳情" />
     <canvas v-show="fallback" ref="canvas" aria-hidden="true" />
     <svg class="planner-overlay" :viewBox="`0 0 ${size.width} ${size.height}`" aria-hidden="true">
@@ -298,9 +316,9 @@ onBeforeUnmount(() => { disposed = true; cancelAnimationFrame(frame); cancelAnim
       <template v-if="detailLevel !== 'dots'"><polygon v-for="p in benefitPoints" :key="p.place.id" :points="p.frame.map(at => at.join(',')).join(' ')" fill="#ffc50016" stroke="#e1ad00" stroke-width="1.5" /></template>
     </svg>
     <button v-for="group in drawing ? [] : groupedPoints" :key="`cluster-${group.id}`" class="planner-poi-cluster" :data-cluster-id="group.id" :class="{outside:group.outside,selected:group.selected}" :style="{left:group.point[0]+'px',top:group.point[1]+'px'}" :aria-label="group.count+' 個景點，點選放大'" :disabled="drawing" @click="expandCluster(group)">{{ group.count }}</button>
-    <button v-for="p in drawing ? [] : points" :key="p.stop.id" class="planner-location" :data-stop-id="p.stop.id" :class="state(p.stop.id)" :style="{ left: p.point[0] + 'px', top: p.point[1] + 'px' }" :aria-label="p.stop.name + (selectedSet.has(p.stop.id) ? '，已加入，再點移除' : hasRange ? '，點選加入行程' : '，查看景點照片')" :disabled="drawing" :aria-pressed="selectedSet.has(p.stop.id)" @click="toggle(p.stop.id)"><img referrerpolicy="no-referrer" v-if="p.stop.photo.src && !failedPhotos.includes(p.stop.photo.src)" :src="asset(p.stop.photo.src)" :alt="p.stop.photo.alt" loading="lazy" @error="photoFailed(p.stop.photo.src)"><i v-else class="planner-poi-dot" aria-hidden="true"/><span v-if="route?.includes(p.stop.id)">{{ route.indexOf(p.stop.id) + 1 }}</span></button>
+    <button v-for="p in drawing ? [] : points" :key="p.stop.id" class="planner-location" :data-stop-id="p.stop.id" :class="state(p.stop.id)" :style="{ left: p.point[0] + 'px', top: p.point[1] + 'px' }" :aria-label="p.stop.name + (selectedSet.has(p.stop.id) ? '，已加入，再點移除' : hasRange ? '，點選加入行程' : '，查看景點照片')" :disabled="drawing" :aria-pressed="selectedSet.has(p.stop.id)" @click="toggle(p.stop.id)"><img referrerpolicy="no-referrer" v-if="p.stop.photo.src && !failedPhotos.includes(p.stop.photo.src)" :src="asset(p.stop.photo.src)" :alt="p.stop.photo.alt" loading="lazy" decoding="async" @error="photoFailed(p.stop.photo.src)"><i v-else class="planner-poi-dot" aria-hidden="true"/><span v-if="route?.includes(p.stop.id)">{{ route.indexOf(p.stop.id) + 1 }}</span></button>
     <button v-for="p in drawing ? [] : details" :key="`detail-${p.stop.id}`" class="planner-place-detail" :data-stop-id="p.stop.id" :class="[state(p.stop.id), { photo: detailLevel === 'photos' }]" :style="{ left: p.point[0] + 'px', top: (p.point[1]! - 18) + 'px' }" :disabled="drawing" :aria-pressed="selectedSet.has(p.stop.id)" :aria-label="`${p.stop.name}，${p.stop.stay}${hasRange ? selectedSet.has(p.stop.id) ? '，點選移除' : '，點選加入' : '，查看景點照片'}`" @click="toggle(p.stop.id)">
-      <img referrerpolicy="no-referrer" v-if="p.stop.photo.src && !failedPhotos.includes(p.stop.photo.src)" :src="asset(p.stop.photo.src)" :alt="p.stop.photo.alt" loading="lazy" @error="photoFailed(p.stop.photo.src)">
+      <img referrerpolicy="no-referrer" v-if="p.stop.photo.src && !failedPhotos.includes(p.stop.photo.src)" :src="asset(p.stop.photo.src)" :alt="p.stop.photo.alt" loading="lazy" decoding="async" @error="photoFailed(p.stop.photo.src)">
       <small v-else-if="detailLevel === 'photos'" class="planner-photo-placeholder">{{ p.stop.photo.src ? '照片暫時無法載入' : '景點照片待補' }}</small>
       <span><b>{{ p.stop.name }}</b><small v-if="detailLevel === 'photos'">{{ p.stop.stay }}</small><p v-if="detailLevel === 'photos'">{{ p.stop.note }}</p></span>
       <i v-if="selectedSet.has(p.stop.id)" aria-hidden="true">✓</i>

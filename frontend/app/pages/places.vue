@@ -5,7 +5,7 @@ import { createPoiRepository } from '~/utils/planner-poi';
 const asset=useAsset(), route=useRoute();
 const catalog=shallowRef<PoiCatalog | null>(null), pois=shallowRef<Poi[]>([]), country=ref<PoiCountry>('JP'), regionId=ref('jp-tokyo');
 const loading=ref(true), error=ref(''), query=ref(''), category=ref(''), photosOnly=ref(false), limit=ref(36), selected=ref<string | null>(null);
-const repository=createPoiRepository((url,signal)=>$fetch(url,{timeout:8000,signal}),asset);
+const repository=createPoiRepository((url,signal)=>$fetch<unknown>(url,{timeout:8000,signal}),asset);
 const countries=[{id:'JP' as const,name:'日本'},{id:'KR' as const,name:'韓國'},{id:'TW' as const,name:'台灣'}];
 const regions=computed(()=>catalog.value?.regions.filter(r=>r.country===country.value) || []);
 const region=computed<PoiRegion | null>(()=>catalog.value?.regions.find(r=>r.id===regionId.value) || null);
@@ -51,13 +51,13 @@ function imageFailed(id:string){if(!imageFailures.value.includes(id))imageFailur
     <PoiMap :pois="filtered" :region="region" :selected="selected" @select="show" />
     <p class="poi-note">照片圓點可查看景點照片，灰點的照片待補；數字代表附近景點，點選可放大。旅遊區域可能包含周邊景點。</p>
     <p v-if="!loading && !filtered.length && !error" class="poi-empty">沒有符合條件的景點，試試其他分類或搜尋文字。</p>
-    <div class="poi-cards"><button v-for="p in cards" :key="p.id" class="poi-card" @click="show(p.id)"><img referrerpolicy="no-referrer" v-if="p.photo && !imageFailures.includes(p.id)" :src="asset(p.photo.src)" :alt="p.name + '景點照片'" loading="lazy" decoding="async" width="320" height="200" @error="imageFailed(p.id)"><span v-else class="poi-no-photo">{{ p.photo ? '照片暫時無法載入' : '景點照片待補' }}</span><span class="poi-card-text"><small>{{ p.categoryLabel }}</small><b>{{ p.name }}</b><span>{{ p.description || p.address || p.localName }}</span></span></button></div>
+    <div class="poi-cards"><button v-for="p in cards" :key="p.id" class="poi-card" v-memo="[p,imageFailures.includes(p.id)]" @click="show(p.id)"><img referrerpolicy="no-referrer" v-if="p.photo && !imageFailures.includes(p.id)" :src="asset(p.photo.src)" :alt="p.name + '景點照片'" loading="lazy" decoding="async" width="320" height="200" @error="imageFailed(p.id)"><span v-else class="poi-no-photo">{{ p.photo ? '照片暫時無法載入' : '景點照片待補' }}</span><span class="poi-card-text"><small>{{ p.categoryLabel }}</small><b>{{ p.name }}</b><span>{{ p.description || p.address || p.localName }}</span></span></button></div>
     <button v-if="filtered.length > limit" class="secondary" @click="limit+=36">再看更多景點（{{ filtered.length-limit }}）</button>
     <p v-if="catalog" class="poi-note">已整理 {{ catalog.totalUnique.toLocaleString() }} 個景點，其中 {{ catalog.totalWithPhoto.toLocaleString() }} 個有照片。<a :href="asset('poi/index.json')" target="_blank" rel="noopener">資料目錄 ↗</a> · <a v-if="region?.file" :href="asset('poi/' + region.file)" target="_blank" rel="noopener">下載此區資料 ↗</a></p>
     <p class="poi-note">景點資料 © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors（ODbL）</a>；中文名稱與簡介來自 <a href="https://www.wikidata.org/wiki/Wikidata:Licensing" target="_blank" rel="noopener">Wikidata（CC0）</a>。照片來源與授權資訊列在各景點詳情。資料更新：{{ region?.fetchedAt ? new Date(region.fetchedAt).toLocaleDateString('zh-TW', { timeZone:'Asia/Taipei' }) : '整理中' }}。</p>
-    <AppSheet :model-value="!!detail" :title="detail?.name || '景點詳情'" @update:model-value="selected=null">
+    <AppSheet class="poi-detail-sheet" :model-value="!!detail" :title="detail?.name || '景點詳情'" @update:model-value="selected=null">
       <template v-if="detail">
-        <img referrerpolicy="no-referrer" v-if="detail.photo && !imageFailures.includes(detail.id)" class="poi-detail-photo" :src="asset(detail.photo.src)" :alt="detail.name + '景點照片'" @error="imageFailed(detail.id)">
+        <img referrerpolicy="no-referrer" v-if="detail.photo && !imageFailures.includes(detail.id)" class="poi-detail-photo" decoding="async" :width="detail.photo.width" :height="detail.photo.height" :src="asset(detail.photo.src)" :alt="detail.name + '景點照片'" @error="imageFailed(detail.id)">
         <p v-else class="poi-empty">{{ detail.photo ? '照片暫時無法載入。' : '尚未找到這個景點的照片。' }}</p>
         <p v-if="detail.photo" class="poi-note">照片：{{ detail.photo.credit }} · <a v-if="detail.photo.licenseUrl" :href="detail.photo.licenseUrl" target="_blank" rel="noopener">{{ detail.photo.license }}</a><template v-else>{{ detail.photo.license }}</template> · <a :href="detail.photo.source" target="_blank" rel="noopener">原始來源 ↗</a></p>
         <p>{{ detail.description || detail.categoryLabel }}</p>
@@ -74,4 +74,8 @@ function imageFailed(id:string){if(!imageFailures.value.includes(id))imageFailur
 
 <style scoped>
 @media(max-width:600px){.poi-screen{box-sizing:border-box;padding-inline:max(12px,env(safe-area-inset-left)) max(12px,env(safe-area-inset-right))}.poi-screen :deep(.poi-map-wrap){margin-inline:0}.poi-screen input:not([type=checkbox]),.poi-screen select{font-size:16px;min-height:44px}.poi-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.poi-filters label{min-width:0}.poi-screen select{max-width:100%}}
+</style>
+
+<style>
+.poi-detail-sheet::backdrop{backdrop-filter:none}
 </style>

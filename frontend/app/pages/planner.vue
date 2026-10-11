@@ -302,7 +302,7 @@ onBeforeUnmount(() => {clearTimeout(generationTimer);clearTimeout(viewportTimer)
       <ul><li v-for="gap in coverageMetadata.missingComponents" :key="gap">{{ displayCoverageGap(gap) }}</li></ul>
       <a :href="coverageMetadata.officialUrl" target="_blank" rel="noopener">核對官方區段與方案 ↗</a>
     </details>
-    <CircleMap :key="activeId || ''" :places="places" :selected="ids" :drawing="drawing" :has-range="hasRange" :range-ids="rangeIds" :boundary="selectionBoundary" :coverage="passCoverage" :benefits="selectedBenefits" :reset-key="mapRevision" :route="routeIds" :bounds="mapBounds" @viewport="onViewport" @inspect="inspectedId=$event" @select="select" @range="selectRange" @cancel="drawing = false" />
+    <CircleMap :key="activeId || ''" :places="places" :paused="!!inspectedPlace" :selected="ids" :drawing="drawing" :has-range="hasRange" :range-ids="rangeIds" :boundary="selectionBoundary" :coverage="passCoverage" :benefits="selectedBenefits" :reset-key="mapRevision" :route="routeIds" :bounds="mapBounds" @viewport="onViewport" @inspect="inspectedId=$event" @select="select" @range="selectRange" @cancel="drawing = false" />
     <details ref="placeList" class="planner-place-list" :open="placeListOpen" @toggle="placeListOpen = ($event.target as HTMLDetailsElement).open">
       <summary>用清單挑景點 <span>{{ viewportPlaces.length.toLocaleString() }} 個</span></summary>
       <div v-if="placeListOpen" class="planner-place-picker">
@@ -341,9 +341,9 @@ onBeforeUnmount(() => {clearTimeout(generationTimer);clearTimeout(viewportTimer)
       </article>
       <button class="primary" :disabled="dirty || busy" @click="save">儲存這份行程</button>
     </section>
-    <AppSheet :model-value="!!inspectedPlace" :title="inspectedPlace?.name || '景點詳情'" @update:model-value="inspectedId=null">
+    <AppSheet class="planner-poi-detail-sheet" :model-value="!!inspectedPlace" :title="inspectedPlace?.name || '景點詳情'" @update:model-value="inspectedId=null">
       <template v-if="inspectedPlace">
-        <img referrerpolicy="no-referrer" v-if="inspectedPlace.photo.src && !inspectedPhotoFailed" class="planner-inspected-photo" :src="asset(inspectedPlace.photo.src)" :alt="inspectedPlace.photo.alt" @error="inspectedPhotoFailed=true">
+        <img referrerpolicy="no-referrer" v-if="inspectedPlace.photo.src && !inspectedPhotoFailed" class="planner-inspected-photo" decoding="async" width="640" height="480" :src="asset(inspectedPlace.photo.src)" :alt="inspectedPlace.photo.alt" @error="inspectedPhotoFailed=true">
         <p v-else class="small-note">{{ inspectedPhotoFailed ? '照片暫時無法載入。' : '尚未找到這個景點的照片。' }}</p>
         <p>{{ inspectedPlace.note }}</p>
         <p v-if="inspectedPlace.photo.src" class="small-note">照片：{{ inspectedPlace.photo.credit }} · <a v-if="inspectedPlace.photo.licenseUrl" :href="inspectedPlace.photo.licenseUrl" target="_blank" rel="noopener">{{ inspectedPlace.photo.license }}</a><template v-else>{{ inspectedPlace.photo.license }}</template> · <a v-if="inspectedPlace.photo.source" :href="inspectedPlace.photo.source" target="_blank" rel="noopener">原始來源 ↗</a></p>
@@ -418,4 +418,8 @@ onBeforeUnmount(() => {clearTimeout(generationTimer);clearTimeout(viewportTimer)
 
 <style scoped>
 @media(max-width:600px){.planner-screen{box-sizing:border-box;padding-inline:max(12px,env(safe-area-inset-left)) max(12px,env(safe-area-inset-right))}.planner-screen :deep(.planner-map-panel){padding-inline:0}.planner-screen .page-heading{margin-inline:8px}.planner-screen .range-choices button{overflow-wrap:anywhere}}
+</style>
+
+<style>
+.planner-poi-detail-sheet::backdrop{backdrop-filter:none}
 </style>

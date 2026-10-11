@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { Poi, PoiRegion } from '~/types/poi';
 import { visibleMapTarget } from '~/utils/planner-map';
-import { poiClusterIndex } from '~/utils/poi';
+import { createMapClusterClient } from '~/utils/map-cluster-client';
+import type { MapClusterFeature } from '~/utils/map-cluster-engine';
 import { loadScript } from '~/utils/loadScript';
 import { attachTransitMap, preparePlannerBasemap, type TransitLegendLine } from '~/utils/transit-map';
 const props=defineProps<{pois:Poi[];region:PoiRegion | null;selected:string | null}>();
@@ -9,33 +10,45 @@ const emit=defineEmits<{select:[id:string]}>();
 const asset=useAsset();
 useHead({link:[{rel:'stylesheet',href:asset('vendor/maplibre-gl.css')}]});
 const container=ref<HTMLElement>(), error=ref(''), ready=ref(false), showLabels=ref(false), transitLines=ref<TransitLegendLine[]>([]), failedPhotos=ref<string[]>([]);
-type Pin={key:string;x:number;y:number;count:number;clusterId?:number;id?:string;name:string;photo:boolean;src?:string;version:number};
-const pins=ref<Pin[]>([]);
-let map:any, observer:ResizeObserver|undefined, disposed=false, version=0, frame=0, clusters=poiClusterIndex([]), photoUrls=new Map<string,string>(), disposeTransit:(()=>void)|undefined;
+type Pin={key:string;x:number;y:number;count:number;clusterId?:number;expansionZoom?:number;id?:string;name:string;photo:boolean;src?:string;version:number};
+const pins=shallowRef<Pin[]>([]);
+const clusterRenderer=ref('pending');
+let map:any, observer:ResizeObserver|undefined, disposed=false, version=0, frame=0, clusterClient:ReturnType<typeof createMapClusterClient>|undefined, features:MapClusterFeature[]=[], poiById=new Map<string,Poi>(), photoUrls=new Map<string,string>(), disposeTransit:(()=>void)|undefined;
 let pointerStart:[number,number]|undefined;
 function beginPointer(event:PointerEvent){pointerStart=[event.clientX,event.clientY];}
 function photoFailed(src:string){if(!failedPhotos.value.includes(src))failedPhotos.value.push(src);}
 function renderPins() {
-  if(!ready.value || disposed)return;
+  if(!ready.value || disposed || props.selected)return;
   const bounds=map.getBounds(), zoom=map.getZoom();
   showLabels.value=zoom>=12;
-  pins.value=clusters.getClusters([bounds.getWest(),bounds.getSouth(),bounds.getEast(),bounds.getNorth()],Math.floor(zoom)).map(feature=>{
-    const at=map.project(feature.geometry.coordinates), p=feature.properties;
-    if('cluster' in p)return {key:`cluster:${p.cluster_id}`,x:at.x,y:at.y,count:p.point_count,clusterId:p.cluster_id,name:'',photo:p.photoCount>0,version};
-    return {key:p.id,x:at.x,y:at.y,count:1,id:p.id,name:p.name,photo:p.photo,src:photoUrls.get(p.id),version};
+  pins.value=features.map(feature=>{
+    const at=map.project(feature.at);
+    if(feature.clusterId!==undefined)return {key:`cluster:${feature.clusterId}`,x:at.x,y:at.y,count:feature.count,clusterId:feature.clusterId,expansionZoom:feature.expansionZoom,name:'',photo:feature.photoCount>0,version};
+    const id=String(feature.id), p=poiById.get(id);
+    return {key:id,x:at.x,y:at.y,count:1,id,name:p?.name || '',photo:feature.photoCount>0,src:photoUrls.get(id),version};
   }).filter(pin=>visibleMapTarget([pin.x,pin.y],container.value!.clientWidth,container.value!.clientHeight));
+  clusterClient?.query([bounds.getWest(),bounds.getSouth(),bounds.getEast(),bounds.getNorth()],zoom);
 }
-function schedule() {cancelAnimationFrame(frame);frame=requestAnimationFrame(renderPins);}
-function update() {version++;photoUrls=new Map(props.pois.filter(p=>p.photo).map(p=>[p.id,asset(p.photo!.src)]));clusters=poiClusterIndex(props.pois,(container.value?.clientWidth || 720)<=600 ? 60 : 45);renderPins();}
+function schedule() {if(frame || props.selected)return;frame=requestAnimationFrame(()=>{frame=0;renderPins();});}
+let clusterRadius=0;
+function update() {
+  if(!clusterClient)return;
+  poiById=new Map(props.pois.map(p=>[p.id,p]));
+  photoUrls=new Map(props.pois.filter(p=>p.photo).map(p=>[p.id,asset(p.photo!.src)]));
+  features=[];pins.value=[];
+  clusterRadius=(container.value?.clientWidth || 720)<=600 ? 60 : 45;
+  clusterClient.load(props.pois.map(p=>({id:p.id,at:[...p.at],photo:!!p.photo})),{mode:'places',radius:clusterRadius});
+  version=clusterClient.revision;schedule();
+}
 function fit() {
   if(!map || !props.region)return;
   const [w,s,e,n]=props.region.bbox;
   map.fitBounds([[w,s],[e,n]],{padding:35,duration:0,maxZoom:12});
 }
 function choose(pin:Pin) {
-  if(pin.id && props.pois.some(p=>p.id===pin.id)){emit('select',pin.id);return;}
+  if(pin.id && poiById.has(pin.id)){emit('select',pin.id);return;}
   if(pin.version!==version)return;
-  if(pin.clusterId!==undefined)map.easeTo({center:map.unproject([pin.x,pin.y]),zoom:clusters.getClusterExpansionZoom(pin.clusterId),duration:matchMedia('(prefers-reduced-motion: reduce)').matches?0:400});
+  if(pin.clusterId!==undefined)map.easeTo({center:map.unproject([pin.x,pin.y]),zoom:pin.expansionZoom,duration:matchMedia('(prefers-reduced-motion: reduce)').matches?0:400});
 }
 function chooseAtPointer(event:MouseEvent) {
   if(!ready.value || !container.value || (event.target as Element).closest('button,summary,a'))return;
@@ -47,28 +60,28 @@ function chooseAtPointer(event:MouseEvent) {
   if(hit){event.stopPropagation();choose(hit.pin);}
 }
 watch(()=>props.pois,update);
-watch(()=>props.region?.id,()=>{version++;fit();});
-watch(()=>props.selected,id=>{
-  const p=props.pois.find(p=>p.id===id);
-  if(p && ready.value)map.easeTo({center:p.at,zoom:Math.max(map.getZoom(),14),duration:matchMedia('(prefers-reduced-motion: reduce)').matches?0:500});
-});
+watch(()=>props.region?.id,fit);
+// Opening a photo must not also animate and repaint a map behind the modal.
+watch(()=>props.selected,id=>{if(id){map?.stop();cancelAnimationFrame(frame);frame=0;}else schedule();});
 onMounted(async()=>{
+  clusterClient=createMapClusterClient(()=>new Worker(new URL('../workers/poi-clusters.worker.ts',import.meta.url),{type:'module'}),(next)=>{features=next;clusterRenderer.value=clusterClient!.mode;schedule();});
+  update();
   try {
     await loadScript(asset('vendor/maplibre-gl.js'));if(disposed)return;
     const gl=(window as any).maplibregl;
     map=new gl.Map({container:container.value,style:'https://tiles.openfreemap.org/styles/liberty',center:[139.75,35.68],zoom:10,attributionControl:true,dragRotate:false,touchPitch:false,maxZoom:18});
     map.touchZoomRotate.disableRotation();map.scrollZoom.disable();map.addControl(new gl.NavigationControl({showCompass:false}),'top-right');fit();
-    observer=new ResizeObserver(()=>{map?.resize();schedule();});observer.observe(container.value!);
+    observer=new ResizeObserver(()=>{map?.resize();const radius=container.value!.clientWidth<=600 ? 60 : 45;if(radius!==clusterRadius)update();else schedule();});observer.observe(container.value!);
     map.on('error',()=>{error.value='道路圖資暫時無法載入，仍可從下方清單查看景點。';});
     map.on('load',()=>{if(disposed)return;ready.value=true;error.value='';preparePlannerBasemap(map);disposeTransit=attachTransitMap(map,asset,lines=>{transitLines.value=lines;});update();map.on('move',schedule);});
   } catch {error.value='地圖暫時無法開啟，請從下方清單查看景點。';}
 });
-onBeforeUnmount(()=>{disposed=true;cancelAnimationFrame(frame);observer?.disconnect();disposeTransit?.();map?.remove();});
+onBeforeUnmount(()=>{disposed=true;cancelAnimationFrame(frame);observer?.disconnect();disposeTransit?.();clusterClient?.dispose();map?.remove();});
 </script>
 <template>
-  <div class="poi-map-wrap" @pointerdown.capture="beginPointer" @click.capture="chooseAtPointer">
+  <div class="poi-map-wrap" :data-cluster-renderer="clusterRenderer" :data-map-paused="!!selected" @pointerdown.capture="beginPointer" @click.capture="chooseAtPointer">
     <div ref="container" class="poi-map" role="region" aria-label="日韓台景點地圖，可拖曳、縮放，點選景點查看照片" />
-    <div class="poi-pin-layer"><button v-for="pin in pins" :key="pin.key" class="poi-pin" :class="{cluster:pin.clusterId!==undefined,unavailable:!pin.photo,selected:pin.id===selected,thumbnail:pin.src && !failedPhotos.includes(pin.src)}" :style="{left:pin.x+'px',top:pin.y+'px','--label-top':(container && pin.y+66>container.clientHeight-8 ? '-28px' : '44px'),'--label-shift':Math.max(-60,Math.min(60,container ? container.clientWidth/2-pin.x : 0))+'px'}" :aria-label="pin.clusterId!==undefined ? pin.count+' 個景點，點選放大' : pin.name+'，查看景點照片'" @click.stop="choose(pin)"><span v-if="pin.clusterId!==undefined">{{ pin.count }}</span><img referrerpolicy="no-referrer" v-else-if="pin.src && !failedPhotos.includes(pin.src)" :src="pin.src" :alt="pin.name" loading="lazy" @error="photoFailed(pin.src)"><span v-if="pin.clusterId===undefined && showLabels" class="poi-pin-label">{{ pin.name }}</span></button></div>
+    <div class="poi-pin-layer"><button v-for="pin in pins" :key="pin.key" class="poi-pin" :class="{cluster:pin.clusterId!==undefined,unavailable:!pin.photo,selected:pin.id===selected,thumbnail:pin.src && !failedPhotos.includes(pin.src)}" :style="{left:pin.x+'px',top:pin.y+'px','--label-top':(container && pin.y+66>container.clientHeight-8 ? '-28px' : '44px'),'--label-shift':Math.max(-60,Math.min(60,container ? container.clientWidth/2-pin.x : 0))+'px'}" :aria-label="pin.clusterId!==undefined ? pin.count+' 個景點，點選放大' : pin.name+'，查看景點照片'" @click.stop="choose(pin)"><span v-if="pin.clusterId!==undefined">{{ pin.count }}</span><img referrerpolicy="no-referrer" v-else-if="pin.src && !failedPhotos.includes(pin.src)" :src="pin.src" :alt="pin.name" loading="lazy" decoding="async" @error="photoFailed(pin.src)"><span v-if="pin.clusterId===undefined && showLabels" class="poi-pin-label">{{ pin.name }}</span></button></div>
     <details v-if="transitLines.length" class="poi-transit-legend"><summary>地鐵路線顏色</summary><ul><li v-for="line in transitLines" :key="line.key"><i :style="{background:line.colour}" />{{ line.ref }} {{ line.name }}</li></ul></details>
     <p v-if="error" class="poi-map-status" role="status">{{ error }}</p>
     <span v-else-if="!ready" class="poi-map-status" role="status">正在開啟景點地圖…</span>

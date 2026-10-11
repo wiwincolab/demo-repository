@@ -40,7 +40,8 @@ export function visibleMapDetails<T extends { stop: { id: number }; point: Point
   const cardWidth = level === 'photos' ? 150 : 140, cardHeight = level === 'photos' ? 171 : 44;
   const accepted: T[] = [];
   const boxes: number[][] = [];
-  const ordered = [...points].sort((a, b) => Number(selected.includes(b.stop.id)) - Number(selected.includes(a.stop.id)));
+  const chosen = new Set(selected);
+  const ordered = [...points].sort((a, b) => Number(chosen.has(b.stop.id)) - Number(chosen.has(a.stop.id)));
   for (const p of ordered) {
     const [x, y] = p.point as [number, number];
     const rect = [x - cardWidth / 2, y - cardHeight - 18, x + cardWidth / 2, y - 18];
