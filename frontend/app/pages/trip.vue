@@ -122,7 +122,7 @@ watch(()=>route.query.day,()=>chooseDay(requestedDay()));
           </div>
           <img :src="asset(s.photo.src)" :alt="s.photo.alt" loading="lazy" :style="{ objectPosition: s.photo.objectPosition }">
         </button>
-        <ServiceRecommendations :stop="s" :next="shown[i + 1]?.day===s.day ? shown[i + 1] : undefined" />
+        <ServiceRecommendations class="trip-stop-services" :stop="s" :next="shown[i + 1]?.day===s.day ? shown[i + 1] : undefined" />
         <div v-if="shown[i + 1]" class="stop-transport">
           <p>{{s.day!==shown[i+1]!.day?'隔日移動':'前往下一站'}} · {{shown[i+1]!.name}}</p>
           <div><label><span class="transport-hidden">{{s.name}}到{{shown[i+1]!.name}}的交通方式</span><select :value="transportSettings.legs[keyFor(s,shown[i+1]!)] || ''" :aria-label="s.name+'到'+shown[i+1]!.name+'的交通方式'" @change="changeLeg(s,shown[i+1]!,($event.target as HTMLSelectElement).value)"><option value="">跟隨主要交通 · {{transportLabels[transportSettings.major]}}</option><option v-for="(label,id) in transportLabels" :key="id" :value="id">{{label}}</option></select></label><a :href="directionsUrl(s,shown[i+1]!,modeFor(s,shown[i+1]!))" target="_blank" rel="noopener noreferrer">查看{{transportLabels[modeFor(s,shown[i+1]!) ]}}路線 ↗</a></div>
@@ -205,6 +205,7 @@ watch(()=>route.query.day,()=>chooseDay(requestedDay()));
 </style>
 
 <style scoped>
+.trip-stop-services{grid-column:2;min-width:0;margin:0}
 .stop-route-link { grid-column:2; display:flex; flex-wrap:wrap; gap:6px 12px; padding:10px 12px; margin:4px 0 8px; border-radius:9px; color:#286e80; background:#edf5f5; font-size:12px; line-height:1.6; }
 .stop-route-link span { margin-left:auto; font-weight:600; }
 </style>
