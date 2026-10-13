@@ -70,6 +70,12 @@ body:not(.town-is-editing):has(.detail:not([hidden])) .town-editor{top:auto;bott
 
 /* The timeline is local civil time, and event buttons use that day's ephemeris. */
 .sky-controls{width:min(680px,calc(100% - 32px));padding:15px 20px 11px;max-height:calc(100dvh - 110px);overflow:auto}
+.sky-panel-header{display:flex;align-items:center;gap:12px;margin-bottom:10px;font-size:12px;color:var(--sub)}
+.sky-panel-header strong{font-weight:650;color:var(--ink)}
+.sky-panel-header #sky-panel-toggle{margin-left:auto;min-width:60px}
+.sky-summary-time{font-variant-numeric:tabular-nums;color:var(--ink)}
+.sky-controls:not(.is-collapsed) .sky-summary-time{display:none}
+.sky-controls [hidden]{display:none!important}
 .sky-heading,.sky-time-row,.sky-look{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .sky-heading{justify-content:space-between;margin-bottom:10px}
 .sky-location-label{display:flex;align-items:center;gap:9px;font-size:11px;color:var(--sub);flex:1;min-width:180px}
@@ -132,3 +138,9 @@ body:not(.town-is-editing):has(.detail:not([hidden])) .town-editor{bottom:calc(v
   .sky-controls .sky-look{display:flex}
   .sky-controls .sky-look #sky-phase,.sky-controls .sky-look #sky-sun-view,.sky-controls .sky-look #sky-moon-view{display:none}
 }
+
+/* Keep a small, reachable entry point after freeing the view for a close-up. */
+.sky-controls.is-collapsed{width:min(330px,calc(100% - 24px));padding:8px 12px;overflow:visible}
+.sky-controls.is-collapsed .sky-panel-header{margin-bottom:0;gap:10px}
+.sky-controls.is-collapsed #sky-panel-toggle{min-height:40px}
+@media(max-width:720px){.sky-panel-header #sky-panel-toggle{min-height:44px}}

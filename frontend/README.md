@@ -349,6 +349,8 @@ npm run build
 回憶廣場 → 場景積木世界 →「進入小鎮」，或直接開啟 `/town/`。
 整合使用者提供的東北亞九景 3D Demo：拖曳旋轉、双指／滾輪縮放、九景地圖聚焦、全景復位、日夜光線切換。手機採全畫面與收合式九景選單，返回鈕回到廣場。
 
+日出日落面板可按「收起」縮成時間列，再按「調整時間」展開。滾輪、雙指或鍵盤放大地圖，以及選取街區聚焦時，面板會自動收起；旋轉、平移與縮小維持使用者目前的收合狀態。
+
 這次是現成 3D 展示的整合，尚未加入自由造鎮或與個人收藏連動。`app/pages/town.vue` 負責 App 外框；`public/demos/travel-town/chictrip.css` 負責內頁適配。來源、限制及 Blender 原檔見 [references/travel-town/README.md](references/travel-town/README.md)。
 
 ## 吉祥物圖鑑（2026-10-03）

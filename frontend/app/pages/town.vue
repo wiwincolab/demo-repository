@@ -39,7 +39,7 @@ onBeforeUnmount(() => window.removeEventListener('message', onTownMessage));
       <PageMascot />
       <button class="town-help" aria-label="操作說明" @click="help = true">?</button>
     </header>
-    <iframe ref="townFrame" class="town-frame" :src="`${base}demos/travel-town/index.html?v=cf36508366ad`" title="東北亞九景：可拖移重組、旋轉、縮放，並依景點與時間呈現太陽和月亮的 3D 小鎮" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox" />
+    <iframe ref="townFrame" class="town-frame" :src="`${base}demos/travel-town/index.html?v=f9bcecd962ec`" title="東北亞九景：可拖移重組、旋轉、縮放，並依景點與時間呈現太陽和月亮的 3D 小鎮" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox" />
     <AppSheet v-model="help" title="逛逛你的小鎮">
       <div class="town-instructions">
         <p>九段風景，透過街道連成一座小鎮。六位去趣小旅伴會沿步道散步，戴著不同顏色的小帽子。</p>

@@ -8,6 +8,7 @@
   let snapshot = Core.sample(A, location, instant), version = 0;
   let app, THREE, disposed = false, skyView = false, timer, viewOffset = -1;
   let playing = false, playbackElapsed = 0, playbackEnd, playButton;
+  let controlsCollapsed = false;
   const cleanups = [], eventCache = new Map();
   const $ = id => document.getElementById(id);
   const on = (target, event, handler, options) => {
@@ -15,6 +16,17 @@
     cleanups.push(() => target.removeEventListener(event, handler, options));
   };
   const local = () => Core.localParts(instant, location.timeZone);
+  function setControlsCollapsed(collapsed) {
+    const panel = document.querySelector('.sky-controls'), button = $('sky-panel-toggle');
+    if (!panel || !button || controlsCollapsed === collapsed) return;
+    controlsCollapsed = collapsed;
+    $('sky-panel-body').hidden = collapsed;
+    panel.classList.toggle('is-collapsed', collapsed);
+    button.setAttribute('aria-expanded', String(!collapsed));
+    button.textContent = collapsed ? '調整時間' : '收起';
+    if (collapsed && $('sky-panel-body').contains(document.activeElement)) button.focus({ preventScroll: true });
+    app?.invalidate();
+  }
   function dayEvents() {
     const date = local().date, key = `${location.id}:${date}`;
     if (!eventCache.has(key)) {
@@ -30,6 +42,8 @@
     $('sky-location').value = location.id;
     if (document.activeElement !== $('sky-date')) $('sky-date').value = p.date;
     $('time').textContent = p.time;
+    $('sky-summary-time').textContent = p.time;
+    $('sky-summary-time').title = `${location.city}當地時間`;
     $('daynight').value = String(p.minutes);
     $('daynight').setAttribute('aria-valuetext', `${p.date} ${p.time}，${location.city}當地時間`);
     $('sky-mode').textContent = live ? '跟隨現在' : '時間預覽';
@@ -83,6 +97,7 @@
   }
   function selectTile(index) {
     stopPlayback();
+    setControlsCollapsed(true);
     restoreView();
     if (Core.locations[index]) { location = Core.locations[index]; refresh(); }
   }
@@ -328,6 +343,21 @@
     app = townApp; THREE = constructors;
     if (!app.state.atmosphere) return;
     prepareAtmosphere(app.state.atmosphere);
+    on($('sky-panel-toggle'), 'click', () => setControlsCollapsed(!controlsCollapsed));
+    const controls = app.state.controls;
+    let interacting = false, previousDistance = controls.getDistance();
+    on(controls, 'start', () => { interacting = true; });
+    on(controls, 'end', () => { interacting = false; });
+    on(controls, 'change', () => {
+      const distance = controls.getDistance();
+      // Orbit, pan, automatic refits, and zooming out keep the user's choice.
+      // Wheel and pinch gestures both report dolly changes through controls.
+      if (interacting && distance < previousDistance - .0001) setControlsCollapsed(true);
+      previousDistance = distance;
+    });
+    on(app.state.renderer.domElement, 'keydown', event => {
+      if (controls.enabled && !event.ctrlKey && !event.metaKey && (event.key === '+' || event.key === '=')) setControlsCollapsed(true);
+    }, { capture: true });
     playButton = document.createElement('button'); playButton.id = 'sky-play'; playButton.type = 'button';
     playButton.textContent = '播放日夜'; playButton.setAttribute('aria-pressed', 'false'); playButton.disabled = true;
     playButton.title = '從目前時間加速播放到當日 23:59；按「現在」可恢復即時天空';
