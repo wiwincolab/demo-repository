@@ -16,3 +16,5 @@
 推送 `main` 後，`.github/workflows/nuxt-pages.yml` 執行型別檢查、測試與 Nuxt 預渲染，再將 `frontend/.output/public` 部署至 GitHub Pages。部署子路徑取自 Pages 設定；`build-info.json` 可核對線上 commit。
 
 詳細操作見 [frontend/README.md](frontend/README.md)。根目錄的舊 HTML、`lagacy/`、`chictrip-v4/` 仍保留作歷史參照，已不作為主站部署內容；舊版說明見 `SITE-README.md`。
+
+提案簡報錄影：[2026-10-13 三段繁體中文字幕影片、完整合成版與可編輯字幕](assets/videos/chictrip-pitch-20261013/README.md)。

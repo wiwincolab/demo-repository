@@ -1,0 +1,74 @@
+{
+  "fps": 30,
+  "width": 1920,
+  "height": 1152,
+  "frames": 5968,
+  "duration_seconds": 198.93333333333334,
+  "caption_count": 79,
+  "audio_target_lufs": -16,
+  "parts": [
+    {
+      "part": 1,
+      "source": "source.mov",
+      "source_duration": 75.006667,
+      "start_frame": 0,
+      "frames": 2251,
+      "start_seconds": 0.0,
+      "duration_seconds": 75.03333333333333,
+      "audio_measurement": {
+        "input_i": "-28.79",
+        "input_tp": "-7.10",
+        "input_lra": "3.30",
+        "input_thresh": "-39.08",
+        "output_i": "-16.46",
+        "output_tp": "-1.50",
+        "output_lra": "2.80",
+        "output_thresh": "-26.74",
+        "normalization_type": "dynamic",
+        "target_offset": "0.46"
+      }
+    },
+    {
+      "part": 2,
+      "source": "source-part2.mp4",
+      "source_duration": 59.329,
+      "start_frame": 2251,
+      "frames": 1780,
+      "start_seconds": 75.03333333333333,
+      "duration_seconds": 59.333333333333336,
+      "audio_measurement": {
+        "input_i": "-22.56",
+        "input_tp": "-3.04",
+        "input_lra": "7.50",
+        "input_thresh": "-33.02",
+        "output_i": "-16.71",
+        "output_tp": "-1.50",
+        "output_lra": "5.50",
+        "output_thresh": "-27.18",
+        "normalization_type": "dynamic",
+        "target_offset": "0.71"
+      }
+    },
+    {
+      "part": 3,
+      "source": "source-part3.mp4",
+      "source_duration": 64.55932,
+      "start_frame": 4031,
+      "frames": 1937,
+      "start_seconds": 134.36666666666667,
+      "duration_seconds": 64.56666666666666,
+      "audio_measurement": {
+        "input_i": "-27.70",
+        "input_tp": "4.40",
+        "input_lra": "3.70",
+        "input_thresh": "-38.38",
+        "output_i": "-16.16",
+        "output_tp": "-1.50",
+        "output_lra": "3.60",
+        "output_thresh": "-26.74",
+        "normalization_type": "dynamic",
+        "target_offset": "0.16"
+      }
+    }
+  ]
+}

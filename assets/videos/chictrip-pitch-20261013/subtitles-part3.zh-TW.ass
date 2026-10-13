@@ -1,0 +1,39 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1146
+PlayResY: 720
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,Heiti TC,26,&H00FFFFFF,&H00FFFFFF,&H00101010,&H80000000,-1,0,0,0,100,100,0,0,1,2,1,2,50,50,4,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:01.56,Default,,0,0,0,,那在行銷策略上
+Dialogue: 0,0:00:01.62,0:00:03.64,Default,,0,0,0,,我們第一階段會透過一些外部宣傳
+Dialogue: 0,0:00:03.68,0:00:05.88,Default,,0,0,0,,讓用戶產生初步的認知
+Dialogue: 0,0:00:06.10,0:00:07.46,Default,,0,0,0,,在進入我們的平台後
+Dialogue: 0,0:00:07.48,0:00:09.80,Default,,0,0,0,,使用我們的功能會增加品牌好感
+Dialogue: 0,0:00:10.02,0:00:12.00,Default,,0,0,0,,同時也會強化情感的黏著
+Dialogue: 0,0:00:12.32,0:00:14.00,Default,,0,0,0,,那這樣的口碑持續擴散
+Dialogue: 0,0:00:14.04,0:00:16.30,Default,,0,0,0,,可以再帶來更多的自然流量
+Dialogue: 0,0:00:17.16,0:00:20.26,Default,,0,0,0,,同時我們認為，市場不缺更多的旅遊工具
+Dialogue: 0,0:00:20.34,0:00:22.32,Default,,0,0,0,,缺的是一個能夠串起規劃
+Dialogue: 0,0:00:22.38,0:00:25.06,Default,,0,0,0,,交易、回憶與再消費的平台
+Dialogue: 0,0:00:25.36,0:00:26.86,Default,,0,0,0,,去趣以高功能整合
+Dialogue: 0,0:00:27.00,0:00:29.20,Default,,0,0,0,,高黏著度，去建立這樣的差異
+Dialogue: 0,0:00:30.20,0:00:32.80,Default,,0,0,0,,相較於一般的社群，還有通用型 AI
+Dialogue: 0,0:00:32.98,0:00:34.24,Default,,0,0,0,,以及旅遊 App
+Dialogue: 0,0:00:34.56,0:00:37.52,Default,,0,0,0,,去趣則是補足了這些跨平台的服務斷點
+Dialogue: 0,0:00:38.40,0:00:41.46,Default,,0,0,0,,那我們的方案將先以 POC 去做驗證
+Dialogue: 0,0:00:41.58,0:00:44.52,Default,,0,0,0,,目標是降低任務時間的 30%
+Dialogue: 0,0:00:44.52,0:00:47.08,Default,,0,0,0,,我們短期將會先穩定基礎功能
+Dialogue: 0,0:00:47.22,0:00:49.44,Default,,0,0,0,,中期則會去深化我們既有的用戶
+Dialogue: 0,0:00:49.52,0:00:51.36,Default,,0,0,0,,帶動再購與自然擴散
+Dialogue: 0,0:00:51.54,0:00:54.00,Default,,0,0,0,,長期則會進一步擴展到全球
+Dialogue: 0,0:00:54.06,0:00:56.78,Default,,0,0,0,,去打造一個跨國的旅遊生態圈
+Dialogue: 0,0:00:57.88,0:00:59.50,Default,,0,0,0,,那這邊是我們的補充資料
+Dialogue: 0,0:00:59.54,0:01:01.10,Default,,0,0,0,,以上是我們的主題介紹
+Dialogue: 0,0:01:01.14,0:01:01.94,Default,,0,0,0,,謝謝大家

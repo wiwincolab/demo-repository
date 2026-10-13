@@ -1,0 +1,35 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1920
+PlayResY: 1152
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,Heiti TC,44,&H00FFFFFF,&H00FFFFFF,&H00101010,&H80000000,-1,0,0,0,100,100,0,0,1,2,1,2,85,85,10,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.56,0:00:03.88,Default,,0,0,0,,AI Trip Planning，創造新的互動模式
+Dialogue: 0,0:00:03.94,0:00:07.44,Default,,0,0,0,,圈出你想玩的範圍，交給 AI 幫你排行程
+Dialogue: 0,0:00:07.52,0:00:10.04,Default,,0,0,0,,也可以依照你的個人化需求做微調
+Dialogue: 0,0:00:10.12,0:00:12.66,Default,,0,0,0,,包含交通券或行程密集度
+Dialogue: 0,0:00:12.78,0:00:16.08,Default,,0,0,0,,任何你想得到的，都可以透過 AI 幫你進行微調
+Dialogue: 0,0:00:17.28,0:00:18.82,Default,,0,0,0,,剛剛的 AI Trip Planning
+Dialogue: 0,0:00:18.86,0:00:22.40,Default,,0,0,0,,同時也會為使用者量身打造適合的 eSIM 方案
+Dialogue: 0,0:00:23.18,0:00:25.32,Default,,0,0,0,,除此之外，沒用完的網路流量
+Dialogue: 0,0:00:25.32,0:00:26.98,Default,,0,0,0,,也可以回饋成和泰 Point
+Dialogue: 0,0:00:27.02,0:00:28.46,Default,,0,0,0,,觸發閉環經濟
+Dialogue: 0,0:00:29.08,0:00:32.02,Default,,0,0,0,,旅遊後，可能會有一些旅行照片
+Dialogue: 0,0:00:32.12,0:00:34.38,Default,,0,0,0,,使用者可以把照片變成獨一無二的紀念品
+Dialogue: 0,0:00:34.42,0:00:36.68,Default,,0,0,0,,還能跟這些紀念品去互動
+Dialogue: 0,0:00:37.28,0:00:41.20,Default,,0,0,0,,有些人可能會想要將旅遊的過程分享到社群
+Dialogue: 0,0:00:41.32,0:00:42.42,Default,,0,0,0,,Social Loop 會產生
+Dialogue: 0,0:00:42.42,0:00:45.02,Default,,0,0,0,,可以促進討論的社群分享內容
+Dialogue: 0,0:00:45.16,0:00:47.10,Default,,0,0,0,,感興趣的人，也可以透過
+Dialogue: 0,0:00:47.10,0:00:48.82,Default,,0,0,0,,一個連結導流回 App
+Dialogue: 0,0:00:49.22,0:00:52.08,Default,,0,0,0,,那最後的話，是在旅行結束後
+Dialogue: 0,0:00:52.10,0:00:53.56,Default,,0,0,0,,我們透過 Memory Atlas
+Dialogue: 0,0:00:53.64,0:00:56.50,Default,,0,0,0,,讓使用者可以持續回到去趣
+Dialogue: 0,0:00:56.50,0:00:58.88,Default,,0,0,0,,回憶這些旅遊的過程

@@ -1,0 +1,6 @@
+# Keep original recordings local; publish only the requested captioned results.
+source.mov
+source-part2.mp4
+source-part3.mp4
+__pycache__/
+*.py[cod]

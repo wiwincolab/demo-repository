@@ -1,0 +1,44 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 2704
+PlayResY: 1756
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,Heiti TC,60,&H00FFFFFF,&H00FFFFFF,&H00101010,&H80000000,-1,0,0,0,100,100,0,0,1,2,1,2,120,120,14,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.42,0:00:02.10,Default,,0,0,0,,大家好，我們是彬彬 BANG BANG
+Dialogue: 0,0:00:02.18,0:00:04.40,Default,,0,0,0,,我們選定的題目，是幫助去趣打造
+Dialogue: 0,0:00:04.40,0:00:07.70,Default,,0,0,0,,旅程方面的智能銷售助理和服務體驗
+Dialogue: 0,0:00:08.58,0:00:10.10,Default,,0,0,0,,針對先前提到的題目
+Dialogue: 0,0:00:10.12,0:00:12.90,Default,,0,0,0,,我們提出了 AI 旅程夥伴的智慧服務
+Dialogue: 0,0:00:12.94,0:00:14.98,Default,,0,0,0,,除了針對 TA 痛點去設計
+Dialogue: 0,0:00:15.04,0:00:16.98,Default,,0,0,0,,讓我們的服務創造使用的價值
+Dialogue: 0,0:00:17.00,0:00:19.22,Default,,0,0,0,,也建立跟客戶之間的情感連結
+Dialogue: 0,0:00:19.38,0:00:21.56,Default,,0,0,0,,以達成客戶黏著度、品牌曝光
+Dialogue: 0,0:00:21.60,0:00:23.56,Default,,0,0,0,,行銷策略等等的目的
+Dialogue: 0,0:00:24.18,0:00:26.80,Default,,0,0,0,,好，在分析旅遊市場、旅客痛點
+Dialogue: 0,0:00:26.84,0:00:28.14,Default,,0,0,0,,還有使用者習慣過後
+Dialogue: 0,0:00:28.18,0:00:30.14,Default,,0,0,0,,我們意識到，這些議題能夠構成
+Dialogue: 0,0:00:30.14,0:00:32.04,Default,,0,0,0,,購買 eSIM 的核心阻力
+Dialogue: 0,0:00:32.46,0:00:34.80,Default,,0,0,0,,我們用規劃程度，還有分享與否
+Dialogue: 0,0:00:34.86,0:00:36.34,Default,,0,0,0,,兩個維度去切割客群
+Dialogue: 0,0:00:36.42,0:00:38.62,Default,,0,0,0,,而本提案的服務設計，預期滿足
+Dialogue: 0,0:00:38.62,0:00:41.48,Default,,0,0,0,,愛規劃、愛分享這類交界的客群
+Dialogue: 0,0:00:42.12,0:00:43.66,Default,,0,0,0,,在第二章的分析上面
+Dialogue: 0,0:00:43.70,0:00:46.68,Default,,0,0,0,,我們融入了訪談結果，去建構本提案的想法
+Dialogue: 0,0:00:46.90,0:00:50.20,Default,,0,0,0,,可以發現，整體的痛點是有連貫性的事件
+Dialogue: 0,0:00:50.20,0:00:53.64,Default,,0,0,0,,從一開始的旅遊規劃耗時，到旅遊紀錄的整合
+Dialogue: 0,0:00:53.70,0:00:56.74,Default,,0,0,0,,進而影響平台的曝光度與使用轉換率
+Dialogue: 0,0:00:56.82,0:00:59.82,Default,,0,0,0,,除此之外，在 eSIM 的選擇上面缺乏依據
+Dialogue: 0,0:00:59.82,0:01:02.36,Default,,0,0,0,,也是整個提案中值得被關注的議題
+Dialogue: 0,0:01:02.84,0:01:05.02,Default,,0,0,0,,好，那後續的解決方案設計呢
+Dialogue: 0,0:01:05.06,0:01:07.76,Default,,0,0,0,,會依照顧客旅程圖的旅行前、中、後
+Dialogue: 0,0:01:07.76,0:01:09.20,Default,,0,0,0,,對應的方案做介紹
+Dialogue: 0,0:01:09.42,0:01:11.54,Default,,0,0,0,,透過了解顧客的情緒變化
+Dialogue: 0,0:01:11.58,0:01:13.36,Default,,0,0,0,,可以探討說，在哪一個區塊
+Dialogue: 0,0:01:13.36,0:01:15.00,Default,,0,0,0,,我們可以增加資源的投入
